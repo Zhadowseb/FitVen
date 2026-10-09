@@ -1,15 +1,599 @@
 # Changelog
 
-## [2.10.1] - Unreleased
-### Changed
-- **The label on a primary button reads in every accent theme.** Three of the eight theme and scheme pairs drew it under the 4.5:1 WCAG AA asks of text. Only the ink changed (`ink` and `textInverted` in `AccentThemes`), never a primary, so the fills, `primaryText` and the tints look exactly as they did:
-  - **Ultraviolet dark**: 3.06:1 → 5.68:1. Its purple is too light for a white label, so the ink is a deep violet, `#110D26` - dark, as it is in the other themes' dark schemes.
-  - **Ultraviolet light**: 4.33:1 → 4.72:1. White instead of the lavender-tinted `#F5F4FF`.
-  - **Coral light**: 4.26:1 → 4.71:1. `#120404` instead of `#2A0C0C`; Coral dark keeps its ink, at 7.19:1.
-- `npm run test:accent-contrast` measures every accent theme in both schemes, as `applyAccentTheme` leaves the palette: the ink on `primary`, and `primaryText` on the card and the background, all at 4.5:1 or more.
+## [2.17.5] - 2026-10-04
+### Fixed
+- **On iPhone, the timer square in the bottom bar opens the workout again.** The ring drawn over it is an `Svg` with `pointerEvents="none"`, but react-native-svg 15 on iOS with the new architecture ignores that on the Svg root (`RNSVGSvgView` does its own hit test), so the ring took the tap and nothing happened. Android honours it, which is why it worked there.
+  - The new `PassThroughSvg` (`Resources/Components`) puts such an Svg in a plain `View` with `pointerEvents="none"`, which iOS honours. All 13 places that drew an Svg over or beside something tappable use it: the two rings in the bottom bar, the workout header, the friends activity tiles, the medal avatar, the cover gradient, the body map overlays, the weekday indicator, the exercise video hero and the exercise history panel.
+  - The timer square sits fully inside its slot now; the lift moved from the square to the slot, with the same look.
+- **Tests:** `npm run test:pass-through-svg` fails if an Svg is given `pointerEvents` directly anywhere in `src/`.
 
 ---
-## [2.10.0] - Unreleased
+## [2.17.4] - 2026-10-04
+### Removed
+- **The location foreground service, and run tracking with it.** Google Play would not take the production release without a declaration and a video for `FOREGROUND_SERVICE_LOCATION`. It was only used to keep GPS running for a run with the screen off, and runs are no longer used.
+  - `app.json` asks only for `ACCESS_FINE_LOCATION` and `ACCESS_COARSE_LOCATION`, to match a workout to its centre. `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_LOCATION` are blocked, and `expo-location` has `isAndroidForegroundServiceEnabled: false`.
+  - `plugins/withoutLocationForegroundService` removes expo-location's own `LocationTaskService` from the merged manifest. The merged release manifest then has no foreground service permission or type at all, as checked on 2026-10-04.
+  - `locationService` starts no location updates and asks for no background location. `locationBackgroundTask.js` and its task are gone, and a task an older build left registered is stopped at startup. Run and Walk can't be picked as a workout type. An old run still opens and shows its route, distance and history, but Start there says tracking is not available in this version.
+  - The location permission text speaks only of matching a workout to the centre.
+- **The privacy policy** says that location is only read to find the centre when a workout starts, and that FitVen no longer tracks runs; the routes of earlier runs stay stored with them. It is raised to 2026-10-04.1 (4 October 2026), so everyone is asked again.
+- **Tests:** `npm run test:no-foreground-service`.
+
+---
+## [2.17.3] - 2026-10-03
+### Fixed
+From the review agents' reports on #308 and #311.
+- **Only folding the card waits for the keyboard.** In 2.17.2 every button on an exercise card - the note, the history, "add the first set" - only put the keyboard away on the first tap. Now that applies only to a tap that would fold or unfold the card, which is the one that took the set fields away (`cardPressAction` in `Utils/cardPress.js`).
+- **The planned card and the split cards count exercises and sets with the same SQL** (`workoutExerciseCountSql`, `workoutSetCountSql`); `getOpenWorkoutsForDate` had its own copy.
+- `{n}` in `home.quickStart.moreToday` and `startPlanned` is `{exercises}` now, since it holds "3 øvelser", not a number.
+
+### Changed
+- **Tests run the logic instead of reading the source:** `cardPressAction`, `shouldCommitEdit` (`Utils/editCommit.js`; an untouched field writes nothing when it goes away), `restDisplayFor` ("4.49" for a counted rest, "3 min" for a planned one), and `splitNameDraft` / `isSplitNameChanged` ("Overkrop" left as it is renames nothing). `getNewestWorkoutOfEachName` is tested with an invalid date, one name both done and planned, and two of one name on a day.
+- **The review workflow's diff trimming is `scripts/trim-diff.js`,** with a test (`npm run test:trim-diff`), instead of untested awk inside the workflow. The workflow reads it from the commit it runs for.
+
+---
+## [2.17.2] - 2026-10-03
+### Fixed
+- **A weight or reps typed in a set is no longer lost when you tap the exercise's name to close the keyboard.** The tap folded the card, which took the field away before it saved, so the set kept its old number (the owner's video of 2026-10-03). With the keyboard up, a tap on the exercise card now only puts the keyboard away, and the field saves as it closes. A field taken away while being edited also saves what was typed (`ThemedEditableCell`).
+- **Tests:** `test-workout-header.js` checks both.
+
+---
+## [2.17.1] - 2026-10-02
+### Fixed
+The three small things the phone test of 2.17.0 found.
+- **A saved counted rest reads "4.49", as it did while it counted,** not "4.82 min" (minutes with decimals). Editing it still edits the rest in the chosen unit.
+- **The split picker's name field starts on the name the title shows:** "Overkrop" for a workout stored as "Upperbody". Left as it is, nothing is renamed.
+- **"1 øvelse", not "1 øvelser",** on the planned card, the split cards and the planned card's screen-reader label. The counts go through `common.exercises` and `common.sets`.
+
+What the review of #307 found.
+- **Home no longer reads the whole workout library to draw your split.** It loads on every focus, and resolving six sessions read 500 workouts with their counts and record checks. It now reads the pinned workouts by `sync_id` and the newest workout of each name among the same 500 (`getNewestWorkoutOfEachName`), which gives the same sessions, the same NÆSTE and the same fallbacks as Train. A name cannot be matched in SQL, because the split compares it normalised ("Push 2" is Push), so the query keeps one row per name as stored.
+- **A workout is found by its `sync_id` through an index** (`workout_type_instance_sync_id_idx`). Home and Train look the split's pinned workouts up that way on every load.
+- **The split cards and the workout library no longer count a deleted exercise,** or its sets. They count like Home's planned card: the exercises still there, and their sets still there.
+- **"Kunne ikke hentes" in the split picker has a "Prøv igen" button.** The text no longer says to try again in a moment.
+- **The keep-awake button is a phone with its screen on, not a sun.** A sun beside the header read as the light/dark switch. Off, the screen is an outline; on, it is lit with light coming off it, so the state no longer shows by colour only.
+- **Only a missing `post_like_notifications` greys the like switch out.** Any other missing column (42703, PGRST204) used to read as "the migration has not run" too; now the error has to name that column.
+
+### Changed
+- **The review agents get a list of what the diff left out.** A diff over 400 KB is now cut at whole files, a file that does not fit is skipped so the smaller ones after it still come along, and the note at the end lists every file that was left out (also in `pr-context/omitted-files.txt`). Before, a 151-file PR showed 89 files, and nothing said which 62 to read.
+- **The video picker's comments no longer point at `gymService.attachLiftVideo` or the gym leaderboard's picker,** which went with lift verification.
+- **The `lift-videos` bucket has to be emptied and deleted by hand,** in the dashboard under Storage: SQL cannot delete storage files. It is in `supabase/migrations/README.md`, with `20261005090000` and `20261007090000`, and in `docs/SIKKERHED-DINE-OPGAVER.md`.
+- **The review agents run on Sonnet 5.5 with Opus 5.5 as their advisor; the aggregating agent runs on Opus 5.5** (`REVIEW_MODEL`, `REVIEW_ADVISOR_MODEL`, `SUMMARY_MODEL` in `pr-review.yml`). Before, they ran on Sonnet 5 and Opus 5.
+- **Tests:** `test-home-planned-today.js`, `test-rest-count-up.js` and `test-split-from-calendar.js` check the three fixes. `test-split-pins.js` checks that Home resolves a split exactly as Train does without reading the library, that the pinned lookup uses the index, and the counts without deleted exercises. `test-post-like-notification.js` runs the like switch and the Profile tile against a fake Supabase, `test-workout-header.js` the new icon's two states, and `test-split-from-calendar.js` the picker's retry.
+
+---
+## [2.17.0] - Released with 2.17.1
+From the owner's bug list of 2026-09-30, merged together (#299–#306).
+
+### Added
+- **Build your split from your own workouts.** The split editor on Train has "Vælg fra kalender". It shows the month page's lower calendar, and you can page through the months. Any workout can be picked: done or planned, of any type. Its view lists the exercises and sets, renames it (`updateWorkoutLabel`, synced), and has "Føj til split". The editor used to offer only the app's guess, the last 90 days' names and favourites.
+  - A workout without a name is named before it can be added. Add is blocked when that workout is already in the split or the split has 6.
+  - A session with no finished strength workout of its name now repeats the latest workout of that name of any type, a finished one first and otherwise a planned one (`resolveChosenSplit`).
+- **A split session can be one specific workout.** A workout picked in the calendar is pinned: two "Push" sessions with different weights are two sessions, and each repeats its own workout with its exercises and sets. Suggestions and favourites stay by name, so they repeat your latest. If a pinned workout is deleted, or has not come down to this phone yet, the session repeats the latest of its name. Old splits of names only work as before.
+  - **Cloud:** `20261006090000_a-split-pins-its-workouts.sql` adds `profile_private.split_entries` (run on 2026-10-01). `split_names` is still written for older builds. Until the migration has run, the pins stay on the phone.
+- **Home shows the split you chose** on Train, with the same NÆSTE (`splitService.getHomeSplitGroups`). Without a chosen split it shows the app's guess, as before.
+- **One calendar component:** the month page's week rows are `CalendarWeekRows`, which both the calendar page and the picker draw. `getMonthPage`, `getMonthTitle` and `MONTH_KEYS` moved to `Utils/calendarDays.js`.
+- **The rest counts up after a set with no rest written.** Ticking such a set starts a count. After 15 s the set's rest bubble counts up, so ticking a whole exercise at once records nothing. The count is saved in the ticked set's rest field when the next set is ticked in any exercise, or when the workout is paused or finished. Unticking the set or restarting the workout drops it. It never reaches the bottom-nav square or the rest-finished notification (`restCountUpService`, `Utils/restCountUp.js`).
+  - **Carry-over:** a counted rest is marked (`Set.rest_counted`), and no copy passes it on. That covers the next set, the last values of an exercise, a copied workout and a program export, so it never becomes a countdown. A rest typed by hand clears the mark.
+  - **Lock screen:** without a planned rest, the card counts up from 15 s, with "Afslut pause". The button is only on the lock screen; after it the set can be ticked (`endCountUp`, iOS `EndCountUpIntent`, Android `END_COUNT_UP`).
+  - **Cloud:** `20261005090000_a-set-knows-a-counted-rest.sql` adds `set.rest_counted` (run on 2026-09-30). Where it has not run, the upload leaves the column out.
+- **A like tells the post's author.** When somebody likes your workout post, you get a row in your notification history ("{name} synes godt om dit opslag"), and a push once the new Edge Function is deployed. Tapping it opens your posts with that one first (`UserPostsPage`), as there is no page for a single post. There is no notification for your own like, across a block, on a hidden or deleted post, or when you have switched likes off. Liking the same post again never sends a second.
+  - **Settings:** a new switch, "Når nogen synes godt om dit opslag" (`notification_preferences.post_like_notifications`, on by default). Before the migration has run it shows greyed out.
+  - **Cloud:** `20261009090000_a-like-notifies-the-poster.sql` (run on 2026-10-01) adds the column and an after-insert trigger on `social_post_like` that writes one event and one inbox row per liker and post. Checked on a throwaway Postgres 17.
+  - **Edge Functions:** the new `send-post-liked-notification`, called by a Database Webhook on `social_post_like` inserts, sends the push. `send-workout-started-notification` counts only workout starts towards its 12-an-hour limit, so likes cannot use it up.
+  - **By hand, in this order:** deploy `send-workout-started-notification`, run the migration, deploy `send-post-liked-notification`, then create the webhook (INSERT on `public.social_post_like`, header `x-fitven-webhook-secret`).
+  - `Utils/notificationHistory.js` holds every notification kind's text, route and hint, taken out of `NotificationHistoryPage`. Lift verification is not among them; it is removed in #303.
+- **Keep the screen on during a workout.** A sun button next to ⋯ keeps the phone from locking while the workout clock runs and the workout is on screen. It lets go on pause, finish, restart or leaving the page. The choice is remembered and is off by default (`keepAwakeService`, `useWorkoutKeepAwake`).
+  - **New dependency:** `expo-keep-awake ~15.0.8`. It needs a new native build. A build without it only loses the button.
+
+### Changed
+- **A set counts for every rep count below it.** 90 kg × 3 is also a 90 kg lift for 1 and 2 reps.
+  - **Records, "Rekord pr. reps":** a slot holds the heaviest set with at least that many reps (`buildRepLadder`). A slot filled by a longer set reads "fra 3 reps" and is never gold. "Next step" leaves those slots out. Drop sets no longer fill a slot, which they did against the rule that a drop set is never a record.
+  - **Never announced as new:** a set is a record only at its own rep count, so a first set of ten is one record, not ten. And it is a new record only when it is heavier than every earlier set with at least as many reps (`getPersonalRecordSetIds`): after 90 × 3, an 85 or a 90 single is no record, since 90 for 1 was already done, while 92 × 2 and a 95 single are. Equal weight is still not a record. The toast, records today, the crown, the trophy room, the calendar and posts all read that flag. It is recomputed for an exercise whenever one of its sets is ticked, edited or deleted, so older flags of that exercise follow the rule then; nothing recomputes every exercise at once. The cloud only reads the uploaded flag.
+  - **Powerlifting** takes the heaviest weight in any working or AMRAP set of 1 or more reps, not only singles. The other leaderboards rank `gym_lift`, the heaviest set whatever its reps, and needed no change.
+  - **Cloud:** `20261008090000_a-set-counts-for-fewer-reps.sql` (run on 2026-10-01) restates `category_rows` from 20261007090000 with only that rule changed. Checked on a throwaway Postgres 17.
+  - The Powerlifting texts and the privacy policy say "heaviest lift", not "single". The policy stays at 2026-09-30.1, which is not released yet.
+- **Home 4b: a workout planned for today is the Quick start.** It is one orange card (`PlannedWorkoutCard`) that reads "Planlagt i dag", where it comes from ("Fra {program}" or "Fra kalenderen"), its name, and its exercises and sets. There is no split button and no Tom træning; a fresh workout starts from the + in the bottom bar. A started workout that is paused reads "Fortsæt" and its minutes. Tapping the card opens the planned workout and creates nothing.
+  - It used to be drawn as the same outlined button as the split's suggestion, with Tom træning under it, so it read as a suggestion.
+  - `getOpenWorkoutsForDate` also matches the day's date, in both spellings, and leaves out a workout on a deleted day or in a deleted or not-started program. A started workout always shows.
+  - "Dit split" has no NÆSTE while a plan is shown (`suppressUpNext`). Its cards still start a copy.
+- **The lock screen shows which set you are on.** The button reads "Sæt 2 af 3 færdigt". A row of dots shows the exercise's sets: done ones filled, the current one orange and larger, the rest hollow. On iOS the dots are on the lock screen card, which grows from 132 to 148 pt, and in the expanded Dynamic Island. On Android they are on the collapsed and the expanded card.
+- **Agent guides:** new `docs/MAP.md` says which files each feature lives in, what the four largest files contain section by section, and what agents should not read (`.claude/worktrees/`, `data/`, the dated audits in `docs/`). The root `AGENTS.md` points at it. `npm test` fails if the map names a path or a function that no longer exists.
+- **The privacy policy** is raised to 2026-09-30.1, so everyone is asked again, once for all of this: it no longer mentions verification videos, says your best lift of an exercise appears on the national leaderboard, says "the heaviest weight you have lifted" where it said "your heaviest single", and says that a post's author is told who liked it.
+
+### Fixed
+- **The ⋯ button is back in a strength workout's header,** with Restart and Change name. Since #294 an empty name became the type's name, so "Named Styrketræning after your exercises" showed all the time. It could not shrink, and pushed ⋯ off the right edge. The header's buttons no longer shrink.
+- **"Named … after your exercises" is gone.** The workout's type ("Styrketræning", "Overkrop") is a small line above the title, unless it would repeat the title. An unknown type reads Styrketræning (`strengthWorkoutTypeTag` in `Utils/workoutTypeLabel.js`).
+- **Your own tile in friends activity shows that you are training again.** "Split Home in two" (`a62aacb4`) moved the read of today's activity to `FeedPage`, which has no friends strip, so your tile always rested. Home reads it again (`getTodayActivitySummary`).
+- **From the phone test of this round:**
+  - The workout's options sheet names the day in the reader's language ("Torsdag · 01.10.2026"). It showed the stored English "Thursday".
+  - The records page's chart and its latest sessions no longer use the day alone as a key. Two sessions on one day gave React "two children with the same key".
+
+### Removed
+- **Video verification of lifts, all the way through.** The owner decided it is too early for it, and that it can be built again later.
+  - **App:** the review sheet (`LiftVerificationSheet`), the status pill and the verified icon are gone. So are attaching a video to a lift, the vote, the "N lifts waiting for a verdict" row, "Kun video" on Powerlifting, the verified gold and pills on the leaderboards and public profiles, and the verification notification. The iOS camera and library texts speak of "a video of an exercise", since custom exercises use the same permissions.
+  - **Cloud:** `20261007090000_remove-lift-verification.sql` (run on 2026-10-01) drops `gym_lift_vote`, the video columns on `gym_lift`, the queue and request functions, the video policy's check, the lift-videos storage policies and the old verification notifications. `ranked_lifts`, `public_profile`, `gym_scope_summary` and `category_rows` are restated without them.
+  - **Every list counts every lift, a rejected one included.** The country's list was verified lifts only; it is now each person's best lift of the exercise, once. Every record on a profile has its rank.
+  - **By hand:** empty and delete the `lift-videos` bucket in the dashboard, under Storage. Supabase does not allow deleting files with SQL.
+  - Checked on a throwaway Postgres 17 after the real gym migrations. The migration runs twice without error, and a rejected, a verified and an unjudged lift then all rank at the centre, in the country and in Powerlifting.
+
+- **Tests:** new `npm run test:workout-header`, `test:home-planned-today`, `test:split-from-calendar`, `test:split-pins`, `test:rest-count-up`, `test:remove-lift-verification`, `test:rep-records-downward` and `test:post-like-notification`; `test-friends-wallpaper.js`, `test-home-quick-start.js`, `test-calendar-days.js`, `test-split-card.js`, `test-live-workout.js`, `test-set-carry-over.js`, `test-records-insights.js`, `test-gym-categories.js`, `test-gym-leaderboard.js` and `test-public-profile.js` extended. The declared-before-use check in `test-gym-leaderboard.js` had lost the escapes in its regex and matched nothing; it works again.
+
+---
+## [2.16.7] - Released with 2.17.1
+### Fixed
+From the review agents' report on #296.
+- **The centre's exercise search:**
+  - Its "Prøv igen" is the page's own retry button, the one under "the categories could not be fetched": the same size, tap area and press feedback. It was a smaller one of its own.
+  - The "{count} fundet" count is shown only once every exercise has been searched. While the rest was coming it counted the preview's matches alone, under a spinner saying it was still looking.
+  - The search's status uses the page's words for its cards: `"ready"` and `"error"`, not `"loaded"` and `"failed"`. `centreSearchView` no longer takes `fullListLoaded`, which only repeated `status`.
+- **Tests:** the undo of a per side / both sides switch is now checked to look the 1RM estimate up once, like the switch. It fails with the undo looking it up per set.
+- A comment said the estimate's join is over six tables; it is eight.
+
+---
+## [2.16.6] - Released with 2.17.1
+### Fixed
+From the review agents' reports on #294 and #295.
+- **The centre page's exercise search** no longer says "Ingen øvelser matcher" about an exercise lifted there. The page starts with a preview and fetches every exercise when somebody searches.
+  - While the full list is coming, the search says so.
+  - If it could not be fetched, the search says that too, with "Prøv igen".
+  - "No match" is shown only once every exercise has been searched (`centreSearchView` in `Utils/gymUtils`).
+- **A per side / both sides switch, and its undo,** look the 1RM estimate up once per exercise instead of once per set. The estimate comes from the exercise and the program, never from the set.
+- **From #293's review:**
+  - The privacy policy says it was last updated on 27 September 2026, the day of its version, and `web/privacy/index.html` is rebuilt.
+  - The comments point at `20261004090000` for the Progress and Flid rules, not at the weight-mode migration.
+  - The ledger no longer says to run that migration, which has run.
+  - The English "same exercise" text has a test.
+- **Tests:**
+  - The workout hydration's rule "an edit waiting to upload wins unless the cloud's copy is newer" is now tested in both directions.
+  - So are a write that lands while the hydration writes, and two cloud rows for an exercise it has just created.
+  - A restart with no sets ticked off still announces the reset timer.
+  - A switch looks the estimate up once.
+
+---
+## [2.16.5] - Released with 2.17.1
+### Fixed
+- **An edit made while the pull is writing keeps the edit.** This is the download side of 2.15.3 and 2.16.2. Every reconcile reads its local rows before its transaction, some after a request, and then wrote the cloud's copy by id alone with `needs_sync = 0`. The user can write at every `await` in the loop. So if a row was edited on another phone and the pull took that copy, an edit made here just before the write was overwritten, lost its flag and was never sent. The window is narrow, since the same row has to change on two phones.
+  - `updateProgramFromCloud`, `updateMesocycleFromCloud`, `updateMicrocycleFromCloud`, `updateDayFromCloud`, `updateWorkoutFromCloud`, `updateExerciseFromCloud` and `updateSetFromCloud` take `expectedSyncVersion` and write only while the row still has that `sync_version`. They return whether they wrote.
+  - A row that changed is left as it is: its edit, its flag and its version. It is not counted as downloaded, and the reconcile's maps keep the row as it was read. The edit goes up in the same pass (day, workout, exercise, set) or the next one (program, block, week).
+  - All 14 calls in `cloudSync/` pass the version of the row they read. So do the two in `hydrateWorkoutStrengthDataFromCloud`, which opening a workout runs. An exercise created there carries its version too, so a second cloud row matched to it does not fail.
+- **Tests:** `npm run test:sync-lost-update` lands an edit just before the pull's first write at every level. It runs each level twice: on a synced row and on a row with an older edit waiting, one run per branch that takes the cloud's copy. Without the fix, all 14 cases fail. It also checks that the 16 call sites pass the version. `test-dev-kpi-sources.js` and `test-set-types.js` pass the version when they call the functions directly.
+- **Docs:** `src/Services/AGENTS.md` states the rule for the pull.
+
+---
+## [2.16.4] - Released with 2.17.1
+### Fixed
+From the review agents' reports on #287–#292.
+- **Workout names:**
+  - A name someone typed is no longer translated. "Run", "Walk", "Resistance" or "legs" on another type stay as typed. Unnamed and auto-named workouts are still drawn in the app's language (`isAppWorkoutName`).
+  - A name typed exactly like one of the app's own auto-names on a strength workout is still translated, because the two are stored the same way.
+- **Restart workout** is one transaction (`restartStrengthWorkout`). If it fails, nothing changes and the app says so.
+- **The weight steppers:**
+  - A + or − right after typing a weight starts from the typed weight.
+  - A step's save is only forgotten once it has succeeded, and a failed save keeps the weight and says so, with "Prøv igen".
+- **Undoing a per side / both sides switch** keeps the sets changed or added since, converted back.
+- **%1RM is of the weight as written:** 22,5 kg per side is 22,5 against the estimate. A switch moves it with the number.
+- **A workout opened or copied from the cloud keeps what the phone has not sent yet.**
+  - An offline edit is no longer overwritten by the cloud's older copy.
+  - A set the cloud held cut to whole kilos is sent up again with its decimals.
+  - Warm-ups, drop sets and AMRAP targets arrive as they are, instead of as working sets.
+- **Sync:**
+  - Looking a row up in the cloud no longer gives an edit still waiting to upload the cloud's version. An older edit can therefore no longer go up over a newer one from another phone.
+  - Once the cloud is known to keep decimals, a later refusal from another field no longer cuts every weight to whole kilos for the session.
+- **The catalog by name:**
+  - The lock-screen card finds the equipment whatever the case of the name, and shows each set once.
+  - A new index, `exercise_name_nocase_idx`, lets every lookup by name search instead of reading the whole catalog.
+  - Copying a week looks the catalog up once per workout.
+- **The centre page** loads its first exercises on every visit, and every exercise only when you search.
+- **"Din fremgang"** explains what it takes when there is no rise yet.
+- **Contrast:**
+  - The per side / both sides tabs pass in dark mode, and their underline in every accent.
+  - The Android weight buttons' red and green text is readable on a light notification shade, and the red on a dark one.
+- **Android:**
+  - A tap on the card, and its redraws during a rest, no longer run on the main thread. Taps are still handled one at a time and in order.
+  - The button rows are 48 dp.
+  - TalkBack says the dimmed minus at 0 kg cannot be used.
+- **A failed weight-mode switch or undo** shows a message.
+- **The review workflow** reads a merged PR from its merge commit, against master just before it. It used to diff the PR's head against a master that already held it, so the agents got an empty diff and read the finished code instead of the change.
+- **Tests:**
+  - `test:set-decimals` runs the workout hydration for real.
+  - `test:sync-lost-update` covers the identity helpers.
+  - `test:weight-mode` runs the switch, its undo and the header's write through the service.
+  - There are two new tests, `test:catalog-name-match` and `test:live-workout-android`.
+
+---
+## [2.16.3] - Released with 2.17.1
+### Changed
+- **Fremgang counts every exercise.** The list ranks each person by their biggest rise in best e1RM in any catalogue exercise, by the same rules as before: Brzycki up to 12 reps, the last 30 days against the 30 before, and 3 sets in each window.
+  - A row names the exercise, e.g. "Hip Thrust 100 → 120 kg". Bench press, squat and deadlift keep the app's own names ("Bænkpres 56,5 → 62 kg").
+  - "Din fremgang" gets your five biggest rises from the server, biggest first, and the card shows three.
+  - Exercises are matched to the catalogue by name, trimmed and lower-cased. Custom exercises do not count. When two rises are the same size, the one reached first ranks higher.
+  - Rises are in per cent, so a light exercise can top the list: a dumbbell going from 2 to 4 kg is +100 %.
+- **Flid: a week counts towards weeks in a row at 2 workouts, not 3,** on the list as on the Train tab. The texts say 2 in both languages.
+- **Cloud:** `20261004090000_progress-counts-every-exercise.sql` (not run) restates `private.category_rows` with only those two parts changed. `npm run test:gym-categories` checks that part by part.
+  - It adds the index `set_cloud_exercise_instance_idx`.
+  - Load tested on Postgres 17 at 2,000 lifters and 1.9M sets:
+    - a country's Progress list: 2.1 → 2.3 s;
+    - a region's: 1.1 → 1.2 s;
+    - a centre's: 91 → 67 ms;
+    - a country's four cards: about 6.3 s either way.
+  - Before it had run, the list counted the three lifts and three workouts a week, and the app read that as before.
+- **The privacy policy** says that the categories show which exercise your estimated best rose most in, with the estimate before and now. It is raised to 2026-09-27.1, so everyone is asked again.
+- The Progress empty text says "same exercise", not "same lift".
+- The migrations ledger records `20261004090000_progress-counts-every-exercise.sql` as run on 2026-09-27.
+
+---
+## [2.16.2] - Released with 2.17.1
+### Fixed
+- **A program, block, week or day edited while it was uploading keeps the edit.** 2.15.3 guarded workouts, exercise instances and sets, but the four levels above them still cleared `needs_sync` by id alone when the cloud answered. A program renamed, a focus changed or a day marked sick while that row was uploading lost its flag, and the download straight after the upload put the old value back.
+  - `markProgramSynced`, `markMesocycleSynced`, `markMicrocycleSynced` and `markDaySynced` now take `expectedSyncVersion` and clear the flag only if the row still has that `sync_version`, like the other three. A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Every call in `programSync.js`, `mesocycleSync.js`, `microcycleSync.js` and `daySync.js`, upload and reconcile alike, passes the version of the row it read.
+- **Tests:** `npm run test:sync-lost-update` now lands an edit mid-upload at program, block, week and day too, checks the four functions directly, and checks that every call site passes the version.
+- **Docs:** `src/Services/AGENTS.md` names all seven functions, and the Known Gap for the four is gone.
+
+---
+## [2.16.1] - Released with 2.17.1
+### Fixed
+- **A set keeps its decimals in the cloud.** A set's weight (102,5 kg, 11,25 kg a side) and RPE (8,5) were cut to whole numbers on upload. A new phone, the category lists and a custom exercise's typical weight therefore got 102 instead of 102,5.
+  - Both now go up and come down with up to two decimals (`Utils/setDecimals`).
+  - Importing a program file no longer cuts them either.
+- **Cloud:** `20261003090000_a-set-keeps-its-decimals.sql` changes `set.weight` and `set.rpe` to `numeric`. It has not been run.
+  - It checks the catalogue first, and stops without changing anything if a view or policy would block it. A second run does nothing.
+  - It rewrites the table once, which took 13 s for 2 million sets locally. Run it when the app is quiet.
+- **Until it has run:** the upload falls back to whole numbers for the rest of the session, the phone keeps its own value, and nothing loops.
+- **After it has run:** the sets the cloud holds cut off are sent again once.
+- **Checked against a local Postgres:** the category lists, the custom exercise stats and `workout_record_counts` give the same results on whole-number data.
+  - The one visible change: a pull-up with 0,5 kg added no longer counts as bodyweight in Calisthenics.
+- The migrations ledger records `20261002090000_weight-mode-per-instance.sql` and `20261003090000_a-set-keeps-its-decimals.sql` as run, both on 2026-09-27.
+- `npm run test:set-decimals` runs the real set sync against the schema in `node:sqlite` and a cloud that is first integer, then numeric.
+
+---
+## [2.16.0] - Released with 2.17.1
+### Added
+- **Weight per side or for both sides.** Dumbbell, kettlebell and cable exercises get two tabs under the name on the exercise card: "Pr. side · 22,5" and "Begge sider · 45".
+  - A switch converts every set of the exercise in that workout: ×2 or ÷2, to the nearest 0.25 kg. Reps are unchanged, and empty weights stay empty.
+  - The choice is kept for the exercise and synced to a new phone, and Undo is offered for five seconds.
+  - Earlier workouts are not touched. Copied or repeated workouts follow the exercise's choice.
+- **Volume counts a weight per side twice** wherever it is summed: statistics, the trophy room's tonnes and the program overview.
+- **Records, e1RM and bests** compare older sets converted into the exercise's current way of writing it, so a switch never creates or removes a record.
+- **"pr. side"** is shown on the folded card, in the history panel, on the Records pages, in program bests and in friends' workout posts.
+- **+ and − on the weight in the set list.** With only rest, #, reps, weight and done shown:
+  - each unfinished set has − and + around its weight;
+  - the header's "− VÆGT +" moves every unfinished set at once;
+  - the step follows the exercise (`Utils/weightStep`): 2 for dumbbells; 5 for machines, cables, squats and deadlifts; otherwise 2.5;
+  - hold to repeat. It is saved once, just after the last press.
+### Changed
+- A set's weight keeps two decimals (6,25 kg) instead of one.
+### Fixed
+- `npm test` runs `test:sync-lost-update` again. Merging 2.15.3 kept the script but dropped it from the chain.
+### Cloud
+- **`20261002090000_weight-mode-per-instance.sql`** adds `weight_mode` to `exercise_instance` and `exercise_column_preferences`.
+  - It has not been run.
+  - Until it runs, the app syncs without the column and keeps the choice on the phone.
+- **Known, not new:** the cloud keeps a set's weight in whole kilos (`field("weight", int())`), so 102,5 kg or 11,25 kg per side is uploaded as 102 and 11. The phone keeps the right number.
+
+---
+## [2.15.3] - Released with 2.17.1
+### Fixed
+- **A workout started while its restart was uploading stays started.** When the cloud answered, the upload cleared the workout's `needs_sync` by id alone. Start had written `timer_start` and `original_start_time` with a new `sync_version` in the meantime, so the start was never sent, and the download straight after the upload put the workout back to not started.
+  - `markWorkoutSynced`, `markExerciseSynced` and `markSetSynced` now take `expectedSyncVersion`, the `sync_version` the row was read at, and clear the flag only if the row still has it (`WHERE … AND sync_version IS ?`). A row that changed keeps its flag and its own version, records the cloud id it got back, and goes up with the next pass.
+  - Exercise instances and sets had the same race. A note typed, or a set ticked off, while that row was uploading was lost the same way.
+  - The reconcile marks rows synced through the same three functions, so it has the guard too.
+  - Program, block, week and day rows still clear the flag the old way.
+- **Tests:** `npm run test:sync-lost-update` runs the real sync modules against the app's schema in `node:sqlite` and an in-memory cloud, with the user's write landing while the upload is out, for all three.
+
+---
+## [2.15.2] - Released with 2.17.1
+### Fixed
+From the owner's test on an Android phone.
+- **Edit profile: changing your birth year turns Save on.** The wheel offered a day and a month that are never kept, so changing them changed nothing. It now offers the year alone, and the heart-rate settings' birth date does the same.
+- **Restart workout sets every set back to not done** (`weightliftingService.resetStrengthWorkoutSets`).
+  - Records, exercise done flags and the day, week and block completion are recomputed and uploaded.
+  - The rest timer and any open prompts are cleared.
+  - Starting again counts from zero.
+- **The lock-screen card now follows the workout clock.** The workout service's own timer writes (start, pause, resume, finish, restart, a label) went through a local `syncWorkoutTypeInstancesInBackground` that never raised the event the card rebuilds on, so the card kept an old clock and old ticks.
+  - The card's query no longer asks for `is_active`, which a pause clears, so a paused workout keeps its card instead of losing it.
+- **A paused workout keeps its time in the square in the bottom navigation** (`workoutService.getWorkoutInProgress`, `Utils/workoutClock`).
+  - The time stands still while paused and counts on when resumed.
+  - A workout paused for more than eight hours gives the square back to the plus.
+  - Only a running workout or a rest polls every second.
+- **One centre:**
+  - Search the exercises ranked at the centre by name.
+  - A real "Øvelser" section with the five most-lifted exercises and "Alle øvelser".
+  - The exercise page scrolls to the chip you opened.
+- **Fremgang:**
+  - The Bænk/Squat/Dødløft tabs and the fixed three-lift card are gone. The page lists everybody's biggest rise, most first, and "Din fremgang" shows your rises biggest first.
+  - The server still counts only the three lifts, and changing that takes a migration.
+- **Explore search:** choosing Centres with nothing typed lists three groups: your centre, the centres you have trained in, and the busiest centres in your centre's region.
+- **Home, your split in the first week:** "Beregner…" sits beside the seven dots, and the explanation has its own line under them instead of being cut off. The state after the week is the same.
+- **Train, Din form:** a week counts towards the streak at 2 workouts, not 3. The Flid category on the centre leaderboards still counts 3.
+- **Exercise library:** the muscle view of an exercise you have trained has "Se statistik", which opens its statistics page. Back returns to the library.
+- **Workout types in Danish.** Types, and workouts named after them (Resistance, Upperbody, Legs, Run, Walk…), now read Styrketræning, Overkrop, Ben, Løb and Gåtur (`Utils/workoutTypeLabel`, locale area `workoutTypes`).
+  - This covers the workout screen, the calendar, the start sheet, Home, Train, programs, the library, posts and friends' activity.
+  - Names you typed yourself, and everything that is stored, are unchanged.
+  - "Skift navn" starts empty for a workout named only after its type.
+- `npm run test:workout-restart` runs the restart, the second start and the paused square against the app's schema in an in-memory SQLite.
+
+---
+## [2.15.1] - Released with 2.17.1
+### Changed
+- **The open Android notification during a set (1e) has weight buttons:** −step · Sæt færdigt · +step, in place of Forrige · Sæt færdigt · Næste.
+  - Collapsed, the rest (1f) and iOS are unchanged.
+  - **A press moves only the set that is now,** to the nearest quarter kilo and never below 0.
+    - The title and the set's chip change at once.
+    - Presses add up.
+    - At 0, minus is faded and does nothing.
+    - A set without a weight (body weight) gets no buttons, and Sæt færdigt takes the row.
+  - **The step follows the exercise** (`liveWeightStepFor` in `Utils/liveWorkout`), from its name or its equipment in the catalog: 2 kg for dumbbells, 5 kg for machines, cables, squats and deadlifts, and 2.5 kg for the rest.
+  - **The queue carries the final weight, not the presses,** merged into one entry per set, so handling it twice gives the same set.
+    - It is written through `updateSetWeight`, as the weight field on the workout screen writes it.
+    - Sæt færdigt pressed after it saves the set with the new weight.
+    - An edit made to the set in the app after the press wins.
+  - **The workout screen reads its sets again after any write from the lock screen** (`subscribeLockScreenEdits` in `Utils/workoutDataEvents`), a moved weight included.
+- **The Android notification, round 2** (1e and 1f):
+  - **Open, set (1e):** NUVÆRENDE SÆT over the set, only the exercise under it, and two rings.
+    - SÆT counts the set being done ("3/4" with two done) and fills with the done ones.
+    - ØVELSE shows the exercise's place and fills with the finished exercises.
+  - **Collapsed, set:** no ring; the text and the round Sæt færdigt.
+  - **Open, rest (1f):** the same card as 1e, with NÆSTE SÆT and the next set.
+    - The pause row (PAUSE, "af 3:00", the countdown and a thin bar) takes the current exercise's place, and the next exercise stays.
+    - There is no coloured background.
+  - **Collapsed, rest:** no ring. The content area is orange at the start of the rest and drains to the left until it is grey.
+    - It redraws at most every 5 s, and at once on ±15 and Spring over.
+    - With animations switched off it stays full.
+- **Every set done: the card asks to finish.** "Alle sæt er færdige · Afslut træningen?" has one button, Afslut.
+  - The button opens the app on a link (`fitven://live-workout/finish`). App.js opens that workout, and the workout screen finishes it without asking again. Then it asks about the post, as a finish there does.
+  - On iOS it is a `Link`, so it needs no iOS 17. On Android it opens the app with the link.
+- **Android: the card keeps to the top of the notification list,** as far as Android allows without a foreground service.
+  - It uses a new silent channel at high importance (`workout_live_top`, replacing `workout_live`) and the highest priority.
+  - The notification time is the time of each post, not the workout's start, which sorted the card as old.
+  - One UI can still reorder it. Conversations, calls and media always come first.
+- **Android: the workout time is in the card itself,** next to the title when collapsed and on the eyebrow line when open. It stands still while the workout is paused and runs again when it is resumed.
+  - It used to be in the system header, where One UI dropped it on a pause and did not bring it back.
+- **Tapping the rest-is-over reminder** no longer opens the notification history. It only brings the app back.
+- **The card's state carries at most 10 sets an exercise,** so it stays under ActivityKit's 4 KB with the new fields.
+- `npm run test:live-workout` now also runs the lock screen's writes against the real schema in an in-memory SQLite. A weight moved and Sæt færdigt save the set once. The same taps handled twice change nothing. An edit made after the tap wins.
+
+---
+## [2.15.0] - Released with 2.17.1
+### Added
+- **The running strength workout is on the lock screen.** On iOS 16.2+ it is a Live Activity and in the Dynamic Island; on Android it is an ongoing notification. Both show the set to do, the rest counting down and the workout time, and all three count by themselves without the app.
+  - **The buttons** (iOS 17+, and every Android version) are Sæt færdigt, Spring over, ±15 s and Forrige/Næste. They change the card at once, and are queued.
+    - When the app is running, the tap is done straight away, through the same service call a tap on the workout screen makes.
+    - Otherwise it is done the next time the app comes to the front. A set is ticked off once, and a rest that would already be over is not started.
+    - Forrige/Næste only move what the card shows. They are dropped when they are handled more than a minute late.
+  - **Starting a strength workout shows the card.** It goes the moment the workout is finished, reset or deleted, and a card left behind by a killed app goes on the next launch.
+    - The card follows the database, not the screens. It is rebuilt from the database after every local write to a set, an exercise or a workout, raised where those writes already queue their upload (`Utils/workoutDataEvents`).
+    - A paused workout older than eight hours gets no card.
+  - **A sound and a buzz when the rest is over,** from a local notification scheduled for the rest's end. It is moved with ±15, cancelled with the rest, and not shown while the app is in front. This did not exist before.
+  - **Settings:** Profile → Notifications → "Vis træning på låseskærmen", on by default, per phone.
+  - **Runs get no card** until one is designed for them. They keep the location notification they have.
+- **Native code:**
+  - `modules/live-workout` is a local Expo module: an iOS pod that starts and ends the Live Activity, and the Android notification.
+  - `targets/widgets` is the iOS widget extension, through `@bacons/apple-targets`, with the App Group `group.com.fitven.app`.
+  - What the card shows and what a tap does to it before JavaScript knows are defined once, in `src/Utils/liveWorkout.js`, and mirrored rule by rule in Swift and Kotlin.
+  - It needs a new native build. The next iOS build asks EAS for credentials for the extension's bundle id and the App Group.
+- **`.github/workflows/ios-native-check.yml`** builds the app for the iOS simulator on macOS for every PR that touches native code, because Swift cannot be compiled on Windows.
+- **Tests:** `npm run test:live-workout` covers:
+  - the state, and that it stays under ActivityKit's 4 KB;
+  - the view and the taps, as both native sides mirror them;
+  - the words in both languages;
+  - that the two Swift copies of the state are identical;
+  - the card's whole life, from launch to sign-out.
+
+---
+## [2.14.4] - Released with 2.17.1
+### Fixed
+- **The store-stats cron migration no longer switches its extensions on itself.** Run in the SQL editor, `create extension pg_cron` set off Supabase's own `extensions.grant_pg_cron_access`. On this project that stopped with "dependent privileges exist", and the whole file rolled back.
+  - `20260930090000_store-stats-ios-daily.sql` now expects pg_cron and pg_net to be switched on in the dashboard (Database → Extensions, or Integrations → Cron). It checks that they are, and stops naming the one that is missing.
+  - It no longer grants anything on the `cron` schema, because the dashboard's own routine does.
+  - The migration had not been run, so changing it in place is safe.
+- The migrations ledger records it as run: the extensions were switched on in the dashboard, and the job `store-stats-ios-daily` was scheduled on 2026-09-26.
+
+
+---
+## [2.14.3] - Released with 2.17.1
+### Changed
+- **A category card and the page it opens write a category the same way.** Each had its own helper; now `src/Utils/categoryFormat.js` does it for both:
+  - the value and its unit, with the language's decimal comma and an e1RM to the half kilo;
+  - the line under a name;
+  - the category's colour as text. It holds 4.5:1 on the card, the page and the personal card's fields, in every accent theme, light and dark.
+- **Under #1 inside a centre**, the card now shows #1's line from the page. Powerlifting names its lifts ("B 120 · S 142,5 · D 0"), and Consistency adds when #1 last trained. The card's own texts for it (`gyms.card.flidDetail`, `fremgangDetail`, `calisthenicsDetail`) are gone, so `category.rows` is the only set.
+- **One medal ring**, `src/Resources/Components/MedalAvatar.js`, for #1 on a card and the podium's three. The card's gold ring is now the podium's: 2.5 dp, a 2 dp gap, shaded like metal.
+- A Progress row without both estimates shows no line, instead of "– → – kg".
+- `npm run test:gym-categories` checks the numbers and lines in both languages, and the contrast in every accent theme. It also fails if anything else works out a category's colour or a contrast of its own.
+
+---
+## [2.14.2] - Released with 2.17.1
+### Removed
+- **What the Centres map left behind.** 2.14.0 took the map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" off the Centres screen, and these had nothing left calling them:
+  - `gymService.getNearbyGyms`, `getGymsInBounds` and `MAP_LAST_KNOWN_MAX_AGE_MS`.
+  - `distanceM` on the centres `mapGym` returns. Only `gyms_nearby` ever sent a distance, and nothing reads it now.
+  - `formatDistance` in `gymUtils`, with its three checks in `test-gym-leaderboard.js`.
+  - The `Crosshair` icon.
+- **Kept:**
+  - The `gyms_nearby` function in the database. It is harmless, and dropping it would take a migration.
+  - `react-native-maps`, which the run screen draws its route with.
+  - The chain colours, which the centre tiles still use. Their comments and checks now talk about tiles, not pins.
+
+---
+## [2.14.1] - Released with 2.17.1
+### Changed
+- The migrations ledger records `20261001090000_dev-kpis.sql` as run, so Dev · Overblik has its numbers.
+
+---
+## [2.14.0] - Released with 2.17.1
+### Changed
+- **Centres go worldwide, a level at a time** (`GymsPage` with `{ scope }`).
+  - Explore → Centres opens on the country your phone is in: reverse geocoded from one position fix, else your centre's country, else Denmark. The countries (4b) list only those with registered lifts.
+  - A country (4a) shows its four categories and its regions. A region (4c) shows its categories and its centres, most lifters first.
+  - Every level has:
+    - a "Globalt" eyebrow;
+    - a search inside the level;
+    - your centre as a photo card, with no numbers of its own;
+    - breadcrumbs ("Alle lande › Danmark › Sjælland");
+    - All / Men / Women (`GenderSegment`): All split blue and pink, remembered for the session and carried into a category and a centre.
+  - The map, "Stærkeste i Danmark", "Hvor du har trænet" and "Nærmeste" have left the page. The national exercise board stays, reached from Powerlifting.
+- **One centre (4d)** keeps its photo hero and "Skift center". Under Centre/Friends come its breadcrumbs and the gender choice.
+  - Four category cards replace the three exercise cards and "Flere øvelser". Friends narrows the cards to the people you follow.
+  - "Alle øvelser" opens the exercise board, which now has chips for every exercise at a centre too.
+- **Four categories, each its own page** (`CategoryLeaderboardPage`, 5a–5d). Each has:
+  - a colour of its own;
+  - a podium (not for Progress);
+  - the list;
+  - your own row, pinned and always shown, or a line saying why you are not on it.
+- **The categories:**
+  - **Consistency (Flid):** workouts this week, month or year, or weeks in a row with at least 3. The server counts the streak, so a sick week breaks it on the list, though not on your Train tab.
+  - **Powerlifting:** the total of your best **single** in bench press, squat and deadlift. There is no estimate, and a missing lift counts 0. "Kun video" counts only verified singles, and a rejected single never counts.
+  - **Progress (Fremgang):** the biggest rise in best e1RM (Brzycki, up to 12 reps, as the rest of the app) over the last 30 days against the 30 before. Each window needs 3 sets.
+  - **Calisthenics:** the most reps in one unweighted set, times 3 for pull-ups, 2 for dips and 1 for push-ups. The factors sit in a table, so they can change without a release.
+  - The filters are gender, age group (U23, 23–39, 40+), Consistency's period and the tabs.
+- **Who is on the lists:**
+  - You are on a level's lists when you have finished a workout at one of its centres in the last 90 days. Powerlifting and calisthenics lifts count at the centre the workout was matched to.
+  - A block hides people from each other everywhere.
+  - Weight classes wait for body weight, which is not asked for yet, so the pill reads "Alle vægte".
+- **Cloud:** `supabase/migrations/20260929090000_gym-scope-and-categories.sql`, run on 2026-09-26 and checked.
+  - It gives `gym` a `country_code` and a `region_key`. Denmark's four landsdele are derived from the postal code: Zealand 186, Jutland 153, Funen 26, Bornholm 0 of today's centres.
+  - It adds `gym_region`, with names and "på Sjælland / i Jylland" phrases, and `private.calisthenics_event`.
+  - It adds three security definer functions: `gym_scope_summary`, `gym_category_cards` and `gym_category_leaderboard`.
+  - It was run twice on a local Postgres against a Supabase stand-in, then checked by hand. Load tested at 2,000 lifters and 1.9M sets: a country's cards take about 7 s, the next thing to cache when the app gets there.
+  - Until it runs, Centres keeps its search and your centre, and says the categories are not available yet.
+  - The importer keeps the country and derives the region (`scripts/import-gyms/regions.js`), so it now needs the migration first.
+  - `npm run test:gym-categories` checks the vocabulary, the regions, the service mapping and the migration's rules.
+- **The privacy policy** says what the categories show, and that anybody who filters by sex or age group can see which group you are in; your sex and age themselves are never shown. With the KPI page's change in 2.13.0 it is raised to 2026-09-26.4, so everyone is asked again once, for both.
+
+---
+## [2.13.0] - Released with 2.17.1
+### Changed
+- **Dev · Overblik is a KPI page now** (`src/Pages/DevDashboardPage/`, admin only).
+  - The period selector and the three ops boxes are gone. Every number has its own fixed window, and a status from one rule set (`getKpiStatus` in `Utils/devDashboard`): good, watch, alarm, baseline or unmeasured.
+  - **The order:** Brugere (downloads and active, per store) → Virker den? (crash · ANR, new bugs per version) → Bruges den? (training this week, coming back, plan completed, where workouts are started from) → release lag → what is used over 28 days → Feedback, with the median answer time → four folding sections (S1–S10). The downloads chart now sits under S7.
+  - With fewer than 30 in a denominator, a tile shows the count and no colour. A number with no source says "Ikke koblet på", and a read that fails says "Kunne ikke hentes"; neither shows 0, and the rest of the page keeps working.
+- **Two things the app now records:**
+  - **Where a workout was started from** (`started_from`: program, recent, calendar, empty or other), set by each path that creates a workout and synced with it. Older rows stay empty and are not counted.
+  - **When the app was last opened,** on which platform and in which version (`AppOpenSync`). It is written at most once an hour, and only after the new privacy policy has been accepted. Both degrade silently until the migration has run.
+- **Cloud:** `supabase/migrations/20261001090000_dev-kpis.sql`, not run yet.
+  - It adds the columns and `dev_metrics` (admin-only).
+  - It adds nine admin functions. Each checks `is_admin` itself and returns only aggregates, never a row per user.
+  - It runs after the admin-guard fix in 2.12.3, which it depends on.
+- **A daily GitHub Action** (`.github/workflows/dev-metrics.yml`, `scripts/dev-metrics/`) measures what only the repository knows and writes it to `dev_metrics`: release lag per store, rework within 14 days, open bug debt and commits per feature.
+  - It needs the repo secrets `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, and a tag per store submission (`android/<version>`, `ios/<version>`; see `docs/VERSIONING.md`). Without them it does nothing and says so.
+  - `npm run test:dev-metrics-action` and `npm run test:dev-kpi-sources` check it and the app side.
+- **The privacy policy** says what is recorded about app use and how a workout was started, and that the developer only ever sees totals. It is raised to 2026-09-26.3, so everyone is asked again.
+
+---
+## [2.12.3] - Released with 2.17.1
+### Fixed
+- **Any signed-in account could make itself admin.** `private.reject_self_appointed_admin` refuses a change to `profile_private.is_admin` from the app by asking whether `current_user` is `authenticated` or `anon`.
+  - It was `security definer`, and inside one `current_user` is the function's owner, so the guard never fired.
+  - The column revokes that were meant to back it up do nothing either, because `authenticated` holds update on the whole table, and Postgres ignores a column revoke while the table grant stands.
+  - One PATCH set the flag, and from then on the admin functions answered: Feedback messages with their senders, store numbers, active users.
+- **The fix** is `security invoker` (`supabase/migrations/20261001080000_the-admin-guard-runs-as-its-caller.sql`). Checked on a local Postgres before and after: the same update is now refused, and the SQL editor still sets the flag.
+- `npm run test:admin-guard` fails if the latest definition of the guard is `security definer` again.
+- The migration was run on 2026-09-26. Who holds the flag: `select user_id, updated_at from public.profile_private where is_admin;` - only the developer's account should.
+
+---
+## [2.12.2] - Released with 2.17.1
+### Added
+- **The dev dashboard's App Store box gets a fetcher.** A new Edge Function, `supabase/functions/store-stats`, reads App Store Connect's daily sales report and writes first-time iOS downloads to `store_stats`. A cron calls it at 06:15 UTC every day.
+  - It asks for yesterday, and for every day of the 29 before it that has no row yet, one request at a time. So a failed run's gap closes itself the next morning. "Yesterday" is Apple's yesterday: its reports run midnight to midnight, Pacific Time.
+  - Only first downloads count: product types `1`, `1F` and `1T`, from [Apple's list](https://developer.apple.com/help/app-store-connect/reference/reporting/product-type-identifiers/). The same report carries updates (`7`, `7F`, `7T`) and re-downloads (`3`, `3F`), and summing its whole Units column gives a number that is too high without looking wrong. Also left out: in-app purchases, and any other app on the same developer account (rows are matched on FitVen's Apple ID, the `ascAppId` in `eas.json`).
+  - When Apple has no report for a day (404, "There were no sales for the date specified."), no row is written, never a zero. Until the app is released that is every day, so the box stays an em dash, which is correct. The next run asks for that day again.
+  - A refused key (401 or 403) stops the run, answers 502 and says why in the function log. A 5xx or a dropped connection skips that day for the next run. A report that cannot be read leaves its day empty rather than counting it as nothing.
+  - `rating` and `rating_count` are never written. Google Play is not built.
+- **What is tested, and what is not.** `npm run test:store-stats` runs the function's own module in Node. It covers the token (ES256, raw r||s, no `sub`), the 404, 401, 403, 429 and 5xx answers against a fake fetch, the gzipped report parsed by column name, the allowlist, the days already stored being skipped, and the upsert. **The sum itself cannot be checked until the app has real downloads.** Do not trust the first number blindly. Compare it with App Store Connect -> Sales and Trends -> Units with the time zone set to Pacific Time; the page shows UTC by default, which is a different day.
+- **To turn it on**, in this order. Nothing is fetched until all four are done:
+  1. Set the function secrets: `ASC_PRIVATE_KEY` (the whole .p8 file), `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_VENDOR_NUMBER`, and `STORE_STATS_CRON_SECRET` (a long random string).
+  2. Create the Vault secrets: `project_url` (`https://<project-ref>.supabase.co`) and `store_stats_cron_secret` (the same string as `STORE_STATS_CRON_SECRET`).
+  3. Deploy the function: `npx supabase functions deploy store-stats --no-verify-jwt --project-ref <project-ref>`. No JWT check, because the cron has no user's JWT to send; the function checks its own secret before anything else.
+  4. Run `supabase/migrations/20260930090000_store-stats-ios-daily.sql` in the SQL editor. The ledger has it as not run.
+  - To check it without waiting for the morning: `curl -X POST https://<project-ref>.supabase.co/functions/v1/store-stats -H "x-store-stats-secret: <the secret>"`. The reply lists every day. Before the release, all 30 under `noSales` is the right answer; a 502 names what Apple refused.
+
+### Changed
+- **Google Play stays an em dash while only the App Store has rows.** The dashboard used to treat "the table has rows" as "both stores answered". With an iOS fetcher alone, that would have drawn Play as 0 downloads for an app that is live there. Unknown is now decided per store (`Utils/devDashboard`), and `npm run test:dev-dashboard` checks it both ways.
+- The empty chart says "Ingen tal fra butikkerne endnu." instead of "Butiksnøglerne er ikke sat på serveren endnu.". With the keys set and the app not yet released, the old line would have been wrong.
+
+---
+## [2.12.1] - Released with 2.17.1
+### Fixed
+- **Deleting an exercise from its settings did nothing on Android.** The panel closed and the confirmation never came, so the exercise stayed.
+  - The cause was `ThemedModal`, which waited for React Native's `Modal.onDismiss` before opening the next modal. React Native only fires that on iOS (`Libraries/Modal/Modal.js`: "OnDismiss is implemented on iOS only").
+  - It is now fired on Android when `visible` turns false, the way `ThemedBottomSheet` already did.
+  - The same fix makes two other things work on Android: "Discard" leaving Edit profile, and "Discard" leaving your own exercise's page.
+- **"Add exercise": the + adds, and pressed again takes it back out.**
+  - A second press used to add another copy of the same exercise while the row already said "added". The press meant to undo seemed to do nothing, and put a duplicate in the workout.
+  - An exercise added on this visit now comes out at once, without a question. One that was in the workout before the picker opened may have sets, so taking it out asks first, and takes every copy of it.
+  - The picker snapshots the workout when it opens (`getWorkoutExerciseEntries`, `Utils/exercisePickerSession`). A new visit starts from what the workout holds by then, so last visit's add counts as already there.
+  - `addExerciseToWorkout` now returns the new exercise's id.
+- **In the picker, only the + adds.** A tap anywhere else on a row used to add it too; now it shows the exercise's muscles. Rows already in the workout are ticked, with "Allerede i {workout}" or "Tilføjet til {workout}" under the name.
+- The muscle view's button follows the same rules. For an exercise that was there before, it closes first and then asks.
+- `npm run test:exercise-picker` checks the visit, the question, the snapshot and Android's onDismiss.
+
+---
+## [2.12.0] - Released with 2.17.1
+### Changed
+- **Home for somebody new.**
+  - **First workout:** when nothing is open today and nothing in the split is due, Quick start's empty workout is no longer a quiet button stretched over the block. It is one full button in the accent (`FirstWorkoutButton`), as tall as the days-since card beside it, with a light that crosses it every 3.2 seconds. The light only moves while Home is on screen, the app is in front and reduce motion is off; otherwise there is none.
+    - It says "Første træning" / "First workout" only to somebody who has never finished a workout. Everybody else who gets the same block - today's session done, or nothing repeating yet - reads "Tom træning" / "Empty workout".
+    - With a workout open or due, Quick start is exactly as it was.
+  - **Your split takes a week:** the row is headed "Dit split" / "Your split". Until seven calendar days after the first finished workout, it shows seven dots, filled a day at a time from that day, and "Tager form efter din første uge", even when the split guess could already make groups. Somebody training one muscle group a day has nothing to recognise before the week has gone round once.
+    - After the week with still no split, the dots are full and the row says it shows up as workouts repeat.
+    - Accounts older than a week see the cards as before.
+    - The rule is `Utils/splitForming`, counting from `workoutService.getFirstWorkoutAt`.
+- **"Fra Udforsk" / "From Explore" replaces "Last month" on Home, for everybody** (`ExploreCarousel`). It is a rail of up to six cards:
+  - **Your centre:** its new records first, when there are any.
+  - **The newest shared exercises**, never your own.
+  - **Posts from the centres you train in.**
+  - **One of Denmark's strongest lifts,** a different one each day.
+  - **Without a centre:** "Find dit center" and the Custom made exercises library, so a new account has cards from the first day.
+  - The order turns daily and is stable within a day (`Utils/homeExploreCards`).
+  - It reads through `homeExploreService` and never marks anything as seen.
+  - It paints what it showed last at once, and asks again at most once a minute or on a pull.
+  - "Last month" is gone with its code: `MuscleGlance`, `Utils/muscleGlance` and `getMuscleGroupDeltas`. Nothing else used them.
+  - `npm run test:home-explore` checks the cards. `npm run test:home-quick-start` checks the first week, the first workout and the wiring.
+
+---
+## [2.11.0] - Released with 2.17.1
+### Changed
+- **Custom made exercises: the exercises people make can be shared and found.** Explore's Exercises tile opens a real library (`CustomExercisesPage`, headed "Custom made exercises" in both languages) instead of an empty page:
+  - A search over names and descriptions, and a sort that is also six chips, kept in step: Most used, Newest, In your centre, People you follow, Has video and Saved. There is a muscle group filter and a result line with "Reset filter".
+  - Each row shows the video's first frame with its length, or "No video", then the name, one line on what it is, tags for the muscle group, equipment and weight mode, and who made it, with "your centre" and "{n} users". It pages 30 at a time.
+  - It is built for a library that is still nearly empty. Nothing shared yet gets its own invitation to share one of yours; a short list ends with the same invitation; and every filter that finds nothing says so and offers the way back.
+- **Explore shows them too:** the tile counts the exercises that can be found, and a new row, "New exercises from others", shows the newest six, with Add right on the card. The row is hidden while there are none.
+- **One exercise, with its video** (`CustomExerciseDetailPage`):
+  - The clip plays muted in a loop under the name. Tap it to pause. It pauses off screen, and with reduce motion on it waits for a tap.
+  - Then the maker, with Profile. The three numbers: its users, how many of them train at your centre, and the typical "3 × 10". The maker's steps. And "What others lift": six bars of the weights logged with it, shown only from 20 sets.
+  - **Add to my exercises** copies the name, muscles, equipment, weight mode, description and steps into your own exercises, never the maker's sets or video. It takes you back to where you came from, with a toast (a new `showToast`), and turns into "Added". **Save** puts it on your saved list without copying it.
+  - The menu reports it. Three reports from different people take it out of the library and tell the maker; copies people already have stay.
+- **Your own exercise has a page** (`MyExercisePage`), opened by tapping one of your custom exercises in the exercise library:
+  - its muscles on the body map;
+  - **Share the exercise**, after a confirmation that says exactly what everyone will see and what they never will;
+  - a video of at most 20 seconds, with its first frame taken on the phone as the poster;
+  - what it is, up to five steps, the equipment and the weight mode (total, per side or bodyweight).
+  - Edits are saved on the phone and uploaded later; only sharing and the video need a connection. A copy of somebody else's exercise cannot be shared, and says whose it is.
+- **Custom exercises now have a cloud half.** They go to the cloud, private until you share them, so they come back on a new phone.
+  - The phone stores the new fields in 12 new columns on `Exercise`, kept in one list for a fresh install and an existing one (`EXERCISE_EXTRA_COLUMNS`).
+  - The old catalog rebuild now carries every custom column. Before, it would have turned custom exercises into catalog rows, for the next catalog sync to delete.
+  - The sync (`syncCustomExercisesWithCloud`, planned by the pure `planCustomExerciseSync`) runs after the catalog sync and after creating an exercise. It never deletes anything.
+- **Cloud:** `supabase/migrations/20260928090000_custom-exercises-can-be-shared.sql`, run on 2026-09-26.
+  - It adds `custom_exercise`, readable only by its owner, with column grants so the counters, the owner and the name cannot be written by the app.
+  - Saving and reporting go through functions only. The numbers are computed on the server and cached for a day (`private.custom_exercise_stats`).
+  - Five security definer functions are the only way to read somebody else's exercise. They honour blocks both ways, hide hidden ones, and hand out a fixed set of fields.
+  - A shared exercise's words go through the blocked-term filter.
+  - The `exercise-videos` bucket is written only in your own folder, and a file is readable by others only while its exercise can be found.
+  - Until it has run, the library and an exercise page say they are not available yet, and custom exercises stay on the phone as before.
+  - `npm run test:shared-exercises` checks the rules, the sync plan, the migration's promises and the wiring.
+- **Account deletion also empties your folder of exercise videos** (`supabase/functions/delete-account`; the function has to be deployed).
+- **New dependency:** `expo-video-thumbnails`, loaded lazily. The first frame is only made by builds that include it; until then a clip is shown without its frame.
+- **The privacy policy and the terms say how sharing works** (both raised to 2026-09-26, so everyone is asked again):
+  - what a shared exercise shows and to whom;
+  - that copies stay with the people who took them;
+  - that your sets with an exercise somebody shared count towards its totals, never with a name;
+  - that three reports hide one.
+- **Smaller changes:**
+  - The confirm dialog's button label holds 4.5:1 in light mode.
+  - A custom exercise in the library says it opens your exercise, not its muscles.
+
+---
+## [2.10.0] - Released with 2.17.1
 ### Changed
 - **Quick start is live while you train.** With a workout running, the block beside the days-since card is one panel that opens it, and "Empty workout" is not offered next to it. On top: a live dot, "I GANG" / "IN PROGRESS", and how long the workout has been going - the same sum as the clock in the middle of the bottom navigation. Under it, only the set that is next: its exercise, one bar per set of that exercise (done filled, the next one glowing), and "8 × 80 kg" large. Every other time the block is exactly as it was. What it shows follows the workout (`LivePanel`, `Utils/liveQuickStart`):
   - **First**: the first set, before any is done. **Next**: "NÆSTE" / "NEXT" over it, between sets.
@@ -20,12 +604,12 @@
 - **Home knows the moment a set is ticked off.** `updateStrengthSetDone` tells `Utils/workoutSetEvents` which set changed and whether it set a record, and Home, waiting under the workout screen, reads the running workout's sets again (`getLiveWorkoutProgress` → `getLiveWorkoutSets`), so the panel is right by the time you are back. Today's open workout now carries its timer, for the elapsed time. `npm run test:live-quick-start` checks the views, the bars, the countdown, the records and the wiring.
 
 ---
-## [2.9.1] - Unreleased
+## [2.9.1] - Released with 2.17.1
 ### Changed
 - The migrations ledger records the six migrations from 2.5 to 2.8 as run: centre records on Explore, a post's centre, the split, sex, public profiles and blocks hiding public posts.
 
 ---
-## [2.9.0] - Unreleased
+## [2.9.0] - Released with 2.17.1
 ### Changed
 - **The days-since card on Home is alive.** It is the first thing on the screen, so it now looks it. Its size and shape are as they were - the same width, corners, padding, icon slot, number and label - and everything new is drawn inside it, from edge to edge:
   - **The number rolls in like an odometer**: each digit a column of 0-9 that turns to its number, 80 ms after the one before it, with an extra full turn on the way in and a single step when the day ticks over at midnight.
@@ -35,7 +619,7 @@
   - It replaces the tiles' ember, steam, charge and cobweb frames on this card only; the friend tiles keep theirs. Everything moves on the UI thread from one clock (Reanimated and react-native-svg): about 35 animated parts while training, the busiest state, and around 40 for the second a record's confetti flies. It moves only while Home is on screen, the app is in front and reduce motion is off; otherwise the card is drawn finished and still, never empty. Its maths - the state, the odometer's columns, the edge's perimeter and dashes, the layouts, and the CSS keyframe timing the design is ported with (`Utils/daysSinceCard`, `Utils/keyframeTimeline`) - is checked by `npm run test:days-since-card`.
 
 ---
-## [2.8.0] - Unreleased
+## [2.8.0] - Released with 2.17.1
 ### Changed
 - **Your profile starts with you.** It used to open on the public-profile form. Now it opens on your photo - tap it to change it - your name, @username and code, your centre and bio, then Edit profile and View as others, your followers and following (each opening that list), the settings as four tiles with their current value (workout types, notifications, social posts, music), one appearance card - the accent as four large swatches, then theme and language - a single Send feedback row, the account card, and "FitVen · version" as a footnote.
 - **Edit profile is its own sheet** (`EditProfilePage`): photo, display name, bio, the username (locked), birth year and - new - **sex**, male or female, kept private beside the birth year and never on your profile, so records can be split by sex later (`profile_private.sex`, `supabase/migrations/20260927090000_a-lifter-can-give-their-sex.sql` - not run yet; until it runs the field is hidden). Save stays off until something changed; Cancel asks before throwing changes away; a draft survives closing the sheet. A birth year that could not be read is no longer wiped by the next save.
@@ -48,7 +632,7 @@
 - Social and the people search keep the tab they were opened from, instead of switching to Explore when opened from your profile.
 
 ---
-## [2.7.0] - Unreleased
+## [2.7.0] - Released with 2.17.1
 ### Changed
 - **Train starts with what to do next.** The page opens on your active program, or - without one - on your split, and your library follows below. Which of the two is decided on every visit, so starting or finishing a program shows at once.
   - **With a program** (`ActiveProgramCard`): its name, block and focus, a segment per week of the block filled by how much of it is done, this week's seven days - done, today, planned, rest - and today's next workout with a Start button. With more than one program active, the one with a workout today is shown, else the one trained in most recently (`programService.getActiveProgramCard`, `Utils/programCard`).
@@ -62,7 +646,7 @@
 - The page's old summary, the image covers and the four tool rows are gone.
 
 ---
-## [2.6.0] - Unreleased
+## [2.6.0] - Released with 2.17.1
 ### Changed
 - **Social is Explore.** The tab is the place to find things now - UDFORSK / EXPLORE, with the search icon - and its first page is new (`ExplorePage`):
   - **A search field** that opens a full-screen search with the keyboard up (`ExploreSearchPage`): centres and people as you type. A centre opens its page; a person opens the people list on the same search, where the follow buttons are.
@@ -77,7 +661,7 @@
 - Knowledge comes to Explore when it exists. `npm run test:explore-tab` checks that every route Explore links to is registered and keeps the tab lit, and that the centre posts can be reported.
 
 ---
-## [2.5.0] - Unreleased
+## [2.5.0] - Released with 2.17.1
 ### Changed
 - **Records is a trophy room.** It was a statistics page with a period selector on top, so it read like a report and never felt like a room full of what you have done. It now shows the whole history and nothing to compare it with:
   - **The trophy and the number.** A gold trophy - a glow that breathes, light across the cup, glints around it - and the number of records you have set, counting up the first time the room opens. Under it, the heaviest lift you have ever made and how long you have been collecting.
@@ -95,12 +679,12 @@
 - The Records page no longer loads what it stopped drawing: four queries on every visit - the old list, the detail and the weekly muscle-load radar - for about a thousand lines of views nothing showed.
 
 ---
-## [2.4.1] - Unreleased
+## [2.4.1] - Released with 2.17.1
 ### Fixed
 - **"Your posts" says when again.** Every card read "Just now", whatever day it was from: the cards are built from the phone's own workouts, and nothing put a time on them - so the time-ago label got nothing, and said "Just now" for nothing. A posted card now says when it was posted (`created_at`, read with the post), and a workout not posted yet says the day it was done. `npm run test:social-posts` checks that a card carries both.
 
 ---
-## [2.4.0] - Unreleased
+## [2.4.0] - Released with 2.17.1
 ### Changed
 - **The whole app speaks Danish.** Only some screens used to follow the language setting; the rest were written into the code in English, and a few in Danish. About 850 texts in 75 files now go through `t()`: the run and strength workouts, the exercise library and catalog, programs, blocks and weeks, the calendar and library, sickness, the settings pages, the 1RM calculator, Records and the errors the services show. Six new locale areas: `calendar`, `errors`, `exercises`, `programs`, `run` and `settings`. The privacy policy and the terms of use stay in English until a Danish version has been read by a person.
 - **What is stored stays as it was.** Muscle groups, sickness types, run flows, program focus, weekdays, set types and workout types are still saved in English and shown translated, so nothing already in SQLite or the cloud changes meaning. Lists that were built once at import now keep keys and translate when drawn, so they follow a language switch. The location errors now carry a code; the run screen used to tell them apart by their English text.
@@ -108,7 +692,7 @@
 - **`npm test` fails on a new hard-coded text.** `scripts/check-hardcoded-strings.js --check` finds text a person sees that does not go through `t()` - JSX text, text props, `Alert.alert`, `{ label: ... }` options and the services' thrown errors - with a short allow list for brand names and units.
 
 ---
-## [2.3.1] - Unreleased
+## [2.3.1] - Released with 2.17.1
 ### Fixed
 - **"Show all" shows up whenever an exercise is hidden.** Biggest gains shows the four largest gains and the one largest decline, but the button to see the rest only came when more than five exercises had a change - so five gains, or two declines, left an exercise out with no way to reach it. It now comes whenever fewer are shown than were measured.
 - **The least-trained muscle group gets its own count.** "Hamstrings get the least · 340 sets in the period" put every group's sets next to one group's name; it is that group's sets now.
@@ -118,7 +702,7 @@
 - **A crowned tile's gold edge follows the theme.** It was the dark theme's gold in both, the tone the light theme darkens because it cannot be read on white.
 
 ---
-## [2.3.0] - Unreleased
+## [2.3.0] - Released with 2.17.1
 ### Changed
 - **Records is one page read in one period.** The period selector sat halfway down and moved only some of what was under it - the biggest movers and the volume chart were always twelve weeks whatever it said - so it read as broken. It is at the top now (4 weeks / 3 months / 1 year / All) and everything on the page follows it, with a line under it saying what the period is compared with.
 - **Three plain numbers lead**: workouts, records and tonnes lifted in the period, each with how it changed against the same length of time before it. They replace "Record every 1st-2nd workout", which took a moment to read every time, and the "Per workout" and "Improving 3 of 7" tiles, which needed explaining.
@@ -129,12 +713,12 @@
 - **Records speaks Danish.** The page was the one screen never translated - headings in English, the exercise detail half in Danish - and is now in both languages, dates included (`records.js` in the locales).
 
 ---
-## [2.2.1] - Unreleased
+## [2.2.1] - Released with 2.17.1
 ### Fixed
 - **Posting a finished workout no longer holds you on the sheet.** "Post it" waited for the post, and the post goes through the same queue as every sync (`enqueueSync`) - so it waited behind the upload of the workout, its exercises and its sets that finishing the workout had just started, and the sheet sat on "Posting..." for as long as all of that took. The post now goes on in the background (`postWorkoutSummaryInBackground`) and the sheet takes you straight to Home, the same Home the tab bar returns to rather than a new one. A thin bar at the top of Home says it is being posted, then that it is posted, and goes; if it fails it says so, with "Try again" - which sends it again with the note you wrote - and a close button. `npm run test:social-posts` checks the sheet no longer awaits the post, and that the background post reports posting, failed, and posted on the retry with the note intact.
 
 ---
-## [2.2.0] - Unreleased
+## [2.2.0] - Released with 2.17.1
 ### Added
 - **A set has a type: warm-up, working, drop or AMRAP.** `Set.set_type` is the truth and `amrap` stays as its mirror, because older versions in the field read and write only the flag - a working set with the flag up is read as AMRAP, since only a client that did not know `set_type` could have written that. Warm-ups count toward neither volume nor records; drop sets count toward volume but not records; an AMRAP set can carry a target (`amrap_target`). **Needs `20260923100000_a-set-has-a-type.sql` before any phone on 2.2.0 syncs** - the set sync names the two new columns, and PostgREST refuses a select on a column that does not exist.
 - **The badge says what kind of set it is.** Warm-ups count on their own (W1, W2) so adding one does not renumber the work, drop sets count from the set above them (D1, D2), and working and AMRAP sets share the main count. A typed row has a stripe and a tint in its colour, a drop set shows how far it fell from its parent ("70 kg -17,5") with a line joining the two where the rest would be, and an AMRAP set with a target shows "9/6+". Warm-ups always sort first.
@@ -155,19 +739,19 @@
 - **Personal records ignore warm-ups and drop sets**, and Home's muscle glance leaves warm-ups out of the lifts it compares.
 
 ---
-## [2.1.2] - Unreleased
+## [2.1.2] - Released with 2.17.1
 ### Fixed
 - **Switching tabs no longer rebuilds Home.** The Home tab called `resetRoot`, which threw the whole stack away and mounted a new Home from nothing - skeleton, every query cold, the friends strip and the avatar fetched again. Measured on a phone with three months of history, driving the taps over adb: **2.3 s before anything showed and 4.1 s before it was all there**, on every press. The frame times were fine throughout (99th percentile 30 ms); the wait was the JavaScript thread mounting the screen and running its loads, which is why it read as the app being slow rather than as it stuttering. Tabs now keep the stack at `[Home]` or `[Home, that tab]` through `reset`, handing the existing Home route back with its key - the instance and what it last drew survive, and its focus effect refreshes it in the background.
 - **The other three tabs stopped stacking copies of themselves.** In React Navigation 7, `navigate()` to a screen that is not on top pushes a new copy rather than going back to the one already there. Train, Feed and Social used it, so Train -> Feed -> Train was two Trains, each mounted from nothing, and the stack grew with every press. They go through the same flat reset as Home now.
 - **Home's muscle glance reads its two windows, not the whole history.** It pulled every completed set ever logged - a five-table join with no date bound - on every return to Home, to compare two thirty-day windows and discard the rest. `getCompletedStrengthSetsForPersonalRecords` takes an optional `sinceIsoDate`; Records passes none and is unchanged. `npm run test:glance-window` runs the real query against an in-memory SQLite, because the one thing that can go wrong quietly is the comparison: `Day.date` holds both `2026-09-20` and `01.08.2026`, and a bound that read only one spelling would drop half the window without an error.
 
 ---
-## [2.1.1] - Unreleased
+## [2.1.1] - Released with 2.17.1
 ### Fixed
 - **2.1.0 crashed on launch for anybody with a real split.** `SplitCards` took `formatDate` from `useTranslation()`, which has never returned one - it is a module export from `@localization` - so it came back `undefined` and calling it threw "undefined is not a function" during Home's first render. `formatWeekdays` returns early for a group with no settled weekday, so it only fired for an account with months of history behind a split: every device this was tried on before release had too little data to reach that line, and the first place it failed was the Play build, on the one phone holding the exercises that release was meant to rescue. Nothing was lost - a render crash does not touch the database. `npm test` now checks every destructure of `useTranslation()` in the app against what the context actually provides, which `check-undeclared` cannot see: the name is declared, it is the object that lacks it.
 
 ---
-## [2.1.0] - Unreleased
+## [2.1.0] - Released with 2.17.1
 ### Added
 - **A feedback message can be triaged, not just read.** Each one carries one of four states - `new`, `planned`, `fixed`, `not_fixed` - set from a chip row on the message itself, one tap per decision. `read_at` said the message had been looked at and nothing about what was decided, and an inbox where everything is "read" is the same inbox as one where nothing is. Setting a state marks the message read too. A trigger forces every new row to `new`: the insert policy lets any signed-in account write its own row, and column grants cannot stop it - Postgres ignores a column-level revoke when the role holds the privilege on the table. **Needs `20260922090000_a-feedback-message-has-a-status.sql`.**
 - **Home leads with what is already open today.** An unfinished workout dated today - planned this morning, or left half-done at lunch - now takes the top button as "Continue", ahead of the split's suggestion. Offering to start a second session beside one already going is almost never what was meant. The empty workout stays there either way, and with neither it is the only button. The eyebrow stays QUICK START throughout - it names the block, and the button under it already says which workout.
@@ -224,7 +808,7 @@
 - The screen is not translated. It is reached by one account, and a key in `locales/` is two languages for everybody who edits it afterwards. The row in the profile that opens it goes through `t()` like the rest of that screen.
 
 ---
-## [2.0.0] - Unreleased
+## [2.0.0] - Released with 2.17.1
 ### Added
 - **Centres.** A public fitness centre is now a thing the app knows: chain, name, address, coordinates and a hero photograph, 365 of them across PureGym, LOOP Fitness, Fit&Sund, FitnessX and SATS. The source is `data/gyms/` - the scraped folder that used to sit on the desktop, moved into the repository with its five Python scrapers and JSON, the photographs gitignored - and `npm run gyms:import` puts it in Supabase: rows to `public.gym`, photographs to the public `gym-images` bucket. Run it with `--dry-run` first; it prints the short name every centre will carry on the tiles, and the rule that derives them is a guess about five chains' naming habits.
 - **A workout knows which centre it happened in.** One position fix at the first start of the timer and, if that gave nothing, another at the finish, matched against the centre list within each centre's radius (120 m by default) by the `match_gym` function. Only the foreground permission is asked for; refused, or no centre in range, the workout simply has no centre and nothing complains. The result lives on `Workout_Type_Instance` as `gym_id` and the start coordinates, all eleven steps of the sync checklist.
@@ -305,7 +889,7 @@
 - **What has been on a device**, on a local development build: the centre screens, the map and its pins, the centres-you-train-in list, the friends tiles and the centre matching. **What has not:** Spotify, which still has no client id, and video verification, which needs a second account in the same centre. `npm test` covers the pure rules (best set, upsert, vote status, matching, short names over all 365 folders, tile order, music freshness) and the SQL invariants the app relies on.
 
 ---
-## [1.1.6] - Unreleased
+## [1.1.6] - Released with 2.17.1
 ### Fixed
 - **`npm test` has been failing in CI, and the run said it passed.** Two things hid it. The workflow ran Node 20, which has no `node:sqlite`, so the seventh test script died and the twenty-two after it never ran. And the step was written as `npm test | tee npm-test.log`, which makes the exit code `tee`'s, and `tee` never fails. The step therefore reported success on every pull request, and the eight review agents were handed "npm test: success" as a fact each time.
 - The Node version is pinned in `.nvmrc` and read from there by both workflows, so it cannot drift from the one the tests are written for again. `engines` says the same thing to anyone installing.
@@ -320,7 +904,7 @@
 - **Feedback reports the build the phone is actually running.** It read the build number out of `app.json`, so a report from a build 24 device said "build 18". It comes from `expo-constants` now, which reads it from the binary.
 
 ---
-## [1.1.5] - Unreleased
+## [1.1.5] - Released with 2.17.1
 ### Added
 - **Report a post from the feed.** The menu on a workout post used to open only on your own; it now opens on everybody's, and on somebody else's it offers **Report post** instead of Edit and Delete. Same five reasons and the same optional note as reporting an account, and it writes the same `user_reports` row - `reported_post_id` has been there since 1.0.2 with nothing filling it in. Your own post keeps Edit and Delete exactly as before.
 - **A post two different people report leaves the feed straight away**, and is read by a person afterwards. `social_post.hidden_at` is set by a trigger on the second report from a different account, and the read policy drops a hidden post for everyone except its author - a post that vanishes for the person who wrote it reads as a bug, and they are the one person the hiding is not protecting. Distinct reporters, not reports: reporting the same post five times is still one person's opinion.
@@ -337,7 +921,7 @@
 - This is the part of the abandoned `major/content-moderation` branch that never reached master. The rest of that branch - the reports table, the term filter, the triggers - shipped in 1.0.2 as `20260912220000_ugc-safety.sql` under different names, so only these three pieces were missing.
 
 ---
-## [1.1.4] - Unreleased
+## [1.1.4] - Released with 2.17.1
 ### Added
 - **Eight review agents on every pull request.** `.github/workflows/pr-review.yml` fans a PR out to eight parallel Claude Code jobs - quality assurance, testing, security, architecture, code design, performance, UI usability and design - and a ninth agent merges their reports into one comment on the PR, updated in place on every push. Nothing has to be running locally.
   - Each agent's brief is a markdown file in `.github/review-agents/`, written against this repo rather than against code in general: the cloud-sync field checklist, the schema living in two files, the layer-aliasing rule, and the reason a colour must never sit in a `*Style.js`. Change what an agent looks for by editing its brief; the workflow only needs touching to add or remove an agent.
@@ -351,12 +935,12 @@
   - **A failed lookup of the existing comment stops the run instead of posting a second one.** `|| true` sat on the `gh api` call itself, so a rate limit or a 5xx read as "no comment yet" and the run answered by creating another comment and reporting success - breaking the single comment, updated in place, that this entry promises.
 
 ---
-## [1.1.3] - Unreleased
+## [1.1.3] - Released with 2.17.1
 ### Changed
 - `eas submit --platform ios` carries the App Store Connect app id in `eas.json`. Without it the command stops and asks, which a non-interactive run cannot answer, so every submission had to be driven by hand.
 
 ---
-## [1.1.2] - Unreleased
+## [1.1.2] - Released with 2.17.1
 ### Fixed
 - Posting a workout no longer waits for a full workout sync. Only a missing source workout is repaired, inside the shared sync queue, so another workout's invalid type cannot block an existing summary or a new workout upload.
 - A failed post after finishing a workout keeps the dialog and note open, shows the error, and offers Try again.
@@ -365,7 +949,7 @@
 - Applied a separate, repeatable Supabase migration to restore missing built-in and legacy workout types, preserving existing catalog settings and read-only client access. The live catalog contained only Resistance and Run; Walk, Upperbody, Legs and StrengthTraining were added on 2026-09-15.
 
 ---
-## [1.1.1] - Unreleased
+## [1.1.1] - Released with 2.17.1
 ### Changed
 - **Run and Walk are gone from every list that offers a workout type**, rather than shown greyed out under a COMING SOON stamp. App Store review guideline 2.1 treats a control that announces a feature and then refuses it as an unfinished app, and it was not a control anyone could use in the meantime. Three places: the cards in the start sheet, the type list in Workout types settings, and the type filter in Your workouts.
 - **Workouts already recorded as Run or Walk are untouched.** They are the user's history, not an offer - this account has twenty of them - so those rows still appear in the calendar and the workout library, still carry the badge and still refuse to open.
