@@ -1,0 +1,9 @@
+### Added
+- **402 more exercises in the catalog,** next to the 89 there were: more variants by bar, dumbbell, kettlebell, cable, machine, band and bodyweight, olympic lifts and a few cardio machines. No stretches or yoga. `supabase/migrations/20261010090000_more-catalog-exercises.sql` adds them as official catalog rows with the usual default columns, so phones get them on their next catalog sync without a release.
+  - **Each new exercise takes its muscles from the one of ours it is closest to,** named in the migration: "Front Squat" gets what "Squat" has, "Cable Lateral Raise" what "Lateral Raise" has, so the body map shows it the same way. The hip abduction ones have no such exercise of ours and get Gluteus Medius (primary) and Gluteus Maximus (secondary).
+  - Names that only differ from ours in case, hyphens or a plural were left out, and so were variants of ones we have under another name ("Barbell Bench Press" is our "Bench Press"), so one lift's history and records are not split over two names. A phone with a custom exercise of a new name keeps the custom one (`INSERT OR IGNORE`).
+- **Tests:** `scripts/test-more-catalog-exercises.js` - one transaction, idempotent, no name twice, every template one of our 89, apostrophes escaped, and the muscle rows read a page at a time.
+
+### Fixed
+- **Every catalog exercise shows its muscles again.** PostgREST returns at most 1000 rows and says nothing when it stops; with the new exercises the catalog has 2101 muscle rows, so everything past the first 1000 - the new exercises - came back with none. `Muscle_Activation` is read through one function now, a page of 1000 at a time by id.
+- **The migration moves both id sequences past the highest id first.** They were behind the ids written by hand, and the first run stopped on an id already taken.
