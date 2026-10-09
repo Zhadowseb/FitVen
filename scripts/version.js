@@ -346,6 +346,21 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
   nextAppJson.expo = nextAppJson.expo || {};
   nextAppJson.expo.version = targetAppVersion;
 
+  // package-lock.json names the version twice (at the top and for the root
+  // package). npm rewrites them on the next install, but until then a release
+  // leaves them behind, and master carried a branch's version in it for a day.
+  const packageLockPath = path.join(rootDir, "package-lock.json");
+  let nextPackageLock = null;
+
+  if (fs.existsSync(packageLockPath)) {
+    nextPackageLock = readJson(packageLockPath);
+    nextPackageLock.version = targetVersion;
+
+    if (nextPackageLock.packages?.[""]) {
+      nextPackageLock.packages[""].version = targetVersion;
+    }
+  }
+
   // Build-numre staar ikke her. eas.json har appVersionSource: "remote", saa
   // EAS ejer versionCode og buildNumber og taeller dem op selv ved hvert
   // production-build. Da de to talte hver for sig, naaede app.json 18 mens
@@ -373,6 +388,8 @@ function buildVersioningSummary({ mode, branchName, targetVersion, changelogMode
     : updatedChangelogContent;
 
   return {
+    nextPackageLock,
+    packageLockPath,
     fragmentFiles,
     mode,
     branchName,
@@ -395,6 +412,10 @@ function applyVersioning(summary, dryRun) {
 
   writeJson(packageJsonPath, summary.nextPackageJson);
   writeJson(appJsonPath, summary.nextAppJson);
+
+  if (summary.nextPackageLock) {
+    writeJson(summary.packageLockPath, summary.nextPackageLock);
+  }
 
   if (summary.changelogMode !== "skip") {
     fs.writeFileSync(

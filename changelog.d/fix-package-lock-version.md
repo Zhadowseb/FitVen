@@ -1,0 +1,4 @@
+### Fixed
+- **`package-lock.json` on master named a branch's version** (`2.17.6-fix-enable-r8-minify.1`) while `package.json` said `2.17.5`: the R8 PR had run `npm install` on its branch, and when it was moved to a fragment only `package.json` and `app.json` were put back. npm does not care, but the next `npm install` rewrote it in a working copy, which would then have blocked a `git pull` of the same change. The lockfile says `2.17.5` again.
+- **`npm run release:prepare` sets the lockfile's version too** (the one at the top and the root package's), with nothing else in it touched, so a release does not leave it behind.
+- **`npm run pr:check` fails when `package-lock.json` and `package.json` name different versions,** in an ordinary branch and in a release commit, so it cannot get to master unnoticed again. `scripts/test-git-flow.js` and `scripts/test-changelog-fragments.js` check both.

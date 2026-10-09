@@ -82,6 +82,8 @@ try {
   }
   fs.writeFileSync(path.join(tmp, "package.json"), JSON.stringify({ name: "x", version: "2.17.5" }, null, 2));
   fs.writeFileSync(path.join(tmp, "app.json"), JSON.stringify({ expo: { version: "2.17.5" } }, null, 2));
+  const lock = { name: "x", version: "2.17.5", lockfileVersion: 3, packages: { "": { name: "x", version: "2.17.5" }, "node_modules/y": { version: "1.0.0" } } };
+  fs.writeFileSync(path.join(tmp, "package-lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
   fs.writeFileSync(path.join(tmp, "CHANGELOG.md"), "# Changelog\n\n## [2.17.5] - 2026-10-04\n### Fixed\n- Older.\n");
   fs.writeFileSync(path.join(tmp, "changelog.d", "README.md"), "How this folder works.\n");
   fs.writeFileSync(path.join(tmp, "changelog.d", "fix-b.md"), "### Fixed\n- The bug.\n");
@@ -117,6 +119,18 @@ try {
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(tmp, "package.json"), "utf8")).version, "2.17.6");
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(tmp, "app.json"), "utf8")).expo.version, "2.17.6");
   assert.deepStrictEqual(fs.readdirSync(path.join(tmp, "changelog.d")), ["README.md"], "only the explanation is left");
+
+  // The lockfile names the version twice, and follows - with nothing else in it touched.
+  const released_lock = JSON.parse(fs.readFileSync(path.join(tmp, "package-lock.json"), "utf8"));
+
+  assert.strictEqual(released_lock.version, "2.17.6", "the lockfile's version follows");
+  assert.strictEqual(released_lock.packages[""].version, "2.17.6", "and so does its root package's");
+  assert.deepStrictEqual(
+    { ...released_lock, version: "2.17.5", packages: { ...released_lock.packages, "": { name: "x", version: "2.17.5" } } },
+    lock,
+    "and nothing else in it changed"
+  );
+  assert.ok(fs.readFileSync(path.join(tmp, "package-lock.json"), "utf8").endsWith("}\n"), "it still ends with a newline");
 } finally {
   fs.rmSync(tmp, { recursive: true, force: true });
 }
