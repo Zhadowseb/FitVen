@@ -1,0 +1,116 @@
+name: Content capture
+
+# Foerste led af den automatiske produktion af organisk indhold: bygger den
+# rigtige app til Android, starter den i en emulator og tager skaermbilleder og
+# en skaermoptagelse. Intet bliver postet nogen steder.
+#
+# Der er ingen telefon med i det. Emulatoren koerer paa GitHubs maskine, og
+# repoet er offentligt, saa minutterne koster ikke noget.
+#
+# Lige nu naar den kun til login-skaermen: der er ingen demokonto endnu. Naar
+# der er en (se docs/CONTENT-AUTOMATION.md), logger scripts/content/capture.sh
+# ind og gaar de skaerme igennem, ugens opslag skal bruge.
+#
+# Den er ikke en port som ci.yml og blokerer ingen PR. Den koerer paa
+# workflow_dispatch og paa en PR, der roerer den selv eller scripts/content.
+
+on:
+  pull_request:
+    branches: [master, "release/**"]
+    paths:
+      - ".github/workflows/content-capture.yml"
+      - "scripts/content/**"
+  workflow_dispatch:
+
+concurrency:
+  group: content-capture-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    name: Android release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci --no-audit --no-fund
+
+      # Den samme prebuild, som EAS koerer: app.json og config-plugins.
+      - name: Prebuild
+        run: npx expo prebuild --platform android --no-install
+
+      # Kun x86_64: emulatoren er x86_64, og de andre tre arkitekturer ville
+      # gange byggetiden. Release-varianten er signeret med debug-noeglen, som
+      # Expo-skabelonen goer, og kan derfor installeres uden videre.
+      - name: Build
+        working-directory: android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+
+      - name: The APK is there
+        run: |
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -1)
+          echo "$APK"
+          test -s "$APK"
+          cp "$APK" fitven-release.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fitven-release-apk
+          path: fitven-release.apk
+          retention-days: 7
+
+  capture:
+    name: Emulator
+    needs: build-apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fitven-release-apk
+
+      # Uden KVM er en x86-emulator ubrugeligt langsom.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          APK_PATH: fitven-release.apk
+          OUT_DIR: out
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/content/capture.sh
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: content-capture
+          path: out
+          retention-days: 14
