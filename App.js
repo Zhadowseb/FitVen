@@ -65,11 +65,8 @@ import MusicSettingsPage from "./src/Pages/MusicSettingsPage/MusicSettingsPage";
 import DevDashboardPage from "./src/Pages/DevDashboardPage/DevDashboardPage";
 
 import { Colors } from './src/Resources/GlobalStyling/colors';
-import {
-  ThemedBottomNavigation,
-  ThemedText,
-  ThemedView,
-} from './src/Resources/ThemedComponents';
+import RestoringSession from './src/Resources/Components/RestoringSession/RestoringSession';
+import { ThemedBottomNavigation } from './src/Resources/ThemedComponents';
 import {
   getDatabaseNameForUserId,
   migrateLegacySharedDatabaseToUserDatabase,
@@ -351,13 +348,7 @@ function RootNavigator() {
   }, [currentRouteName]);
 
   if (isAuthLoading) {
-    return (
-      <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
-        <ThemedText setColor={theme.quietText ?? theme.iconColor}>
-          Restoring session...
-        </ThemedText>
-      </ThemedView>
-    );
+    return <RestoringSession />;
   }
   
   return (
@@ -478,10 +469,8 @@ function RootNavigator() {
 }
 
 function UserScopedDatabaseApp() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme] ?? Colors.light;
   const { accentTheme, isThemeLoading } = useThemeMode();
-  const { language, isLanguageLoading, t } = useTranslation();
+  const { language, isLanguageLoading } = useTranslation();
   const { user, isAuthLoading } = useAuth();
   const userId = user?.id ?? null;
   const databaseName = getDatabaseNameForUserId(userId);
@@ -506,13 +495,7 @@ function UserScopedDatabaseApp() {
   // waiting for auth. The language is the same story: without the wait the
   // first screen is painted in English and repainted in Danish a tick later.
   if (isAuthLoading || isThemeLoading || isLanguageLoading) {
-    return (
-      <ThemedView style={{ alignItems: "center", justifyContent: "center" }}>
-        <ThemedText setColor={theme.quietText ?? theme.iconColor}>
-          {t("common.restoringSession")}
-        </ThemedText>
-      </ThemedView>
-    );
+    return <RestoringSession />;
   }
 
   return (

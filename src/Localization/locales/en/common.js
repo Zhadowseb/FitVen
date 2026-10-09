@@ -28,7 +28,14 @@ export default {
   off: "Off",
   unknownError: "Something went wrong.",
   signInRequired: "You need to be signed in.",
-  restoringSession: "Restoring session...",
+  // The splash while the saved session is restored; the lines under the title cycle.
+  restoringSession: {
+    title: "Restoring session",
+    warmingUp: "Warming up",
+    loadingPlates: "Loading the plates",
+    chalkingUp: "Chalking up",
+    spotting: "Spotting your session",
+  },
   kg: "kg",
   // ThemedPicker, when the screen gives it no text of its own.
   picker: { placeholder: "Select", title: "Pick" },
