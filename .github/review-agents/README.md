@@ -8,7 +8,7 @@ Workflowet er `.github/workflows/pr-review.yml`. Mandaterne er filerne her i
 mappen.
 
 ```
-pull_request (opened, synchronize, reopened, ready_for_review)
+workflow_dispatch (-f pr=<nummer>) eller /qa som kommentar på et PR
         │
    context ──▶ diffet hentes én gang og deles med alle
         │

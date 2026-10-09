@@ -119,6 +119,11 @@ try {
   assert.strictEqual(result.code, 0, result.out);
   assert.ok(/Ready to merge/.test(result.out) && /is a valid fragment/.test(result.out));
 
+  // An uncommitted change is named in full - the first line of git status starts with a space.
+  repo.write("src/a.js", "module.exports = 3;\n");
+  assert.ok(/not part of the PR: src\/a\.js/.test(repo.check().out), "the first uncommitted file keeps its first letter");
+  repo.git("checkout", "--", "src/a.js");
+
   // A work branch that sets the version, or edits the changelog, is not.
   repo.write("package.json", `${JSON.stringify({ name: "x", version: "2.17.6-minor-thing.1" }, null, 2)}\n`);
   repo.commit();

@@ -60,17 +60,19 @@ function parseArgs(argv) {
   return options;
 }
 
-function run(command, args, { cwd, timeout = 20000 } = {}) {
+function run(command, args, { cwd, timeout = 20000, trim = true } = {}) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout, windowsHide: true });
 
   if (result.error || result.status !== 0) {
     return null;
   }
 
-  return result.stdout.trim();
+  return trim ? result.stdout.trim() : result.stdout;
 }
 
 const git = (options, args, timeout) => run("git", args, { cwd: options.repo, timeout });
+// Not trimmed: the first line of `git status --porcelain` starts with a space.
+const gitRaw = (options, args) => run("git", args, { cwd: options.repo, trim: false });
 
 /** The branch name, or null when HEAD is detached and none was given. */
 function currentBranch(options) {
@@ -307,7 +309,7 @@ function check(options) {
   }
 
   if (!options.ci) {
-    const dirty = (git(options, ["status", "--porcelain"]) ?? "").split(/\r?\n/).filter(Boolean);
+    const dirty = (gitRaw(options, ["status", "--porcelain"]) ?? "").split(/\r?\n/).filter(Boolean);
 
     if (dirty.length) {
       warn(`${dirty.length} uncommitted or untracked files are not part of the PR: ${dirty.slice(0, 4).map((line) => line.slice(3)).join(", ")}${dirty.length > 4 ? ", ..." : ""}`);
@@ -396,7 +398,7 @@ function state(options) {
   const worktrees = (git(options, ["worktree", "list", "--porcelain"]) ?? "")
     .split(/\r?\n/)
     .filter((line) => line.startsWith("worktree "));
-  const dirty = (git(options, ["status", "--porcelain"]) ?? "").split(/\r?\n/).filter(Boolean);
+  const dirty = (gitRaw(options, ["status", "--porcelain"]) ?? "").split(/\r?\n/).filter(Boolean);
   const warnings = [];
 
   lines.push(`Branch: ${branch ?? "(detached)"} in ${inWorktree ? "its own worktree" : "the main checkout"}`);
