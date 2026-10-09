@@ -1,0 +1,15 @@
+### Added
+- **Several chats can work at the same time and produce PRs that merge in any order.** The things every branch used to edit, and so conflicted on, are gone from feature branches:
+  - **Changelog fragments.** A branch writes `changelog.d/<branch>.md` instead of a section in `CHANGELOG.md`, and no longer sets a version. `npm run version:auto` makes the fragment; `npm run release:prepare -- <version>` folds every fragment into a dated entry by heading, sets `package.json` and `app.json`, and removes them. `npm run release:plan` lists what a release holds and which version the branch names call for. `changelog.d/README.md` has the format.
+  - **`npm test` finds the tests.** It is `scripts/run-tests.js`: the checks, then every `scripts/test-*.js`, stopping at the first failure (`--all` lists them all, `--only <text>` runs some). A new test is one new file and no edit to the long `npm test` line in `package.json` that two branches adding a test both used to change.
+  - **`npm run pr:check`** (`scripts/git/flow.js check`) says whether a branch is ready to merge: a name that follows the convention, a finished fragment, version and `CHANGELOG.md` left alone, no conflict markers. It warns about being behind `master` and about every other open PR that changes the same files, naming the ones that will conflict. It knows the release commit too: both versions agree, a dated entry, no fragment left. **CI runs the same check on every PR** (`.github/workflows/pr-hygiene.yml`), and there is a PR template.
+  - **Each chat tells where things stand when it starts.** `.claude/settings.json` runs `npm run flow:state` as a session-start hook: the branch, whether it is in its own worktree, how far it is from `origin/master`, every open PR with its merge state, and what to fix.
+  - **A `git-steward` agent** (`.claude/agents/git-steward.md`) any chat can ask where to start a branch, whether two PRs conflict and which goes first, whether a PR is ready, and what a release holds. It reads the real state and answers with a verdict and commands; it advises and never pushes or merges.
+- **`AGENTS.md` and `docs/VERSIONING.md` describe it:** each chat in its own git worktree, how to make a PR that can be merged as it stands, the order to merge in, the release commit as its own small PR (on `minor/release-<version>`, since the ruleset blocks `release/**`), store tags, and tidying up.
+- **Tests:** `scripts/test-changelog-fragments.js` (including the release command run for real in a copy), `scripts/test-git-flow.js` (the check on real throw-away repositories) and `scripts/test-run-tests.js`.
+
+### Changed
+- `npm run version:auto` on a work branch no longer writes a version into `package.json` and `app.json` or a section into `CHANGELOG.md`; it makes the fragment. `npm run version:status` on a work branch says whether the fragment is there and finished. On `master` and on `release/x.y.z` both behave as before.
+
+### Fixed
+- **`scripts/test-username-search.js` was never run.** It was written but never added to the `npm test` line, so CI did not run it. It passes, and the runner now runs it.
