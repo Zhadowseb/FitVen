@@ -5,10 +5,10 @@ const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
 
-const sql = fs.readFileSync(
-  path.join(__dirname, "../supabase/migrations/20261010090000_more-catalog-exercises.sql"),
-  "utf8"
-);
+// With the line endings of every checkout: a Windows one turns LF into CRLF.
+const sql = fs
+  .readFileSync(path.join(__dirname, "../supabase/migrations/20261010090000_more-catalog-exercises.sql"), "utf8")
+  .replace(/\r\n/g, "\n");
 
 // The catalog as it was before this migration: every template has to be one
 // of these, or the exercises copying it would get no muscles.

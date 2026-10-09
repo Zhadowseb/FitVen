@@ -152,11 +152,14 @@ make them worthless is to change the code and leave them behind.
 
 ## Automated PR Review
 
-Every pull request is read by eight review agents in parallel - quality
+A pull request is read by eight review agents in parallel - quality
 assurance, testing, security, architecture, code design, performance, UI
 usability and design - and a ninth agent merges their reports into a single
-comment on the PR. The workflow is `.github/workflows/pr-review.yml` and each
-agent's brief is a markdown file in `.github/review-agents/`.
+comment on the PR. They run when asked, not by themselves: `gh workflow run
+pr-review.yml --ref master -f pr=<number>` (a merged PR is read in its merge
+commit), or `/qa` as a comment from someone with write access. The workflow is
+`.github/workflows/pr-review.yml` and each agent's brief is a markdown file in
+`.github/review-agents/`.
 
 The agents read these guides. A rule written down here is a rule they will
 enforce, which is one more reason to keep them true. To change what an agent
