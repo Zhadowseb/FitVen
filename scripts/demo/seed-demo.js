@@ -243,8 +243,13 @@ function checkRow(definitions, table, row) {
   // PostgREST lists every NOT NULL column as required, also the ones the
   // database fills in itself: the id it counts up (an identity column shows no
   // default) and any column with a default, like created_at.
+  // Filled means a value: a null in a NOT NULL column is refused just the same
+  // (local_workout_type_instance_id was sent as null and the first apply stopped on it).
   const missingRequired = (definition.required ?? []).filter(
-    (column) => column !== "id" && !(column in row) && !("default" in (properties[column] ?? {}))
+    (column) =>
+      column !== "id" &&
+      (!(column in row) || row[column] === null || row[column] === undefined) &&
+      !("default" in (properties[column] ?? {}))
   );
 
   return { table, missingTable: false, unknown, missingRequired };
@@ -291,7 +296,7 @@ async function probe(connection) {
       problems.push(`${table}: the seed writes columns the table does not have: ${result.unknown.join(", ")}`);
     }
     if (result.missingRequired.length) {
-      problems.push(`${table}: the table requires columns the seed does not fill: ${result.missingRequired.join(", ")}`);
+      problems.push(`${table}: the table requires columns the seed leaves empty: ${result.missingRequired.join(", ")}`);
     }
   }
 
@@ -465,9 +470,14 @@ async function seedActivity(client, definitions, ids) {
     }
   }
 
+  // The ids a phone would have given the rows, counted up for each person.
+  const localIds = new Map();
+
   for (const activity of cast.ACTIVITIES) {
     const userId = ids.get(activity.user);
-    const rows = cast.buildActivityRows(activity, userId, now);
+    const rows = cast.buildActivityRows(activity, userId, now, localIds.get(activity.user));
+
+    localIds.set(activity.user, rows.used);
     const workout = pruneOptional(definitions, "workout_type_instance", rows.workout);
     const inserted = await client.from("workout_type_instance").insert(workout).select("id").single();
 

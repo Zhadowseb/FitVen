@@ -325,15 +325,21 @@ function syncFields(seed, nowIso) {
  * The cloud rows for one activity, without the ids the cloud hands out: the
  * workout, its exercises and their sets, and the post. `userId` is the
  * author's. The caller fills in `cloud_*_id` links as the parents come back.
+ *
+ * `local_*_id` are the ids a phone gives a row in its own database, and the
+ * cloud insists on a number there (not null). Nobody has a phone for these
+ * people, so they are counted up from `localIds` - one count per person - and
+ * the next start is `used`: the caller carries it on to the next activity.
  */
-function buildActivityRows(activity, userId, now = new Date()) {
+function buildActivityRows(activity, userId, now = new Date(), localIds = { workout: 1, exercise: 1, set: 1 }) {
+  let nextSet = localIds.set;
   const nowIso = now.toISOString();
   const date = copenhagenDate(now, activity.daysAgo);
   const startedAt = copenhagenInstant(date, activity.start);
   const completedAt = new Date(startedAt.getTime() + activity.minutes * 60000);
   const workout = {
     user_id: userId,
-    local_workout_type_instance_id: null,
+    local_workout_type_instance_id: localIds.workout,
     ...syncFields(`${activity.id}:workout`, nowIso),
     cloud_day_id: null,
     workout_type: "Resistance",
@@ -350,7 +356,7 @@ function buildActivityRows(activity, userId, now = new Date()) {
   const exercises = activity.exercises.map((exercise, order) => ({
     row: {
       user_id: userId,
-      local_exercise_instance_id: null,
+      local_exercise_instance_id: localIds.exercise + order,
       ...syncFields(`${activity.id}:exercise:${order}`, nowIso),
       exercise_name: exercise.name,
       exercise_order: order,
@@ -362,7 +368,7 @@ function buildActivityRows(activity, userId, now = new Date()) {
     },
     sets: exercise.sets.map(([weight, reps], index) => ({
       user_id: userId,
-      local_set_id: null,
+      local_set_id: nextSet++,
       ...syncFields(`${activity.id}:set:${order}:${index}`, nowIso),
       set_number: index + 1,
       personal_record: exercise.pr === index,
@@ -394,7 +400,16 @@ function buildActivityRows(activity, userId, now = new Date()) {
     updated_at: completedAt.toISOString(),
   };
 
-  return { workout, exercises, post };
+  return {
+    workout,
+    exercises,
+    post,
+    used: {
+      workout: localIds.workout + 1,
+      exercise: localIds.exercise + activity.exercises.length,
+      set: nextSet,
+    },
+  };
 }
 
 module.exports = {

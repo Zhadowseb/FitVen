@@ -90,6 +90,31 @@ assert.strictEqual(cast.stableUuid("a"), cast.stableUuid("a"), "the same seed, t
 assert.notStrictEqual(cast.stableUuid("a"), cast.stableUuid("b"));
 assert.ok(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(cast.stableUuid("a")));
 
+// The cloud wants a number in every local_*_id (not null): counted up for each person, never twice for one.
+{
+  const counters = new Map();
+  const seenLocal = new Map();
+
+  for (const activity of cast.ACTIVITIES) {
+    const rows = cast.buildActivityRows(activity, activity.user, NOW, counters.get(activity.user));
+
+    counters.set(activity.user, rows.used);
+
+    for (const [kind, id] of [
+      ["workout", rows.workout.local_workout_type_instance_id],
+      ...rows.exercises.map((entry) => ["exercise", entry.row.local_exercise_instance_id]),
+      ...rows.exercises.flatMap((entry) => entry.sets.map((set) => ["set", set.local_set_id])),
+    ]) {
+      assert.ok(Number.isInteger(id) && id >= 1, `${activity.id}: a ${kind} has a local id`);
+
+      const key = `${activity.user}:${kind}:${id}`;
+
+      assert.ok(!seenLocal.has(key), `${key} is used once`);
+      seenLocal.set(key, true);
+    }
+  }
+}
+
 // A date is relative to the day it runs, in Copenhagen.
 assert.strictEqual(
   cast.copenhagenDate(new Date("2026-10-08T22:30:00Z"), 0),
@@ -145,6 +170,12 @@ assert.deepStrictEqual(
   seed.checkRow(withDefaults, "social_post_like", { post_id: 1 }).missingRequired,
   ["stamped_at"],
   "id and a column with a default are not reported; a required one without a default is"
+);
+// A null in a NOT NULL column is not filled either: the first apply stopped on local_workout_type_instance_id.
+assert.deepStrictEqual(
+  seed.checkRow(definitions, "set", { user_id: 1, weight: null }).missingRequired,
+  ["weight"],
+  "a required column sent as null is reported"
 );
 assert.ok(seed.checkRow(definitions, "social_post", {}).missingTable);
 assert.ok(
