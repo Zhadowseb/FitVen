@@ -27,7 +27,14 @@ export default {
   off: "Fra",
   unknownError: "Noget gik galt.",
   signInRequired: "Du skal være logget ind.",
-  restoringSession: "Genopretter session...",
+  // The splash while the saved session is restored; the lines under the title cycle.
+  restoringSession: {
+    title: "Genopretter session",
+    warmingUp: "Varmer op",
+    loadingPlates: "Lægger pladerne på",
+    chalkingUp: "Kridter hænderne",
+    spotting: "Spotter din session",
+  },
   kg: "kg",
   // ThemedPicker, when the screen gives it no text of its own.
   picker: { placeholder: "Vælg", title: "Vælg" },
