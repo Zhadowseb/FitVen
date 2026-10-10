@@ -44,6 +44,11 @@ export default {
     allow: "Tillad placering",
     openSettings: "Åbn Indstillinger",
   },
+  // Notifikationen Android viser, så længe en gåtur bliver sporet.
+  tracking: {
+    notificationTitle: "Gåtur i gang",
+    notificationBody: "FitVen sporer din gåtur, også når skærmen er slukket.",
+  },
   lockScreen: {
     title: "Skærmen er låst",
     message: "Berøring ignoreres, mens du går.",

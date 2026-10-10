@@ -73,6 +73,9 @@ import {
   setActiveDatabaseName,
 } from "./src/Database/localDatabase";
 import { locationService, notificationService } from "./src/Services";
+// Defines the task a walk's location updates are delivered to; it has to run
+// when the app loads, not when a walk starts.
+import "./src/Services/walkLocationTask";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
 import { LocalizationProvider, useTranslation } from './src/Localization';
@@ -91,11 +94,13 @@ import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
 
-// Older builds tracked runs with a background location task, and Android
-// restores a registered task on launch. Stop any such leftover once, so
-// nothing can start the location foreground service this app no longer
-// declares a permission for.
+// Older builds tracked runs with a background location task, and a task that
+// is registered is restored natively on launch. Stop any such leftover once,
+// so nothing starts a location foreground service that nobody asked for. The
+// same goes for a walk's task: a walk that was open when the app was closed
+// comes back paused, so nothing is left to track it.
 void locationService.stopLegacyRunLocationTask();
+void locationService.stopWalkLocationTask();
 
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
