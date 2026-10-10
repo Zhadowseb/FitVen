@@ -663,12 +663,10 @@ const CREATION_CALL = new RegExp(
 );
 
 const PATHS = {
-  // "Dit split" and the quick start's "Start {name}" copy from your split;
-  // "Tom træning" / "Første træning" is the empty one.
-  "src/Pages/HomePage/HomePage.js": [
-    ["copyWorkoutToStandaloneDate", "RECENT"],
-    ["createQuickWorkout", "EMPTY"],
-  ],
+  // "Dit split" and the quick start's "Start {name}" copy from your split.
+  // "Tom træning" / "Første træning" opens the start sheet, which makes the
+  // empty workout (see SHEET_OPENERS).
+  "src/Pages/HomePage/HomePage.js": [["copyWorkoutToStandaloneDate", "RECENT"]],
   // The Train tab: repeat today, plan into the program, plan on a date.
   "src/Pages/ExerciseLibraryPage/ExerciseLibraryPage.js": [
     ["repeatWorkoutToday", "RECENT"],
@@ -747,8 +745,10 @@ const SHEET_OPENERS = {
   "src/Pages/WorkoutCalendarPage/WorkoutCalendarPage.js": ["CALENDAR"],
   "src/Pages/WeekPage/Components/Day/Day.js": ["PROGRAM"],
   "src/Pages/MicrocyclePage/Components/MicrocycleList/MicrocycleList.js": ["PROGRAM"],
-  // The empty feed opens it as the centre button does.
+  // The empty feed opens it as the centre button does, and so does Home's
+  // "Tom træning" / "Første træning".
   "src/Pages/FeedPage/FeedPage.js": [null],
+  "src/Pages/HomePage/HomePage.js": [null],
 };
 
 for (const file of SRC_FILES) {

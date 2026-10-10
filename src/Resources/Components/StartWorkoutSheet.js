@@ -23,6 +23,7 @@ import Plus from "../Icons/UI-icons/Plus";
 import ReplayHistory from "../Icons/UI-icons/ReplayHistory";
 import Resistance from "../Icons/WorkoutLabels/Resistance";
 import Run from "../Icons/WorkoutLabels/Run";
+import Walk from "../Icons/WorkoutLabels/Walk";
 import { getTodaysDate } from "../../Utils/dateUtils";
 import {
   filterReleasedWorkoutTypes,
@@ -189,8 +190,12 @@ function getUsualWorkoutMeta(workout, t) {
 }
 
 function WorkoutGlyph({ type, size = 26, color }) {
-  if (type === "run" || type === "walk") {
+  if (type === "run") {
     return <Run width={size} height={size} primaryColor={color} />;
+  }
+
+  if (type === "walk") {
+    return <Walk width={size} height={size} primaryColor={color} />;
   }
 
   return <Resistance width={size} height={size} color={color} />;

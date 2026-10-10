@@ -20,6 +20,9 @@ export const runningSchemaSql = `
       actual_distance REAL,
       actual_duration_seconds INTEGER,
       actual_pace REAL,
+      -- A walk's step count (Services/walkService.js). Run and Walk are not in
+      -- the cloud, so this stays on the phone like the distance beside it.
+      actual_steps INTEGER,
 
       done INTEGER NOT NULL DEFAULT 0
   );
