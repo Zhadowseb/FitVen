@@ -23,8 +23,14 @@ import * as workoutService from "./workoutService";
 // The one walk that is being tracked, kept outside the screen. The screen is a
 // view of it: leaving the walk screen for another tab, or the screen being
 // rebuilt, does not stop the position or the steps - only pausing, finishing,
-// the app going to the background (nothing keeps a foreground-only tracker
-// alive there) or the app being closed does.
+// deleting or the app being closed does.
+//
+// With the screen off it goes on: the position comes from the walk's location
+// task (an Android foreground service with a notification, iOS background
+// location), started here when the walk runs and stopped when it pauses or
+// ends. If that task cannot start, the position is only watched while the app
+// is in front, and the app going to the background detaches the sensors as it
+// did before the service existed (`backgroundTracking`).
 //
 // It owns the walk's clock too (the same `Workout_Type_Instance` timer fields
 // a strength workout uses, so the square in the bottom navigation and the
@@ -81,6 +87,14 @@ function buildSnapshot() {
 function emit() {
   snapshot = buildSnapshot();
   listeners.forEach((listener) => listener(snapshot));
+}
+
+// The screen is not looking while the app is behind it, so a position or a step
+// there is kept and not announced; the app coming back announces it all.
+function emitLive() {
+  if (!session?.inBackground) {
+    emit();
+  }
 }
 
 export function subscribeWalkTracker(listener) {
@@ -144,6 +158,8 @@ function saveProgress() {
   const distanceMeters = session.walk.distanceMeters;
   const movingSeconds = currentElapsedSeconds();
 
+  session.lastSavedAtMs = Date.now();
+
   return enqueueWrite(() =>
     walkService.saveWalkProgress(db, {
       workoutId,
@@ -156,9 +172,12 @@ function saveProgress() {
 
 /* ---------------------------------------------------------------- sensors -- */
 
+// Resolves once the position is really stopped - for the walk's location task
+// that is the Android service and its notification going away - so a pause
+// that is followed by a quick resume starts from nothing.
 function detachSensors() {
-  session?.locationSubscription?.remove();
-  session?.stepSubscription?.remove();
+  const locationSubscription = session?.locationSubscription;
+  const stepSubscription = session?.stepSubscription;
 
   if (session) {
     // The steps counted by a watcher that is gone are in the total already;
@@ -166,9 +185,28 @@ function detachSensors() {
     session.stepBase = session.steps;
     session.locationSubscription = null;
     session.stepSubscription = null;
+    session.inBackground = false;
   }
 
   stopTimers();
+  stepSubscription?.remove();
+
+  return Promise.resolve(locationSubscription?.remove()).catch((error) => {
+    console.warn("Unable to stop the position of the walk:", error);
+  });
+}
+
+// Whether the position keeps coming with the screen off: only when the walk's
+// location task is what delivers it.
+function backgroundTracking(target = session) {
+  return Boolean(target?.locationSubscription?.background);
+}
+
+// A step counter that is delivering right now. Behind the screen the phone's
+// counter is stopped by its library (and catches up to the total when the app
+// is back), so it is no sign of life there.
+function stepsLive(target = session) {
+  return Boolean(target?.stepSubscription) && !target.inBackground;
 }
 
 function stopTimers() {
@@ -240,7 +278,7 @@ async function attachOnce(sessionRef) {
 
       // The walk was paused, finished or left while the watcher was starting.
       if (session !== sessionRef || sessionRef.status === "paused" || sessionRef.status === "done") {
-        subscription.remove();
+        await subscription.remove();
       } else {
         sessionRef.locationSubscription = subscription;
       }
@@ -280,7 +318,7 @@ function onSteps(count) {
     [...session.stepSamples, [now, session.steps]],
     now
   );
-  emit();
+  emitLive();
 }
 
 function onFix(fix) {
@@ -290,6 +328,16 @@ function onFix(fix) {
 
   const now = Date.now();
   const previousFix = session.lastRawFix;
+
+  if (session.inBackground) {
+    // Behind the screen Android does not run the timers, but the positions keep
+    // coming: they are what judges an auto pause and saves the walk, then.
+    tick();
+
+    if (now - session.lastSavedAtMs >= SAVE_EVERY_MS) {
+      void saveProgress();
+    }
+  }
 
   session.lastRawFix = fix;
 
@@ -307,13 +355,13 @@ function onFix(fix) {
       if (seconds > 0 && seconds <= 5 && metres / seconds >= WALK_TRACKING.autoPauseMinSpeedMetersPerSecond) {
         session.lastMoveAtMs = now;
 
-        if (!session.stepSubscription) {
+        if (!stepsLive()) {
           resumeFromAuto();
         }
       }
     }
 
-    emit();
+    emitLive();
     return;
   }
 
@@ -349,7 +397,7 @@ function onFix(fix) {
     session.walk = next;
   }
 
-  emit();
+  emitLive();
 }
 
 // Good enough to tell walking from standing; the real distance comes from
@@ -377,7 +425,7 @@ function tick() {
     autoPaused: session.status === "autoPaused",
     nowMs: Date.now(),
     sinceMs: session.sinceMs,
-    hasStepCounter: Boolean(session.stepSubscription),
+    hasStepCounter: stepsLive(),
     // Until the first fix there is no ground to judge by, so a slow GPS start
     // is not read as standing still.
     hasGps: Boolean(session.locationSubscription) && session.fix !== null,
@@ -458,12 +506,34 @@ function handleAppState(nextState) {
 
   const tracking = session.status === "running" || session.status === "autoPaused";
 
+  if (nextState === "background" && tracking && backgroundTracking() && !session.inBackground) {
+    // The walk's location service keeps the position coming, and with it the
+    // app, so nothing is detached and the route is not broken. The step counter
+    // is stopped by its library behind the screen and counts up to the total
+    // when the app is back: it is not a sign of life meanwhile (stepsLive), and
+    // nothing is added for the gap here, which would count those steps twice.
+    session.inBackground = true;
+    void saveProgress();
+    return;
+  }
+
+  if (nextState === "active" && session.inBackground) {
+    session.inBackground = false;
+    // The catch-up of the step counter arrives as one jump: it is no cadence,
+    // and the walk is not judged still before it has landed.
+    session.stepSamples = [];
+    session.sinceMs = Date.now();
+    emit();
+    return;
+  }
+
   if (nextState === "background" && tracking && !session.backgroundedAt) {
-    // Nothing keeps a position or a step counter alive behind the screen in
-    // this build. The clock goes on (it is the time on the wall), the route is
-    // broken here, and the walk picks up again when the app comes back.
+    // Nothing keeps a position or a step counter alive behind the screen when
+    // the walk's location task could not start. The clock goes on (it is the
+    // time on the wall), the route is broken here, and the walk picks up again
+    // when the app comes back.
     session.backgroundedAt = Date.now();
-    detachSensors();
+    void detachSensors();
     void breakRoute();
     void saveProgress();
     return;
@@ -522,6 +592,8 @@ function emptySession(workoutId) {
     lastMoveAtMs: null,
     sinceMs: Date.now(),
     backgroundedAt: null,
+    inBackground: false,
+    lastSavedAtMs: 0,
     autoPauseEnabled: true,
     savedTotals: null,
   };
@@ -655,7 +727,7 @@ export async function leaveWalk() {
     pauseClock("paused");
   }
 
-  detachSensors();
+  await detachSensors();
   await writeChain;
   session = null;
   snapshot = null;
@@ -668,13 +740,15 @@ export async function releaseWalk(workoutId) {
     return;
   }
 
-  detachSensors();
+  const detached = detachSensors();
+
   session = null;
   snapshot = null;
   listeners.forEach((listener) => listener(null));
 
   // A position or a save that was already queued is written before this
   // returns, so deleting the workout afterwards leaves nothing behind it.
+  await detached;
   await writeChain;
 }
 
@@ -767,7 +841,7 @@ export async function pauseWalk() {
     session.status = "paused";
   }
 
-  detachSensors();
+  await detachSensors();
   await breakRoute();
   await saveProgress();
   emit();
@@ -858,7 +932,9 @@ export async function finishWalk() {
   session.elapsed = movingSeconds;
   session.timerStart = null;
   session.status = "done";
-  detachSensors();
+
+  const detached = detachSensors();
+
   session.savedTotals = {
     distanceKm: distanceMeters / 1000,
     durationSeconds: movingSeconds,
@@ -867,6 +943,7 @@ export async function finishWalk() {
   };
   emit();
 
+  await detached;
   await writeChain;
   await walkService.finishWalk(db, {
     workoutId,
@@ -891,7 +968,7 @@ export async function restartWalk() {
     autoPauseEnabled: session.autoPauseEnabled,
   };
 
-  detachSensors();
+  await detachSensors();
   await writeChain;
   await walkService.restartWalk(db, workoutId);
 

@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-10.1";
+export const PRIVACY_POLICY_VERSION = "2026-10-11.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "10 October 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "11 October 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -74,7 +74,7 @@ You can withdraw that consent at any time by deleting your account, which remove
 
 Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.
 
-Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance, also when the screen is off or you are in another app: on an Android phone FitVen then shows a notification for as long as the walk is tracked, and on an iPhone the status bar shows that FitVen is using your location. FitVen stops reading it when you pause or finish the walk and when you close the app, and does not follow you anywhere else. An automatic pause keeps reading it, to notice that you walk again; a pause you press does not. FitVen never asks for location "all the time": the permission is the one for while you use the app. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
 While a walk runs, FitVen also reads your phone's step counter (Motion & Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone.
 

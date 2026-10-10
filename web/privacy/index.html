@@ -45,7 +45,7 @@
 <body>
   <main>
     <h1>FitVen — Privacy</h1>
-    <p class="meta">Version 2026-10-10.1 · Last updated 10 October 2026</p>
+    <p class="meta">Version 2026-10-11.1 · Last updated 11 October 2026</p>
 
     <section>
       <h2>Who is responsible</h2>
@@ -82,7 +82,7 @@
       <h2>Where it is stored</h2>
       <p>Training and profile data is stored on Supabase in the eu-north-1 region, in Sweden, inside the EU.</p>
       <p>Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.</p>
-      <p>Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.</p>
+      <p>Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance, also when the screen is off or you are in another app: on an Android phone FitVen then shows a notification for as long as the walk is tracked, and on an iPhone the status bar shows that FitVen is using your location. FitVen stops reading it when you pause or finish the walk and when you close the app, and does not follow you anywhere else. An automatic pause keeps reading it, to notice that you walk again; a pause you press does not. FitVen never asks for location &quot;all the time&quot;: the permission is the one for while you use the app. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.</p>
       <p>While a walk runs, FitVen also reads your phone's step counter (Motion &amp; Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone.</p>
       <p>Exercise videos are stored on Supabase with the rest of your data.</p>
       <p>The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran or walked, even though the route itself is never sent to them.</p>

@@ -18,7 +18,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running.",
+        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running, also with the screen off.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true
       },
@@ -50,8 +50,7 @@
         "android.permission.ACTIVITY_RECOGNITION"
       ],
       "blockedPermissions": [
-        "android.permission.FOREGROUND_SERVICE",
-        "android.permission.FOREGROUND_SERVICE_LOCATION"
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
       ]
     },
     "web": {
@@ -59,7 +58,6 @@
     },
     "plugins": [
       "./plugins/withDevAppVariant",
-      "./plugins/withoutLocationForegroundService",
       "expo-sqlite",
       [
         "react-native-ble-plx",
@@ -79,10 +77,12 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running.",
-          "isIosBackgroundLocationEnabled": false,
+          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running, also with the screen off.",
+          "locationAlwaysAndWhenInUsePermission": "FitVen reads your location while a walk is running, also with the screen off, to draw its route and measure its distance. It stops when you pause or finish the walk.",
+          "locationAlwaysPermission": "FitVen reads your location while a walk is running, also with the screen off, to draw its route and measure its distance. It stops when you pause or finish the walk.",
+          "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": false,
-          "isAndroidForegroundServiceEnabled": false
+          "isAndroidForegroundServiceEnabled": true
         }
       ],
       [

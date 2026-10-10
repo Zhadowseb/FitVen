@@ -44,6 +44,11 @@ export default {
     allow: "Allow location",
     openSettings: "Open Settings",
   },
+  // The notification Android shows for as long as a walk is being tracked.
+  tracking: {
+    notificationTitle: "Walk in progress",
+    notificationBody: "FitVen is tracking your walk, also with the screen off.",
+  },
   lockScreen: {
     title: "Screen locked",
     message: "Touches are ignored while you walk.",

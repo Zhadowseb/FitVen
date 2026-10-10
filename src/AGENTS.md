@@ -127,12 +127,15 @@ Five names, and they are not interchangeable:
 - The run screen is split, but only its pure parts. `Run.js` is still ~4,500
   lines because the Bluetooth hooks and the run-tracking calls are wired into
   its state and cannot move without a device to test on. GPS tracking for a run is
-  switched off: `locationService.startRunTracking` always fails, and the app
-  declares no foreground service (`scripts/test-no-foreground-service.js`
-  fails if one, or background location, comes back). The walk is not built on
-  it: `WorkoutTypes/Walk/` is a screen of its own over
+  switched off: `locationService.startRunTracking` always fails, and the only
+  foreground service and background location task the app has are the walk's
+  (`scripts/test-no-foreground-service.js` fails if one comes back for Run or
+  anywhere else, or if background location permission is asked for). The walk
+  is not built on it: `WorkoutTypes/Walk/` is a screen of its own over
   `Services/walkTrackerService.js`, which keeps the position and the steps going
-  while the app is open whether or not that screen is. The maths that could move lives beside it in
+  whether or not that screen is open, and with the screen off - through the
+  location task in `Services/walkLocationTask.js` (`App.js` imports it; it is
+  not in the Services barrel, because the Node tests have no task manager). The maths that could move lives beside it in
   `runDisplayUtils.js` (sections, route, charts), `runFormatUtils.js` (pace,
   clock, distance), `runEnduranceStats.js` and `runFlowOptions.js`, and is the
   only part with tests. Put new run maths there, not back in the screen.
