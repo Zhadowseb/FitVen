@@ -243,6 +243,17 @@ function check(options) {
     (file) => file.startsWith(`${fragments.FRAGMENT_DIR}/`) && file.toLowerCase().endsWith(".md") && !/readme\.md$/i.test(file)
   );
 
+  // The lockfile names the version too. A stale one is harmless to npm and was
+  // merged to master once with a branch's version in it, and `npm install`
+  // then rewrote it in somebody's working copy.
+  const headLock = readJsonAt(options, "HEAD", "package-lock.json");
+
+  if (headLock && headPackage && headLock.version !== headPackage.version) {
+    fail(
+      `package-lock.json says version ${headLock.version} and package.json says ${headPackage.version}: npm install puts the lockfile right, and release:prepare keeps both in step`
+    );
+  }
+
   if (isReleasePr) {
     checkReleasePr({ options, headPackage, headApp, changed, fail, ok, warn });
   } else {

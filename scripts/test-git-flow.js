@@ -40,6 +40,10 @@ assert.deepStrictEqual(
 // --- A throw-away repository -------------------------------------------------
 const FLOW = path.join(__dirname, "git", "flow.js");
 
+/** A package-lock.json at a version: it names it twice. */
+const lockJson = (version) =>
+  `${JSON.stringify({ name: "x", version, lockfileVersion: 3, packages: { "": { name: "x", version } } }, null, 2)}\n`;
+
 function makeRepo() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fitven-flow-"));
   const git = (...args) => execFileSync("git", args, { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -55,6 +59,7 @@ function makeRepo() {
   fs.writeFileSync(path.join(dir, "CHANGELOG.md"), "# Changelog\n\n## [2.17.5] - 2026-10-04\n### Fixed\n- Older.\n");
   fs.writeFileSync(path.join(dir, "changelog.d", "README.md"), "How this works.\n");
   fs.writeFileSync(path.join(dir, "src", "a.js"), "module.exports = 1;\n");
+  fs.writeFileSync(path.join(dir, "package-lock.json"), lockJson("2.17.5"));
   git("add", "-A");
   git("commit", "-q", "-m", "start");
 
@@ -177,11 +182,22 @@ try {
   repo = scenario("minor/release-2.17.6");
   repo.write("package.json", `${JSON.stringify({ name: "x", version: "2.17.6" }, null, 2)}\n`);
   repo.write("app.json", `${JSON.stringify({ expo: { version: "2.17.6" } }, null, 2)}\n`);
+  repo.write("package-lock.json", lockJson("2.17.6"));
   repo.write("CHANGELOG.md", "# Changelog\n\n## [2.17.6] - 2026-10-09\n### Fixed\n- The thing.\n\n---\n\n## [2.17.5] - 2026-10-04\n### Fixed\n- Older.\n");
   repo.commit("Release 2.17.6");
   result = repo.check();
   assert.strictEqual(result.code, 0, result.out);
   assert.ok(/this is the release commit for 2.17.6/.test(result.out), "a stable version in package.json makes it a release commit");
+
+  // A lockfile left at another version is not ready, in a release or in an ordinary branch.
+  repo.write("package-lock.json", lockJson("2.17.5"));
+  repo.commit();
+  assert.ok(
+    /package-lock.json says version 2.17.5 and package.json says 2.17.6/.test(repo.check().out),
+    "a release whose lockfile did not follow is not ready"
+  );
+  repo.write("package-lock.json", lockJson("2.17.6"));
+  repo.commit();
 
   // ... not with a fragment left over, a missing entry, or versions that disagree.
   repo.write("changelog.d/fix-left.md", "### Fixed\n- x\n");
@@ -197,8 +213,18 @@ try {
   repo = scenario("minor/release-2.17.7");
   repo.write("package.json", `${JSON.stringify({ name: "x", version: "2.17.7" }, null, 2)}\n`);
   repo.write("app.json", `${JSON.stringify({ expo: { version: "2.17.7" } }, null, 2)}\n`);
+  repo.write("package-lock.json", lockJson("2.17.7"));
   repo.commit();
   assert.ok(/no dated section for 2.17.7/.test(repo.check().out), "a release without its changelog entry is not ready");
+
+  // An ordinary branch whose lockfile carries another version than package.json (the master of one day).
+  repo = scenario("fix/stale-lock");
+  repo.write("changelog.d/fix-stale-lock.md", "### Fixed\n- x\n");
+  repo.write("package-lock.json", lockJson("2.17.6-fix-something.1"));
+  repo.commit();
+  result = repo.check();
+  assert.strictEqual(result.code, 1);
+  assert.ok(/package-lock.json says version 2.17.6-fix-something.1 and package.json says 2.17.5/.test(result.out), "a stale lockfile version is named");
 
   // The release plan reads the fragments that are in the checkout.
   repo = scenario();
