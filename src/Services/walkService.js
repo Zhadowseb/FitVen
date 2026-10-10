@@ -144,9 +144,14 @@ export async function finishWalk(
   });
 }
 
-/** Back to a walk that has not started: no route, nothing covered, no clock. */
-export async function restartWalk(db, workoutId) {
+/** No route and nothing covered: what a walk has before it is started. */
+export async function clearWalk(db, workoutId) {
   await locationRepository.deleteLocationLogsByWorkout(db, workoutId);
   await runningRepository.resetWalkSegments(db, workoutId);
+}
+
+/** Back to a walk that has not started: no route, nothing covered, no clock. */
+export async function restartWalk(db, workoutId) {
+  await clearWalk(db, workoutId);
   await workoutService.resetWorkoutState(db, workoutId);
 }

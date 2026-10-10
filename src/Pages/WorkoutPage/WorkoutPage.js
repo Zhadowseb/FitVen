@@ -175,7 +175,7 @@ const WorkoutPage = ({ route }) => {
       // A walk that is being tracked stops, so nothing is written for it after
       // it is gone.
       if (isWalkWorkout) {
-        walkTrackerService.releaseWalk(workout_id);
+        await walkTrackerService.releaseWalk(workout_id);
       }
 
       await programService.deleteWorkout(db, workout_id);

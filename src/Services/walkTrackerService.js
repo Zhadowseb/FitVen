@@ -191,12 +191,32 @@ function startTimers() {
   }, SAVE_EVERY_MS);
 }
 
-async function attachSensors() {
-  if (!session || session.status === "done" || session.status === "paused") {
-    return;
+// One attach at a time: Start, "Allow location" and the app coming back to the
+// front can all ask for it, and two that overlap would each start a position
+// watcher while only one is kept - the other would run on after the walk ended.
+function attachSensors() {
+  if (!session) {
+    return Promise.resolve();
   }
 
   const sessionRef = session;
+
+  sessionRef.attachChain = (sessionRef.attachChain ?? Promise.resolve()).then(() =>
+    attachOnce(sessionRef)
+  );
+
+  return sessionRef.attachChain;
+}
+
+async function attachOnce(sessionRef) {
+  if (
+    session !== sessionRef ||
+    sessionRef.status === "done" ||
+    sessionRef.status === "paused" ||
+    sessionRef.status === "idle"
+  ) {
+    return;
+  }
 
   if (!sessionRef.stepSubscription && sessionRef.stepsAvailable) {
     sessionRef.stepSubscription = stepCounterService.watchSteps((count) => {
@@ -589,6 +609,14 @@ export async function openWalk(database, workoutId) {
   }
 
   next.status = done ? "done" : originalStart === null ? "idle" : "paused";
+
+  // A walk that has not been started has nothing of its own: a copy of an older
+  // walk can carry a segment, and its numbers are not this walk's.
+  if (next.status === "idle") {
+    stored.points = [];
+    stored.segment = null;
+  }
+
   next.originalStart = originalStart;
   next.elapsed = elapsed;
   next.walk = replayWalkPoints(stored.points);
@@ -635,7 +663,7 @@ export async function leaveWalk() {
 }
 
 /** For a walk that was deleted: nothing is written for it any more. */
-export function releaseWalk(workoutId) {
+export async function releaseWalk(workoutId) {
   if (!session || Number(session.workoutId) !== Number(workoutId)) {
     return;
   }
@@ -644,6 +672,10 @@ export function releaseWalk(workoutId) {
   session = null;
   snapshot = null;
   listeners.forEach((listener) => listener(null));
+
+  // A position or a save that was already queued is written before this
+  // returns, so deleting the workout afterwards leaves nothing behind it.
+  await writeChain;
 }
 
 // Asks only for what has not been decided, and only here - the first time a
@@ -705,6 +737,8 @@ export async function startWalk() {
   session.sinceMs = Date.now();
 
   const { workoutId } = session;
+
+  await enqueueWrite(() => walkService.clearWalk(db, workoutId));
 
   await enqueueWrite(async () => {
     await workoutService.setWorkoutOriginalStartTime(db, {

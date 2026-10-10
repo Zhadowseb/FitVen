@@ -122,7 +122,6 @@ function installWorld() {
     getForegroundPermissionsAsync: async () => phone.locationPermission,
     requestForegroundPermissionsAsync: async () => {
       phone.asked.push("location");
-     
 
       return phone.locationPermission;
     },
@@ -561,11 +560,13 @@ async function main() {
   await tracker.resumeWalk();
   assert.strictEqual(tracker.getWalkSnapshot(9).location, "blocked", "a refusal that cannot be asked again again is blocked");
 
-  // Allowing it from the screen starts the position at once.
+  // Allowing it from the screen starts the position at once - once, even when
+  // two things ask for it at the same moment.
   phone.locationPermission = { granted: true, status: "granted", canAskAgain: true };
-  await tracker.requestLocationAccess();
+  await Promise.all([tracker.requestLocationAccess(), tracker.requestLocationAccess()]);
   assert.strictEqual(tracker.getWalkSnapshot(9).location, "granted");
-  assert.strictEqual(phone.locationWatchers.filter((w) => !w.removed).length, 1, "and the position is watched");
+  assert.strictEqual(phone.locationWatchers.filter((w) => !w.removed).length, 1, "and the position is watched, by one watcher");
+  assert.strictEqual(phone.locationWatchers.length, 1, "and two asks started exactly one");
 
   /* ------------------------------------------ no step counter at all -- */
 
@@ -610,11 +611,32 @@ async function main() {
   exec(
     `INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, done) VALUES (11, 1, '2026-10-10', 'Walk', 0)`
   );
-  await tracker.openWalk(db, 11);
+  // What a copy of an older walk can carry: a segment with another walk's numbers, and a stray route.
+  exec(
+    `INSERT INTO Run (workout_id, type, set_number, is_pause, actual_distance, actual_duration_seconds, actual_steps, done) VALUES (11, 'WORKING_SET', 1, 0, 3.2, 2400, 5000, 0)`
+  );
+  exec(`INSERT INTO LocationLog (workout_id, latitude, longitude, accuracy, timestamp) VALUES (11, 55, 12, 5, 1)`);
+
+  const copied = await tracker.openWalk(db, 11);
+
+  assert.strictEqual(copied.status, "idle");
+  assert.strictEqual(copied.steps, 0, "an unstarted walk does not take over the steps of the one it was copied from");
+  assert.strictEqual(copied.route.length, 0, "or its route");
+
   await tracker.startWalk();
-  tracker.releaseWalk(11);
+  await walkSeconds(5);
+  assert.strictEqual(all("SELECT * FROM LocationLog WHERE workout_id = 11 AND timestamp = 1").length, 0, "Start clears what was there");
+  assert.strictEqual(tracker.getWalkSnapshot(11).steps, 10, "and the steps count from nothing");
+
+  // A deleted walk: what was queued is written first, so deleting leaves nothing behind it.
+  await walkSeconds(3);
+  await tracker.releaseWalk(11);
   assert.ok(phone.locationWatchers.every((watcher) => watcher.removed), "a deleted walk lets go of the position");
   assert.strictEqual(tracker.getWalkSnapshot(11), null, "and is no longer tracked");
+  await deleteRunSetsByWorkout(db, 11);
+  await advance(30);
+  assert.strictEqual(all("SELECT * FROM LocationLog WHERE workout_id = 11").length, 0, "nothing is written for it afterwards");
+  assert.strictEqual(all("SELECT * FROM Run WHERE workout_id = 11").length, 0);
 
   void totalStepsCounted;
 }
