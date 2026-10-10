@@ -18,7 +18,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in.",
+        "NSLocationWhenInUseUsageDescription": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSSupportsLiveActivities": true
       },
@@ -46,7 +46,8 @@
       "package": "com.anonymous.programapp",
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACTIVITY_RECOGNITION"
       ],
       "blockedPermissions": [
         "android.permission.FOREGROUND_SERVICE",
@@ -78,10 +79,16 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in.",
+          "locationWhenInUsePermission": "FitVen uses your location to match a workout to the fitness centre you are in, and to draw the route and measure the distance of a walk while it is running.",
           "isIosBackgroundLocationEnabled": false,
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-sensors",
+        {
+          "motionPermission": "FitVen uses your motion and fitness data to count the steps of a walk and show your cadence."
         }
       ],
       [

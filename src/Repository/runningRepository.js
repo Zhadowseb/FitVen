@@ -169,8 +169,123 @@ export async function updateRunSetPause(db, { runId, isPause }) {
 }
 
 export async function deleteRunSetsByWorkout(db, workoutId) {
+  // A walk's route is a place somebody went, and goes with the walk.
+  await db.runAsync(
+    `DELETE FROM LocationLog
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
   await db.runAsync(
     `DELETE FROM Run
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
+}
+
+/**
+ * The one row a walk keeps what it covered in: a working segment that is not a
+ * pause. A walk recorded by the old Run flow may have more rows, and this is
+ * the first of them.
+ */
+export async function getWalkSegment(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT *
+     FROM Run
+     WHERE workout_id = ?
+       AND COALESCE(is_pause, 0) = 0
+       AND ${NORMALIZED_RUN_TYPE_SQL} = 'WORKING_SET'
+     ORDER BY set_number ASC, Run_id ASC
+     LIMIT 1;`,
+    [workoutId]
+  );
+}
+
+/** What every finished segment of the workout added up to. */
+export async function getWalkTotals(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT
+        COALESCE(SUM(actual_distance), 0) AS distance_km,
+        COALESCE(SUM(actual_duration_seconds), 0) AS duration_seconds,
+        SUM(actual_steps) AS steps,
+        COUNT(*) AS segments
+     FROM Run
+     WHERE workout_id = ?
+       AND COALESCE(is_pause, 0) = 0
+       AND done = 1;`,
+    [workoutId]
+  );
+}
+
+/**
+ * Writes what the walk has covered into its segment, making the segment when
+ * there is none. `done` is only ever raised here by finishing the walk.
+ */
+export async function saveWalkSegment(
+  db,
+  {
+    workoutId,
+    distanceKm,
+    durationSeconds,
+    paceMinutes,
+    steps,
+    done = false,
+  }
+) {
+  const existing = await getWalkSegment(db, workoutId);
+
+  if (!existing) {
+    await db.runAsync(
+      `INSERT INTO Run (
+        workout_id,
+        type,
+        set_number,
+        is_pause,
+        actual_distance,
+        actual_duration_seconds,
+        actual_pace,
+        actual_steps,
+        done
+      ) VALUES (?, 'WORKING_SET', 1, 0, ?, ?, ?, ?, ?);`,
+      [
+        workoutId,
+        distanceKm ?? null,
+        durationSeconds ?? null,
+        paceMinutes ?? null,
+        steps ?? null,
+        done ? 1 : 0,
+      ]
+    );
+    return;
+  }
+
+  await db.runAsync(
+    `UPDATE Run
+     SET actual_distance = ?,
+         actual_duration_seconds = ?,
+         actual_pace = ?,
+         actual_steps = ?,
+         done = CASE WHEN ? = 1 THEN 1 ELSE done END
+     WHERE Run_id = ?;`,
+    [
+      distanceKm ?? null,
+      durationSeconds ?? null,
+      paceMinutes ?? null,
+      steps ?? null,
+      done ? 1 : 0,
+      existing.Run_id,
+    ]
+  );
+}
+
+/** A restart: the segment goes back to nothing covered, and open again. */
+export async function resetWalkSegments(db, workoutId) {
+  await db.runAsync(
+    `UPDATE Run
+     SET actual_distance = NULL,
+         actual_duration_seconds = NULL,
+         actual_pace = NULL,
+         actual_steps = NULL,
+         done = 0
      WHERE workout_id = ?;`,
     [workoutId]
   );

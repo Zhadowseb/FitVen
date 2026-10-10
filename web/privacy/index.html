@@ -45,7 +45,7 @@
 <body>
   <main>
     <h1>FitVen — Privacy</h1>
-    <p class="meta">Version 2026-10-04.1 · Last updated 4 October 2026</p>
+    <p class="meta">Version 2026-10-10.1 · Last updated 10 October 2026</p>
 
     <section>
       <h2>Who is responsible</h2>
@@ -64,7 +64,7 @@
       <p>Your training: programs, workouts, exercises, sets, weights, repetitions, personal records and the notes you write on them, the split of workouts you choose to rotate through, and how each workout was started — from a program, from a recent workout or your split, in the calendar, as an empty workout, or copied from another workout.</p>
       <p>Exercises you make yourself: the name, the muscles, the equipment, the weight mode, a short description, the steps and — if you add one — a video and a still frame taken from it. They are kept with your account, so they come back on a new phone. The shared exercises you save, the ones you add a copy of, and the ones you report are stored too.</p>
       <p>Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; and the lifts from those workouts that go on a centre's leaderboard.</p>
-      <p>Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and the location and route of runs you tracked with an earlier version of FitVen.</p>
+      <p>Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, the route, distance and steps of the walks you track with FitVen, and the location and route of runs you tracked with an earlier version of FitVen. A walk's route, distance and steps stay on your phone; only the walk itself, with its date and time, is stored with your account like any other workout.</p>
       <p>Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish and the posts you like.</p>
       <p>Music: if you connect Spotify and turn on sharing, the name of the track and the artist playing during a workout is saved with that workout.</p>
       <p>Feedback: what you write when you send us feedback, and the version of the app it was sent from.</p>
@@ -82,9 +82,10 @@
       <h2>Where it is stored</h2>
       <p>Training and profile data is stored on Supabase in the eu-north-1 region, in Sweden, inside the EU.</p>
       <p>Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.</p>
-      <p>Location is only read once when you start a workout, to find the centre you are in, and only if you allow it. FitVen no longer tracks runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.</p>
+      <p>Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.</p>
+      <p>While a walk runs, FitVen also reads your phone's step counter (Motion &amp; Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone.</p>
       <p>Exercise videos are stored on Supabase with the rest of your data.</p>
-      <p>The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.</p>
+      <p>The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran or walked, even though the route itself is never sent to them.</p>
       <p>If you connect Spotify, the app asks Spotify what is playing while a workout is running. Your Spotify login stays on your phone.</p>
       <p>Those four — Supabase, Expo, Google Maps and, if you connect it, Spotify — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.</p>
     </section>

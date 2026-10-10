@@ -298,6 +298,13 @@ export async function matchWorkoutToGym(
     return { gymId: null, gym: null, matched: false, reason: "missing_workout" };
   }
 
+  // A walk is not done in a centre: no position is read for it here, so
+  // starting one does not ask for location twice, and where it ended is not
+  // kept as the place it was done.
+  if (LOCATION_WORKOUT_TYPES.has(workout.workout_type)) {
+    return { gymId: null, gym: null, matched: false, reason: "location_workout" };
+  }
+
   const existingGymId = toNumber(workout.gym_id);
 
   if (existingGymId !== null && !force) {

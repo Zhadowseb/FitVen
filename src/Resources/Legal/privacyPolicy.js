@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-04.1";
+export const PRIVACY_POLICY_VERSION = "2026-10-10.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "4 October 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "10 October 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -50,7 +50,7 @@ Exercises you make yourself: the name, the muscles, the equipment, the weight mo
 
 Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; and the lifts from those workouts that go on a centre's leaderboard.
 
-Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, and the location and route of runs you tracked with an earlier version of FitVen.
+Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, the route, distance and steps of the walks you track with FitVen, and the location and route of runs you tracked with an earlier version of FitVen. A walk's route, distance and steps stay on your phone; only the walk itself, with its date and time, is stored with your account like any other workout.
 
 Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish and the posts you like.
 
@@ -74,11 +74,13 @@ You can withdraw that consent at any time by deleting your account, which remove
 
 Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.
 
-Location is only read once when you start a workout, to find the centre you are in, and only if you allow it. FitVen no longer tracks runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone, is never sent to FitVen's server and is deleted with the walk. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+
+While a walk runs, FitVen also reads your phone's step counter (Motion & Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone.
 
 Exercise videos are stored on Supabase with the rest of your data.
 
-The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran, even though the route itself is never sent to them.
+The map that draws your route is Google Maps. Drawing a route means asking Google for the map of that area, so Google can see roughly where you ran or walked, even though the route itself is never sent to them.
 
 If you connect Spotify, the app asks Spotify what is playing while a workout is running. Your Spotify login stays on your phone.
 
