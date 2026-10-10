@@ -97,6 +97,7 @@ const phone = {
   // given to deliver positions to.
   taskSupported: false,
   refuseStarts: 0,
+  stopGate: null,
   runningTask: null,
   taskCalls: [],
   taskExecutors: {},
@@ -170,6 +171,10 @@ function installWorld() {
       phone.runningTask = { name, options };
     },
     stopLocationUpdatesAsync: async (name) => {
+      if (phone.stopGate) {
+        await phone.stopGate;
+      }
+
       phone.taskCalls.push(["stop", name]);
       phone.runningTask = null;
     },
@@ -819,6 +824,12 @@ async function main() {
   assert.strictEqual(tracker.getWalkSnapshot(12).status, "autoPaused", "standing still behind the screen auto pauses");
   assert.strictEqual(bgOne("SELECT timer_start AS t FROM Workout_Type_Instance WHERE workout_id = 12").t, null);
 
+  // The jitter of a phone lying still is not walking: one position that moved
+  // does not wake it.
+  walkedMeters += 1.4;
+  await screenOffSeconds(5, { moving: false });
+  assert.strictEqual(tracker.getWalkSnapshot(12).status, "autoPaused", "one jump of the position does not wake an auto pause");
+
   // And walking again wakes it, with a step watcher that is no longer delivering.
   await screenOffSeconds(6, { moving: true });
   assert.strictEqual(tracker.getWalkSnapshot(12).status, "running", "ground gained behind the screen resumes an auto pause");
@@ -919,6 +930,35 @@ async function main() {
   assert.strictEqual(phone.locationWatchers.filter((watcher) => !watcher.removed).length, 0);
   await tracker.leaveWalk();
   phone.taskCalls = [];
+
+  // A late batch from a task that is being stopped must not stop the one a
+  // quick resume has started behind it.
+  newBgWalk(19);
+  await tracker.openWalk(bg, 19);
+  await tracker.startWalk();
+  {
+    let release = null;
+
+    phone.stopGate = new Promise((resolve) => {
+      release = resolve;
+    });
+
+    const pausing = tracker.pauseWalk();
+    const resuming = tracker.resumeWalk();
+
+    for (let turn = 0; turn < 10; turn += 1) {
+      await flush();
+    }
+
+    await deliver([{ coords: { latitude: 55, longitude: 12, accuracy: 5, speed: 1 }, timestamp: clock }]);
+    phone.stopGate = null;
+    release();
+    await Promise.all([pausing, resuming]);
+    await flush();
+    assert.ok(phone.runningTask, "the service the resume started is still running");
+    assert.strictEqual(taskKinds().slice(-2).join(), "stop,start", "and nothing stopped it behind its back");
+    await tracker.leaveWalk();
+  }
 
   // No location, no service.
   newBgWalk(16);

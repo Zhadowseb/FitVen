@@ -37,6 +37,9 @@ export const WALK_TRACKING = Object.freeze({
   // Auto pause: this long without a step and without ground gained.
   autoPauseQuietSeconds: 10,
   autoPauseMinSpeedMetersPerSecond: 0.5,
+  // Positions in a row that gained ground, to wake an auto pause by ground
+  // alone (no step counter delivering).
+  autoPauseWakeStreak: 3,
 });
 
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);

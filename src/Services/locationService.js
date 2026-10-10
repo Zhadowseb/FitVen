@@ -151,11 +151,13 @@ export function deliverWalkLocations(locations) {
 
 let currentWalkTracking = null;
 
-// Without a token it stops whatever walk task there is, which is what the
-// launch cleanup and an orphaned task need.
+// With a token it stops that start. Without one it stops whatever walk task
+// there is, which is what the launch cleanup and an orphaned task need - but
+// only if no walk owns the task by the time it runs: a late batch from a task
+// that was just stopped must not stop the one a quick resume started behind it.
 function stopWalkTask(token) {
   return inTaskOrder(async () => {
-    if (token && currentWalkTracking !== token) {
+    if (token ? currentWalkTracking !== token : currentWalkTracking !== null) {
       return;
     }
 
@@ -232,7 +234,10 @@ export function startWalkTracking(onFix) {
         // walking pace is slow and the filter in Utils/walkTracking decides
         // what counts.
         timeInterval: 1000,
-        distanceInterval: 1,
+        // No distance filter: standing still is what an auto pause judges, and
+        // behind the screen Android does not run the timers, so it has to be
+        // judged by positions that keep arriving.
+        distanceInterval: 0,
         // iOS stops delivering when it decides the phone stands still, and
         // does not start again behind the screen; a walk decides that itself.
         pausesUpdatesAutomatically: false,

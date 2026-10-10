@@ -348,16 +348,26 @@ function onFix(fix) {
   if (session.status === "autoPaused") {
     // Ground gained is how a walk without a step counter wakes up again, and
     // nothing is added to the walk meanwhile.
+    let moved = false;
+
     if (previousFix && isUsableWalkFix(fix) && isUsableWalkFix(previousFix)) {
       const seconds = (fix.timestamp - previousFix.timestamp) / 1000;
       const metres = approximateMetres(previousFix, fix);
 
-      if (seconds > 0 && seconds <= 5 && metres / seconds >= WALK_TRACKING.autoPauseMinSpeedMetersPerSecond) {
-        session.lastMoveAtMs = now;
+      moved = seconds > 0 && seconds <= 5 && metres / seconds >= WALK_TRACKING.autoPauseMinSpeedMetersPerSecond;
+    }
 
-        if (!stepsLive()) {
-          resumeFromAuto();
-        }
+    session.moveStreak = moved ? session.moveStreak + 1 : 0;
+
+    // With a live step counter the steps wake the walk and the ground only
+    // keeps it from pausing again. Without one the ground is all there is, and
+    // the jitter of a phone lying still is not walking: it takes a few
+    // positions in a row.
+    if (moved && (stepsLive() || session.moveStreak >= WALK_TRACKING.autoPauseWakeStreak)) {
+      session.lastMoveAtMs = now;
+
+      if (!stepsLive()) {
+        resumeFromAuto();
       }
     }
 
@@ -449,6 +459,7 @@ function pauseClock(nextStatus) {
   session.elapsed = currentElapsedSeconds();
   session.timerStart = null;
   session.status = nextStatus;
+  session.moveStreak = 0;
   void persistTimer();
   void saveProgress();
 }
@@ -590,6 +601,7 @@ function emptySession(workoutId) {
     location: "unknown",
     lastStepAtMs: null,
     lastMoveAtMs: null,
+    moveStreak: 0,
     sinceMs: Date.now(),
     backgroundedAt: null,
     inBackground: false,
