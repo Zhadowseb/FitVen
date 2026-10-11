@@ -860,7 +860,17 @@ const CRON_MORNING = Date.UTC(2026, 8, 27, 6, 15);
 
   assert.deepStrictEqual(
     [...new Set(readSecrets)].sort(),
-    ["ASC_ISSUER_ID", "ASC_KEY_ID", "ASC_PRIVATE_KEY", "ASC_VENDOR_NUMBER", "STORE_STATS_CRON_SECRET"]
+    [
+      "ASC_ISSUER_ID",
+      "ASC_KEY_ID",
+      "ASC_PRIVATE_KEY",
+      "ASC_VENDOR_NUMBER",
+      // Android (Google Play), optional: android.ts and docs/ANDROID-DOWNLOADS-DIN-OPGAVE.md.
+      "PLAY_PACKAGE_NAME",
+      "PLAY_REPORTS_BUCKET",
+      "PLAY_SERVICE_ACCOUNT_JSON",
+      "STORE_STATS_CRON_SECRET",
+    ]
   );
 
   for (const name of readSecrets) {
