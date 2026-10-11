@@ -238,6 +238,38 @@ loadAppModule.stubModule("expo-sensors", {
     },
   },
 });
+const hc = { calls: [] };
+
+loadAppModule.stubModule("react-native-health-connect", {
+  SdkAvailabilityStatus: { SDK_UNAVAILABLE: 1, SDK_AVAILABLE: 3 },
+  getSdkStatus: async () => 3,
+  initialize: async () => true,
+  getGrantedPermissions: async () => [{ accessType: "read", recordType: "Steps" }],
+  requestPermission: async (permissions) => permissions,
+  openHealthConnectSettings() {},
+  aggregateGroupByPeriod: async (request) => {
+    hc.calls.push(request);
+
+    return [];
+  },
+});
+
+const kit = { status: 1, reads: [], rows: [] };
+
+loadAppModule.stubModule("@kingstinct/react-native-healthkit", {
+  isHealthDataAvailableAsync: async () => true,
+  getRequestStatusForAuthorization: async () => kit.status,
+  requestAuthorization: async () => {
+    kit.status = 2;
+
+    return true;
+  },
+  queryStatisticsCollectionForQuantity: async (...args) => {
+    kit.reads.push(args);
+
+    return kit.rows;
+  },
+});
 loadAppModule.stubModule("expo-constants", { default: {} });
 loadAppModule.stubModule("react-native-url-polyfill/auto", {});
 loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
@@ -313,6 +345,7 @@ async function main() {
   {
     const db = createDatabase();
 
+    await stepsRepository.setStepsEnabled(db);
     motion.steps = { [day(-1)]: 5000, [day(0)]: 250 };
 
     const written = await steps.refreshRecentDailySteps(db);
@@ -326,22 +359,119 @@ async function main() {
     assert.strictEqual(await steps.refreshRecentDailySteps(db), 0, "a second look finds nothing new and writes nothing");
   }
   {
+    // A permission given for a walk is not a yes to the whole day: nothing is read,
+    // and nothing is sent, until Allow has been tapped on the steps card.
+    world.tables.daily_steps = [];
+
+    const db = createDatabase();
+
+    motion.permission = "granted";
+    motion.steps = { [day(-1)]: 5000, [day(0)]: 250 };
+    motion.reads = [];
+    kit.reads = [];
+
+    assert.strictEqual(await steps.refreshRecentDailySteps(db), 0);
+    assert.strictEqual(motion.reads.length, 0, "the motion history is not read");
+    assert.strictEqual(kit.reads.length, 0, "and neither is Apple Health");
+    assert.strictEqual(kept(db).length, 0);
+
+    const result = await steps.syncDailyStepsWithCloud(db, { userId: "u1", policyVersion: "2026-10-11.1" });
+
+    assert.deepStrictEqual(result, { pulled: 0, pushed: 0 }, "and nothing goes up");
+    assert.strictEqual(world.tables.daily_steps.length, 0);
+
+    await stepsRepository.setStepsEnabled(db);
+    assert.ok((await steps.refreshRecentDailySteps(db)) > 0, "after Allow it is read");
+    assert.ok(motion.reads.length > 0);
+  }
+  {
     // The first opening, before the question has been asked, does not use up the history.
     const db = createDatabase();
 
+    await stepsRepository.setStepsEnabled(db);
     motion.permission = "undetermined";
+    kit.status = 1;
     await steps.refreshRecentDailySteps(db);
-    assert.strictEqual(await stepsRepository.getBackfillTriedAt(db), 0, "no source answered, so no try was spent");
+    assert.strictEqual(await stepsRepository.getBackfillDoneAt(db, "motion"), 0, "no source answered, so nothing was marked done");
+    assert.strictEqual(await stepsRepository.getBackfillDoneAt(db, "health"), 0);
     motion.permission = "granted";
     motion.steps = { [day(-5)]: 4000 };
     await steps.refreshRecentDailySteps(db);
-    assert.ok((await stepsRepository.getBackfillTriedAt(db)) > 0, "the history is asked for once a source answers");
+    assert.ok((await stepsRepository.getBackfillDoneAt(db, "motion")) > 0, "the history is read once a source answers");
     assert.ok(kept(db).some((entry) => entry.day === day(-5) && entry.steps === 4000));
 
-    // ...and the try belongs to this person's database, not to the phone.
+    // ...and the marks belong to this person's database, not to the phone.
     const other = createDatabase();
 
-    assert.strictEqual(await stepsRepository.getBackfillTriedAt(other), 0);
+    assert.strictEqual(await stepsRepository.getBackfillDoneAt(other, "motion"), 0);
+  }
+  {
+    // A better source that comes later still gets its history, though the table
+    // already holds days from a worse one: motion first, Apple Health turned on after.
+    const db = createDatabase();
+
+    await stepsRepository.setStepsEnabled(db);
+    motion.permission = "granted";
+    motion.steps = { [day(-5)]: 4000, [day(-4)]: 3000, [day(-1)]: 5000 };
+    kit.status = 1; // not asked yet
+    kit.rows = [];
+    await steps.refreshRecentDailySteps(db);
+    assert.deepStrictEqual(
+      kept(db).filter((entry) => entry.day <= day(-4)).map((entry) => [entry.day, entry.source]),
+      [[day(-5), "motion"], [day(-4), "motion"]],
+      "the table has days from the motion history"
+    );
+    assert.strictEqual(await stepsRepository.getBackfillDoneAt(db, "health"), 0);
+
+    kit.status = 2; // Apple Health is allowed now
+    kit.rows = [
+      { startDate: new Date(day(-40) + "T00:00:00"), sumQuantity: { quantity: 7000, unit: "count" } },
+      { startDate: new Date(day(-4) + "T00:00:00"), sumQuantity: { quantity: 8200, unit: "count" } },
+    ];
+    await steps.refreshRecentDailySteps(db);
+
+    assert.ok((await stepsRepository.getBackfillDoneAt(db, "health")) > 0, "Apple Health's history is read, though the table was not empty");
+    assert.deepStrictEqual(
+      kept(db).filter((entry) => entry.day === day(-40) || entry.day === day(-4)).map((entry) => [entry.day, entry.steps, entry.source]),
+      [[day(-40), 7000, "health"], [day(-4), 8200, "health"]],
+      "a day from before the motion history is filled, and a day motion had is upgraded"
+    );
+  }
+  {
+    // A new phone: the cloud filled the table before health was allowed. Health still backfills.
+    world.tables.daily_steps = [{ user_id: "u1", day: day(-10), steps: 2500, source: "motion", updated_at: new Date(1000).toISOString() }];
+
+    const db = createDatabase();
+
+    await steps.syncDailyStepsWithCloud(db, { userId: "u1", policyVersion: "2026-10-11.1" });
+    assert.strictEqual(kept(db).length, 1, "the history came from the cloud");
+
+    await stepsRepository.setStepsEnabled(db);
+    kit.status = 2;
+    kit.rows = [{ startDate: new Date(day(-30) + "T00:00:00"), sumQuantity: { quantity: 6100, unit: "count" } }];
+    await steps.refreshRecentDailySteps(db);
+    assert.ok(kept(db).some((entry) => entry.day === day(-30) && entry.source === "health"), "and Apple Health's days are read on top");
+    world.tables.daily_steps = [];
+  }
+  {
+    // Android: the history is asked for within the 30 days Health Connect shows
+    // without the history permission, not for 90 it may refuse.
+    platform.OS = "android";
+    hc.calls = [];
+
+    const db = createDatabase();
+
+    await stepsRepository.setStepsEnabled(db);
+    await steps.refreshRecentDailySteps(db);
+
+    const starts = hc.calls.map((call) => new Date(call.timeRangeFilter.startTime));
+    const oldest = new Date(Math.min(...starts));
+    const asked = Math.round((new Date(TODAY + "T00:00:00") - oldest) / (24 * 60 * 60 * 1000));
+
+    assert.strictEqual(hc.calls.length, 2, "the last days, and the history");
+    assert.strictEqual(asked, 29, "the history goes back 29 days on Android");
+    assert.ok((await stepsRepository.getBackfillDoneAt(db, "health")) > 0);
+    platform.OS = "ios";
   }
 
   /* ------------------------------------------------------------- the cloud -- */

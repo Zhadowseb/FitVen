@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { runningRepository, workoutRepository } from "../Repository";
+import { runningRepository, stepsRepository, workoutRepository } from "../Repository";
 import {
   addDays,
   buildDay,
@@ -90,6 +90,11 @@ export function getStepsAccess() {
  * motion history is asked for instead, the next best source, and only then.
  */
 export async function requestStepsAccess(db) {
+  // Tapping Allow is the yes: from here the steps are read. Before it, nothing is.
+  if (db) {
+    await stepsRepository.setStepsEnabled(db);
+  }
+
   const status = await healthStepsService.requestHealthStepsAccess();
 
   cache = null;

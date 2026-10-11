@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+
 import { supabase } from "@database/supaBaseClient";
 import { stepsRepository } from "../Repository";
 import { addDays, datesBetween, localIsoDate } from "../Utils/dailySteps";
@@ -19,34 +21,51 @@ import * as stepCounterService from "./stepCounterService";
 // day stays even when the phone's health app is switched off or has forgotten
 // it, and a new phone gets its history back from the cloud.
 
-// A refresh looks this far back each time: ure and health apps hand their
+// A refresh looks this far back each time: watches and health apps hand their
 // steps over a little late.
 const RECENT_DAYS = 3;
-// The first time, as far back as the sources will tell.
-const BACKFILL_DAYS = 90;
+// The first time a source answers, as far back as it will tell. Health Connect
+// only shows the 30 days before the permission was first given, so Android asks
+// for less than that rather than for something it may refuse; the iPhone's own
+// motion history is a week.
+const backfillDays = (source) => (source === "health" ? (Platform.OS === "android" ? 29 : 90) : 6);
 // And how far back the cloud is asked about when the phones meet.
 const CLOUD_WINDOW_DAYS = 120;
-const BACKFILL_RETRY_MS = 24 * 60 * 60 * 1000;
 
 const CLOUD_TABLE = "daily_steps";
 
 /* ------------------------------------------------------------------ local -- */
 
+const SOURCE_READERS = {
+  health: (fromIso, toIso) => healthStepsService.readDailySteps(fromIso, toIso),
+  motion: (fromIso, toIso) => stepCounterService.readMotionDailySteps(fromIso, toIso),
+};
+
 /**
  * Reads the sources for the days and keeps what is better than what is there.
- * Returns { written, answered }: how many days were written, and whether any
- * source could be asked at all (a phone that has not been asked for permission
- * yet answers nothing, and that is not a quiet week).
+ * Returns { written, answered } - how many days were written, and which sources
+ * could be asked at all (one that has not been given permission answers nothing,
+ * and that is not a quiet week).
+ *
+ * Nothing is read until the person has said yes to their steps being read (the
+ * Allow on the steps card or page): the motion permission may have been given
+ * for a walk, and that is not a yes to the whole day.
  */
-export async function refreshDailySteps(db, { fromIso, toIso, now = Date.now() }) {
-  const [health, motion, rows] = await Promise.all([
-    healthStepsService.readDailySteps(fromIso, toIso),
-    stepCounterService.readMotionDailySteps(fromIso, toIso),
+export async function refreshDailySteps(db, { fromIso, toIso, sources = Object.keys(SOURCE_READERS), now = Date.now() }) {
+  const none = { written: 0, answered: { health: false, motion: false } };
+
+  if (!(await stepsRepository.getStepsEnabled(db))) {
+    return none;
+  }
+
+  const [readings, rows] = await Promise.all([
+    Promise.all(sources.map((source) => SOURCE_READERS[source](fromIso, toIso))),
     stepsRepository.getDailySteps(db, { fromIso, toIso }),
   ]);
+  const byName = Object.fromEntries(sources.map((source, index) => [source, readings[index]]));
   const writes = planRefresh({
     days: datesBetween(fromIso, toIso),
-    readings: { health, motion },
+    readings: byName,
     existing: new Map(rows.map((row) => [row.day, row])),
     now,
   });
@@ -55,13 +74,20 @@ export async function refreshDailySteps(db, { fromIso, toIso, now = Date.now() }
     await stepsRepository.writeDailyStep(db, write);
   }
 
-  return { written: writes.length, answered: health !== null || motion !== null };
+  return {
+    written: writes.length,
+    answered: { health: byName.health != null, motion: byName.motion != null },
+  };
 }
 
 /**
- * The last few days, and - once, if nothing older was ever kept and a source is
- * answering - the history. A try is only counted when a source answered: the
- * first opening before the question has been asked must not use it up.
+ * The last few days, and - once for each source, the first time it answers - its
+ * history. That is per source and not "when the table is empty": a better source
+ * that comes later (Apple Health turned on after the phone's motion history
+ * had filled the table, or a new phone that got its days from the cloud before
+ * the health app was allowed) still gets its history read. A source is only
+ * marked done when it answered, so a first opening before the question has been
+ * asked uses nothing up.
  */
 export async function refreshRecentDailySteps(db, { now = Date.now() } = {}) {
   const todayIso = localIsoDate(new Date(now));
@@ -69,30 +95,28 @@ export async function refreshRecentDailySteps(db, { now = Date.now() } = {}) {
   const recent = await refreshDailySteps(db, { fromIso: recentFrom, toIso: todayIso, now });
   let written = recent.written;
 
-  if (
-    recent.answered &&
-    (await stepsRepository.countDailyStepsBefore(db, recentFrom)) === 0 &&
-    (await backfillIsDue(db, now))
-  ) {
-    await stepsRepository.setBackfillTriedAt(db, now);
-    written += (
-      await refreshDailySteps(db, {
-        fromIso: addDays(todayIso, -BACKFILL_DAYS),
-        toIso: addDays(recentFrom, -1),
-        now,
-      })
-    ).written;
+  for (const source of Object.keys(SOURCE_READERS)) {
+    if (!recent.answered[source] || (await stepsRepository.getBackfillDoneAt(db, source)) > 0) {
+      continue;
+    }
+
+    const result = await refreshDailySteps(db, {
+      fromIso: addDays(todayIso, -backfillDays(source)),
+      toIso: addDays(recentFrom, -1),
+      sources: [source],
+      now,
+    });
+
+    written += result.written;
+
+    // Only a read that really answered counts: a window the source refuses is
+    // tried again next time, not marked done.
+    if (result.answered[source]) {
+      await stepsRepository.setBackfillDoneAt(db, source, now);
+    }
   }
 
   return written;
-}
-
-// Kept in the person's own database, so another account on the phone is not held
-// back by this one having looked.
-async function backfillIsDue(db, now) {
-  const last = await stepsRepository.getBackfillTriedAt(db);
-
-  return last <= 0 || now - last >= BACKFILL_RETRY_MS;
 }
 
 /** The kept days from `fromIso` to `toIso`, as { "2026-10-05": { steps, source } }. */

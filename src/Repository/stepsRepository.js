@@ -1,4 +1,5 @@
-// The Daily_Steps table: one row for each day (see Database/schema/steps.js).
+// The Daily_Steps table: one row for each day (see Database/schema/steps.js),
+// and a few small facts about this person's steps kept beside it.
 
 export async function getDailySteps(db, { fromIso, toIso }) {
   return db.getAllAsync(
@@ -8,16 +9,6 @@ export async function getDailySteps(db, { fromIso, toIso }) {
      ORDER BY day ASC;`,
     [fromIso, toIso]
   );
-}
-
-/** How many days older than `beforeIso` are kept: nothing means no history was ever read. */
-export async function countDailyStepsBefore(db, beforeIso) {
-  const row = await db.getFirstAsync(
-    `SELECT COUNT(*) AS count FROM Daily_Steps WHERE day < ?;`,
-    [beforeIso]
-  );
-
-  return Number(row?.count) || 0;
 }
 
 /** Writes a day as it is, replacing the one that was there. `needsSync` says whether the cloud has it. */
@@ -54,24 +45,54 @@ export async function markDailyStepSynced(db, { day, updatedAt }) {
   );
 }
 
-const BACKFILL_TRIED_KEY = "steps_backfill_tried_at";
+/* ----------------------------------------------------- facts about the steps -- */
 
-/** When the history was last asked for (ms), or 0: kept in this person's own database. */
-export async function getBackfillTriedAt(db) {
+async function getMetadata(db, key) {
   const row = await db.getFirstAsync(
     `SELECT metadata_value FROM App_Metadata WHERE metadata_key = ?;`,
-    [BACKFILL_TRIED_KEY]
+    [key]
   );
-  const value = Number(row?.metadata_value);
 
-  return Number.isFinite(value) ? value : 0;
+  return row?.metadata_value ?? null;
 }
 
-export async function setBackfillTriedAt(db, timestamp) {
+async function setMetadata(db, key, value) {
   await db.runAsync(
     `INSERT INTO App_Metadata (metadata_key, metadata_value)
      VALUES (?, ?)
      ON CONFLICT(metadata_key) DO UPDATE SET metadata_value = excluded.metadata_value;`,
-    [BACKFILL_TRIED_KEY, String(timestamp)]
+    [key, String(value)]
   );
+}
+
+const STEPS_ENABLED_KEY = "steps_enabled";
+
+/**
+ * Whether this person has said yes to their steps being read - the Allow on the
+ * steps card or page. Until then no source is read: a permission given for a
+ * walk is not a yes to the whole day.
+ */
+export async function getStepsEnabled(db) {
+  return (await getMetadata(db, STEPS_ENABLED_KEY)) === "1";
+}
+
+export async function setStepsEnabled(db) {
+  await setMetadata(db, STEPS_ENABLED_KEY, "1");
+}
+
+const backfillKey = (source) => `steps_backfill_${source}_at`;
+
+/**
+ * When a source's history was read (ms), or 0 if it has not been. Once for each
+ * source, whatever the table already holds: a better source that answers later
+ * still gets its history read.
+ */
+export async function getBackfillDoneAt(db, source) {
+  const value = Number(await getMetadata(db, backfillKey(source)));
+
+  return Number.isFinite(value) ? value : 0;
+}
+
+export async function setBackfillDoneAt(db, source, timestamp) {
+  await setMetadata(db, backfillKey(source), timestamp);
 }
