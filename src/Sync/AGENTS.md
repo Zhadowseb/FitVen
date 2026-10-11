@@ -20,12 +20,13 @@ below never executes — no matter how complete it looks.
 | `WorkoutMusicSync` | yes | what is playing during a live workout, to `workout_music`, every 30 s while sharing is on |
 | `GymMatchSync` | yes | the centre match and the leaderboard lifts a finished workout could not complete, retried on launch and on return to the foreground |
 | `AppOpenSync` | yes | when the app was last opened, on which platform and in which version, to your own `profile_private` - at most once an hour, and only once the privacy policy this build carries has been accepted |
+| `DailyStepsSync` | yes | the one number a day keeps: the phone's sources (health app, motion history) are read into `Daily_Steps` for the last few days, then it meets `public.daily_steps` - the days a new phone has not seen come back, what this phone has goes up. At most every five minutes, and the upload waits for the privacy policy this build carries to have been accepted |
 | `LiveWorkoutSync` | yes | nothing to the cloud: the running strength workout to the lock screen (iOS Live Activity, Android notification) through `liveWorkoutService`, and the taps on the card's buttons back into the workout |
 
 `syncQueue.js` is not a component. It is the entry point the others go
-through, and it serialises everything onto a single promise chain. Three do
+through, and it serialises everything onto a single promise chain. Four do
 not use it - `WorkoutMusicSync`, which polls a music provider,
-`PushNotificationRegistrationSync` and `AppOpenSync` - because they reconcile
+`PushNotificationRegistrationSync`, `AppOpenSync` and `DailyStepsSync` - because they reconcile
 nothing local and only write cloud rows of their own, so there is no
 parent-first order for them to break. `LiveWorkoutSync` does not either: it
 writes nothing to the cloud, and the set it ticks off from the lock screen goes

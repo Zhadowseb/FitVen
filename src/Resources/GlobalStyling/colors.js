@@ -122,6 +122,16 @@ export const Colors = {
         scrimSoft: "rgba(0, 0, 0, 0.04)",
         sheetScrim: "rgba(0, 0, 0, 0.62)",
 
+        // The five step zones (Utils/stepZones.js). Fixed colours, not accent
+        // colours: a zone is the same colour on every screen and in every theme.
+        stepZones: {
+            inactive: "#E0584F",
+            moving: "#D9A441",
+            active: "#A8C256",
+            sweetSpot: "#4ED39A",
+            bonus: "#22B8A0",
+        },
+
         iconColor: "#868C99",
         iconColorFocused: "#F7742E",
     },
@@ -215,6 +225,16 @@ export const Colors = {
         onDanger: "#FFFFFF",
         scrim: "rgba(0, 0, 0, 0.5)",
         sheetScrim: "rgba(0, 0, 0, 0.62)",
+
+        // The five step zones (Utils/stepZones.js). The same hues as in dark,
+        // darkened so the zone name reads on a white card.
+        stepZones: {
+            inactive: "#C23F36",
+            moving: "#8F6610",
+            active: "#5F7A12",
+            sweetSpot: "#16825A",
+            bonus: "#0F7F6E",
+        },
 
         iconColor: "#676B76",
         iconColorFocused: "#F7742E",

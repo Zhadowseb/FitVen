@@ -1,0 +1,78 @@
+name: Android native check
+
+# Bygger appen til Android, naar en aendring roerer den native kode: de lokale
+# Expo-moduler i modules/ eller det, der styrer prebuild.
+#
+# Appen udvikles paa Windows, hvor Kotlin ikke kan compiles uden et helt
+# Android-toolchain. Uden den her ville en Kotlin-fejl foerst vise sig i en
+# EAS-build. Den signerer ikke, uploader ikke og bygger kun en debug-APK til
+# en enkelt arkitektur, og repoet er offentligt, saa minutterne koster ikke
+# noget.
+#
+# Den er ikke en port som ci.yml. Den er en compiler, man kan spoerge.
+
+on:
+  pull_request:
+    branches: [master, "release/**", "minor/**", "fix/**"]
+    paths:
+      - "modules/**"
+      - "plugins/**"
+      - "app.json"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/android-native-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-native-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Android debug build
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - run: npm ci --no-audit --no-fund
+
+      # Den samme prebuild, som EAS koerer: app.json, config-plugins og de
+      # lokale moduler i modules/ bliver koblet paa af autolinking.
+      - name: Prebuild
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build
+        working-directory: android
+        run: |
+          set -o pipefail
+          mkdir -p ../build
+          ./gradlew app:assembleDebug -PreactNativeArchitectures=arm64-v8a --no-daemon --console=plain 2>&1 | tee ../build/gradle.log | grep -E "^e: |error:|FAILURE|BUILD" || true
+          grep -q "BUILD SUCCESSFUL" ../build/gradle.log
+
+      # Et groent byg beviser ikke, at modulet kom med. Dets Kotlin skal vaere
+      # compilet til klasser.
+      - name: The step sensor is in the app
+        run: |
+          find . -name 'StepSensorModule*.class' -not -path './node_modules/*' | grep -q . || { echo "StepSensorModule was not compiled"; exit 1; }
+
+      - name: Build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-gradle-log
+          path: build/gradle.log
+          retention-days: 7

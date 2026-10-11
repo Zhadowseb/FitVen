@@ -24,7 +24,7 @@ import Reload from "../../Resources/Icons/UI-icons/Reload";
 import Name from "../../Resources/Icons/UI-icons/Name";
 import Social from "../../Resources/Icons/UI-icons/Social";
 import WorkoutCopyTargetModal from "../../Resources/Components/WorkoutCopyTargetModal";
-import { programService, workoutService } from "../../Services";
+import { programService, walkTrackerService, workoutService } from "../../Services";
 import { formatDate } from "../../Utils/dateUtils";
 import { STARTED_FROM } from "@utils/startedFrom";
 import {
@@ -172,6 +172,12 @@ const WorkoutPage = ({ route }) => {
 
   const deleteWorkout = async () => {
     try {
+      // A walk that is being tracked stops, so nothing is written for it after
+      // it is gone.
+      if (isWalkWorkout) {
+        await walkTrackerService.releaseWalk(workout_id);
+      }
+
       await programService.deleteWorkout(db, workout_id);
       setOptionsBottomsheetVisible(false);
       navigation.goBack();
@@ -494,6 +500,23 @@ const WorkoutPage = ({ route }) => {
     );
   }
 
+  // A walk draws its own header (back, title, auto pause), like a strength
+  // workout does, so the page keeps only the options sheet and its dialogs.
+  if (isWalkWorkout) {
+    return (
+      <ThemedView safe={["top", "left", "right"]}>
+        <Walk
+          workout_id={workout_id}
+          title={workoutDisplayName(workoutLabel, t, workoutType)}
+          restartRequestKey={restartRequestKey}
+          onOpenOptions={() => setOptionsBottomsheetVisible(true)}
+        />
+
+        {overlays}
+      </ThemedView>
+    );
+  }
+
   return (
     <ThemedView safe={["top", "left", "right"]}>
       <ThemedHeader
@@ -551,13 +574,6 @@ const WorkoutPage = ({ route }) => {
           workout_id={workout_id}
           restartRequestKey={restartRequestKey}
           onHeaderTitleChange={setRunHeaderTitle}
-        />
-      )}
-
-      {isWalkWorkout && (
-        <Walk
-          workout_id={workout_id}
-          restartRequestKey={restartRequestKey}
         />
       )}
 

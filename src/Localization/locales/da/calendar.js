@@ -218,5 +218,6 @@ export default {
     mobility: "Mobilitet",
     lowerbody: "Underkrop",
     run: "Løb",
+    walk: "Gåtur",
   },
 };

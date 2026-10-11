@@ -157,6 +157,8 @@ const INHERIT_TAB_ROUTES = new Set([
   // One shared exercise: from Explore's library, and from your own exercise
   // as "see it as others do".
   "CustomExerciseDetailPage",
+  // The steps: from Home's card and from Statistics.
+  "StepsPage",
 ]);
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {

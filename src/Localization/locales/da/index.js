@@ -28,10 +28,12 @@ import run from "./run";
 import settings from "./settings";
 import social from "./social";
 import statistics from "./statistics";
+import steps from "./steps";
 import time from "./time";
 import train from "./train";
 import trainCalendar from "./trainCalendar";
 import trainLibrary from "./trainLibrary";
+import walk from "./walk";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
 import workoutTypes from "./workoutTypes";
@@ -65,10 +67,12 @@ export default {
   settings,
   social,
   statistics,
+  steps,
   time,
   train,
   trainCalendar,
   trainLibrary,
+  walk,
   workout,
   workoutStart,
   workoutTypes,

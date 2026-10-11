@@ -86,6 +86,7 @@ behind by accident.
 | `20261008090000_a-set-counts-for-fewer-reps.sql` | yes |
 | `20261009090000_a-like-notifies-the-poster.sql` | yes |
 | `20261010090000_more-catalog-exercises.sql` | yes |
+| `20261011090000_daily-steps.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
@@ -528,3 +529,10 @@ to point a tool at.
 
 `docs/export-user-programs.sql` is a read-only query for pulling one user's
 program data out by hand. It changes nothing, so it stays in `docs/`.
+
+`20261011090000_daily-steps.sql` has not been run. It creates `public.daily_steps`, one row for each person and day
+(steps and the source they came from: health, motion, sensor), owner-only under row level security, and a write needs the
+privacy policy to have been accepted. Until it has run, a phone on the version that has the daily steps keeps its days on
+the phone and tries again at the next start - nothing breaks, and nothing is lost. Run it in the SQL editor; it is
+idempotent and gives up after five seconds if the table is busy, so run it again then. Deleting an account removes the rows
+(the delete-account function deletes every row with the user's id, and `on delete cascade` covers the rest).

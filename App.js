@@ -45,6 +45,7 @@ import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibrary
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
 import RecordsExercisePage from "./src/Pages/RecordsExercisePage/RecordsExercisePage";
 import StatisticsPage from "./src/Pages/StatisticsPage/StatisticsPage";
+import StepsPage from "./src/Pages/StepsPage/StepsPage";
 import StatisticsDetailPage from "./src/Pages/StatisticsDetailPage/StatisticsDetailPage";
 import WorkoutLibraryPage from "./src/Pages/WorkoutLibraryPage/WorkoutLibraryPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
@@ -87,6 +88,8 @@ import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
+import DailyStepsSync from "./src/Sync/DailyStepsSync";
+import WatchWalkPrompt from "./src/Resources/Components/WatchWalkPrompt/WatchWalkPrompt";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
@@ -402,6 +405,7 @@ function RootNavigator() {
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RecordsExercisePage" component={RecordsExercisePage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsPage" component={StatisticsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="StepsPage" component={StepsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsDetailPage" component={StatisticsDetailPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutLibraryPage" component={WorkoutLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutPostsPage" component={WorkoutPostsPage} options={{ headerShown: false }} />
@@ -511,11 +515,14 @@ function UserScopedDatabaseApp() {
       <WorkoutMusicSync />
       <GymMatchSync />
       <AppOpenSync />
+      <DailyStepsSync />
       <LiveWorkoutSync />
       <PrivacyConsentGate>
         {/* Keyed on the language too: a screen's header options and anything
             else the navigator captured at mount are rebuilt in the new one. */}
         <RootNavigator key={`accent-${accentTheme}-${language}`} />
+        {/* A walk found on the phone: add it to FitVen? After the policy is accepted. */}
+        <WatchWalkPrompt />
       </PrivacyConsentGate>
     </SQLiteProvider>
   );
