@@ -15,9 +15,13 @@ til mig, og læg dem ikke i chatten.
 
 1. Play Console -> **Download reports** -> **Statistics**.
 2. Tryk på knappen **Copy Cloud Storage URI**. Den ser sådan ud:
-   `gs://pubsite_prod_rev_01234567890123456789/`
-3. Selve bucket-navnet er `pubsite_prod_rev_01234567890123456789` (uden `gs://`
-   og uden skråstreg). Det er værdien til `PLAY_REPORTS_BUCKET`.
+   `gs://pubsite_prod_<tal>/` (på nogle konti `gs://pubsite_prod_rev_<tal>/`)
+3. Selve bucket-navnet er `pubsite_prod_<tal>` (uden `gs://` og uden skråstreg).
+   Det er værdien til `PLAY_REPORTS_BUCKET`. For FitVens udviklerkonto er det
+   `pubsite_prod_7090016886199254644`: det blev læst ud af linket til
+   oktober-rapporten på Statistik-siden, hvor filen hedder
+   `stats/installs/installs_com.anonymous.programapp_202610_overview.csv`, præcis
+   som koden forventer.
 
 ## 2. Lav en service account (Google Cloud)
 
@@ -50,7 +54,7 @@ Dashboard -> Edge Functions -> Secrets (eller `npx supabase secrets set ...`):
 | Secret | Værdi |
 |---|---|
 | `PLAY_SERVICE_ACCOUNT_JSON` | hele JSON-filen fra trin 2, indsat som den er |
-| `PLAY_REPORTS_BUCKET` | `pubsite_prod_rev_...` fra trin 1 |
+| `PLAY_REPORTS_BUCKET` | `pubsite_prod_7090016886199254644` |
 | `PLAY_PACKAGE_NAME` | kun hvis den ikke er `com.anonymous.programapp` |
 
 Uden de to første gør funktionen ingenting på Android og siger det i sit svar

@@ -3,7 +3,7 @@
 // Google Play has no "sales report" API for installs. What it has is the bulk
 // reports of the Play Console: CSV files in a Cloud Storage bucket that belongs
 // to the developer account (Play Console -> Download reports -> Statistics ->
-// "Copy Cloud Storage URI", which reads gs://pubsite_prod_rev_<number>/). One file
+// "Copy Cloud Storage URI", which reads gs://pubsite_prod_<number>/). One file
 // for each month and app, `stats/installs/installs_<package>_<YYYYMM>_overview.csv`,
 // with a row for each day. A Google service account that has been given the
 // permission "View app information and download bulk reports" in the Play
