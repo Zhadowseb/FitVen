@@ -9,6 +9,13 @@ const NORMALIZED_RUN_TYPE_SQL = `
   END
 `;
 
+// A day's date as "YYYY-MM-DD": a Day row holds it in either that or "DD.MM.YYYY".
+const DAY_ISO_SQL = `CASE
+  WHEN d.date LIKE '__.__.____'
+  THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+  ELSE d.date
+END`;
+
 export async function getRunSets(db, { workoutId, type }) {
   return db.getAllAsync(
     `SELECT *
@@ -274,6 +281,32 @@ export async function saveWalkSegment(
       done ? 1 : 0,
       existing.Run_id,
     ]
+  );
+}
+
+/**
+ * What the finished walks of each day covered, for the Steps page: steps and
+ * kilometres per day ("YYYY-MM-DD"), between two days inclusive.
+ */
+export async function getWalkTotalsByDay(db, { fromIso, toIso }) {
+  return db.getAllAsync(
+    `SELECT
+        ${DAY_ISO_SQL} AS date,
+        COALESCE(SUM(r.actual_steps), 0) AS steps,
+        COALESCE(SUM(r.actual_distance), 0) AS distance_km
+     FROM Run r
+     JOIN Workout_Type_Instance w ON w.workout_id = r.workout_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE w.workout_type = 'Walk'
+       AND w.done = 1
+       AND r.done = 1
+       AND COALESCE(r.is_pause, 0) = 0
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       AND ${DAY_ISO_SQL} BETWEEN ? AND ?
+     GROUP BY ${DAY_ISO_SQL}
+     ORDER BY ${DAY_ISO_SQL} ASC;`,
+    [fromIso, toIso]
   );
 }
 

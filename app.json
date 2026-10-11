@@ -47,7 +47,8 @@
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACTIVITY_RECOGNITION"
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.health.READ_STEPS"
       ],
       "blockedPermissions": [
         "android.permission.FOREGROUND_SERVICE",
@@ -91,6 +92,15 @@
           "motionPermission": "FitVen uses your motion and fitness data to count the steps of a walk and show your cadence."
         }
       ],
+      "react-native-health-connect",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "FitVen reads your daily steps from the Health app, to show how active your days are next to your workouts. It never writes to Health.",
+          "NSHealthUpdateUsageDescription": false,
+          "background": false
+        }
+      ],
       [
         "expo-image-picker",
         {
@@ -107,7 +117,8 @@
         "expo-build-properties",
         {
           "android": {
-            "enableMinifyInReleaseBuilds": true
+            "enableMinifyInReleaseBuilds": true,
+            "minSdkVersion": 26
           }
         }
       ]

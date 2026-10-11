@@ -14,6 +14,42 @@ function workoutDisplayLabelSql(workoutAlias = "w", workoutTypeAlias = "wt") {
   )`;
 }
 
+/**
+ * The finished workouts of the given types between two days (inclusive), with
+ * the time on their clock. The Steps page counts strength workouts as step
+ * equivalents from this; a workout with no time comes back with elapsed_time 0.
+ * A day's date is "YYYY-MM-DD" or "DD.MM.YYYY" in the table, and comes back as
+ * the first.
+ */
+export async function getFinishedWorkoutsOfTypesBetween(db, { types, fromIso, toIso }) {
+  const placeholders = types.map(() => "?").join(", ");
+
+  return db.getAllAsync(
+    `SELECT workout_id, workout_type, label, elapsed_time, iso_date AS date
+     FROM (
+       SELECT
+          w.workout_id,
+          w.workout_type,
+          w.label,
+          COALESCE(w.elapsed_time, 0) AS elapsed_time,
+          CASE
+            WHEN d.date LIKE '__.__.____'
+            THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+            ELSE d.date
+          END AS iso_date
+       FROM Workout_Type_Instance w
+       JOIN Day d ON d.day_id = w.day_id
+       WHERE w.workout_type IN (${placeholders})
+         AND w.done = 1
+         AND COALESCE(w.deleted_at, '') = ''
+         AND COALESCE(d.deleted_at, '') = ''
+     )
+     WHERE iso_date BETWEEN ? AND ?
+     ORDER BY iso_date ASC, workout_id ASC;`,
+    [...types, fromIso, toIso]
+  );
+}
+
 export async function getWorkoutHierarchyIds(db, workoutId) {
   return db.getFirstAsync(
     `SELECT

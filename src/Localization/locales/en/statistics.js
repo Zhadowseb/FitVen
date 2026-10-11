@@ -37,6 +37,15 @@ export default {
     empty: "Nothing to measure yet in this period.",
     open: "Open {name}",
   },
+  steps: {
+    title: "Daily steps",
+    perDay: "per day",
+    averageThisWeek: "Average this week · {zone}",
+    averageLastWeek: "Average last week · {zone}",
+    last12Weeks: "Last 12 weeks · coloured by step zone",
+    see: "See steps",
+    a11y: "Daily steps: average {average} a day, {zone} zone. Open steps",
+  },
   volume: {
     weekTitle: "Volume per week",
     monthTitle: "Volume per month",
