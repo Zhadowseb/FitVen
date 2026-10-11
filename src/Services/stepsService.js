@@ -1,7 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { runningRepository, workoutRepository } from "../Repository";
-import { buildDay, datesBetween, localIsoDate } from "../Utils/dailySteps";
+import {
+  addDays,
+  buildDay,
+  datesBetween,
+  localIsoDate,
+  startOfWeek,
+  weeklyWalkedAverages,
+} from "../Utils/dailySteps";
 import { LIVE_STRENGTH_WORKOUT_TYPES } from "../Utils/liveWorkout";
 import { getTargetSteps, normalizeTargetZoneId } from "../Utils/stepZones";
 import * as healthStepsService from "./healthStepsService";
@@ -148,6 +155,53 @@ export async function loadStepDays(db, { fromIso, toIso, countTraining = true, t
     hasPhoneSource: rows.hasPhoneSource,
     days: rows.days.map((row) => buildDay(row, { countTraining, theme })),
   };
+}
+
+/**
+ * What the Home card needs: the access, the settings, today, and whether the
+ * phone has said anything in the last week. iOS does not tell a refusal from a
+ * quiet week, so a week without a single step reads as "no data" - the card
+ * then asks instead of showing a zero as if it were real.
+ */
+export async function loadHomeSteps(db, { theme } = {}) {
+  const [status, settings] = await Promise.all([getStepsAccess(), getStepsSettings()]);
+  const today = localIsoDate();
+  const { days, hasPhoneSource } = await loadStepDays(db, {
+    fromIso: addDays(today, -6),
+    toIso: today,
+    countTraining: settings.countTraining,
+    theme,
+  });
+
+  return {
+    status,
+    settings,
+    today: days[days.length - 1],
+    hasPhoneSource,
+    hasPhoneData: days.some((day) => day.source === "phone" && day.walked > 0),
+  };
+}
+
+/**
+ * The Statistics section: the walked steps per day, averaged per week over the
+ * last 12 weeks, with the target it is held against. Null when the phone has
+ * said nothing in any of them, so the section is left out rather than empty.
+ */
+export async function loadWeeklySteps(db, { weeks = 12, theme } = {}) {
+  const [status, settings] = await Promise.all([getStepsAccess(), getStepsSettings()]);
+
+  if (status === "undetermined") {
+    return null;
+  }
+
+  const todayIso = localIsoDate();
+  const fromIso = addDays(startOfWeek(todayIso), -7 * (weeks - 1));
+  const { days } = await loadStepDays(db, { fromIso, toIso: todayIso, countTraining: false, theme });
+  const series = weeklyWalkedAverages(days, { todayIso, weeks });
+
+  return series.some((week) => week.average !== null)
+    ? { weeks: series, targetSteps: settings.targetSteps, targetZoneId: settings.targetZoneId }
+    : null;
 }
 
 export function clearStepsCache() {

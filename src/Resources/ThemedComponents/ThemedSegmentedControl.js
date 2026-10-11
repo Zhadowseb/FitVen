@@ -18,6 +18,8 @@ export default function ThemedSegmentedControl({
   value,
   onChange,
   style,
+  // The segments share the row equally, for a control that spans the screen.
+  stretch = false,
 }) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -43,6 +45,7 @@ export default function ThemedSegmentedControl({
             onPress={() => onChange(option.value)}
             style={[
               styles.segment,
+              stretch ? styles.segmentStretch : null,
               isActive ? { backgroundColor: theme.primary } : null,
             ]}
           >
@@ -76,6 +79,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 6,
     paddingHorizontal: 13,
+  },
+
+  segmentStretch: {
+    flex: 1,
   },
 
   segmentText: {

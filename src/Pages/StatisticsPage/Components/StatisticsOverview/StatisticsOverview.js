@@ -4,6 +4,7 @@ import Svg, { Defs, LinearGradient, Path, Rect, Stop } from "react-native-svg";
 import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./StatisticsOverviewStyle";
+import DailyStepsCard from "../DailyStepsCard/DailyStepsCard";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import RecordStar from "@resources/Components/RecordStar/RecordStar";
 import { ThemedSegmentedControl, ThemedText } from "@resources/ThemedComponents";
@@ -59,6 +60,10 @@ export default function StatisticsOverview({
   onSelectExercise,
   showAllMovers,
   onToggleAllMovers,
+  // The daily steps (Services/stepsService.loadWeeklySteps), or null: the
+  // section sits between the gains and the volume, and is left out with them.
+  steps = null,
+  onOpenSteps,
 }) {
   const { t } = useTranslation();
   const scheme = useColorScheme();
@@ -380,6 +385,14 @@ export default function StatisticsOverview({
           ) : null}
         </View>
       </View>
+
+      {/* Daily steps */}
+      {steps ? (
+        <View style={styles.section}>
+          {sectionHead(t("statistics.steps.title"))}
+          <DailyStepsCard steps={steps} onOpen={onOpenSteps} />
+        </View>
+      ) : null}
 
       {/* Volume */}
       <View style={styles.section}>

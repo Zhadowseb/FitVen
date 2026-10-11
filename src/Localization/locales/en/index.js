@@ -29,6 +29,7 @@ import run from "./run";
 import settings from "./settings";
 import social from "./social";
 import statistics from "./statistics";
+import steps from "./steps";
 import time from "./time";
 import train from "./train";
 import trainCalendar from "./trainCalendar";
@@ -67,6 +68,7 @@ export default {
   settings,
   social,
   statistics,
+  steps,
   time,
   train,
   trainCalendar,

@@ -215,6 +215,12 @@ const isoOfLocal = (date) =>
 export async function readDailySteps(fromIso, toIso) {
   const dates = datesBetween(fromIso, toIso);
 
+  // HealthKit ends the app if it is asked for something it was never given
+  // leave to read, so nothing is read before the question has been asked.
+  if ((await getHealthStepsStatus()) !== "granted") {
+    return null;
+  }
+
   try {
     if (Platform.OS === "ios") {
       const kit = getHealthKit();

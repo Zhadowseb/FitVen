@@ -194,3 +194,26 @@ export function changePercent(current, previous) {
 
   return Math.round(((current - previous) / previous) * 100);
 }
+
+/**
+ * The last `weeks` weeks (Monday to Sunday, the current one last) as the
+ * average of the walked steps on the days that have a number - the Statistics
+ * section's bars. A week with no day of data is { average: null }, a gap in the
+ * chart, not a week of zero. Training is not in these: Statistics shows walked
+ * steps, the training part is on the Steps page.
+ */
+export function weeklyWalkedAverages(days, { todayIso, weeks = 12 }) {
+  const monday = startOfWeek(todayIso);
+  const grouped = new Map(groupByWeek(days).map((week) => [week.start, week]));
+
+  return Array.from({ length: weeks }, (_, index) => {
+    const start = addDays(monday, -7 * (weeks - 1 - index));
+    const week = grouped.get(start);
+
+    return {
+      start,
+      days: week?.days ?? 0,
+      average: week && week.days > 0 ? week.averageWalked : null,
+    };
+  });
+}

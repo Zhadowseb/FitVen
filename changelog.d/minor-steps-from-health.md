@@ -1,2 +1,11 @@
+### Added
+- **Daily steps on Home.** A card under "Days since last" and Quick start shows today's steps from the phone's own health app (Apple Health on iPhone, Health Connect on Android), the steps training added in orange (`+3,450`), the step zone as a pill and a segmented bar on a 0-12,000 scale (a 3 px orange line under it marks what training added). Tapping it opens the Steps page. It asks to read steps the first time somebody taps Allow on it - never when the app opens - and says so in one line when it cannot read them, instead of showing a zero.
+- **The Steps page** (Day / Week / Month): the active steps as an average or a day, a stacked chart (walked in green, training in orange, a dashed line at the target), four tiles (total, sweet spot days, best day, distance), where the activity came from (Walks / Everyday / Training), a switch **Count training as steps** with the list of the period's strength workouts, and the target (Active, Sweet spot or Bonus; Sweet spot by default).
+- **"Daily steps" on Statistics,** between "Biggest gains" and "Volume per week": the walked steps per day, averaged per week over the last 12 weeks, each bar in its step zone's colour, with the change against the week before.
+- **The five step zones** live in one module (`src/Utils/stepZones.js`) with fixed colours in the theme (darker in light mode): Inactive under 2,000, Moving, Active, Sweet spot 7,000-9,999, Bonus 10,000+.
+- **Training as steps:** each minute of a finished strength workout counts as 115 steps (Tæl Skridt, Dansk Firmaidrætsforbund), to the nearest 25 - 30 min is 3,450. It is computed, not stored, so the switch and the rate recompute every day at once.
+- **Nothing about the steps is stored or uploaded.** The phone keeps the history; FitVen reads it and shows it. A Walk's own steps are inside the phone's count and only split Walks from Everyday, so they are never counted twice.
+
 ### Changed
-- Describe the change here.
+- **This needs a new development build and a new store build:** `@kingstinct/react-native-healthkit` and `react-native-health-connect` (and `react-native-nitro-modules`) are native. An older development client goes on without them, with no steps card. Android raises `minSdkVersion` to 26 and declares `READ_STEPS`; iOS gets the HealthKit entitlement (no background delivery) and `NSHealthShareUsageDescription`.
+- **The privacy policy names the daily steps,** and its version is raised again, so everybody is asked to accept it once more; `web/privacy/index.html` is rebuilt.
