@@ -643,6 +643,25 @@ export async function openWalk(database, workoutId) {
 }
 
 /** Lets go of the sensors and the walk, writing what it has. */
+/**
+ * A finished walk that is open gets its route read again: a route that came
+ * from the watch is written after the walk was opened (watchWalkService).
+ */
+export async function reloadFinishedWalkRoute(database, workoutId) {
+  if (!session || Number(session.workoutId) !== Number(workoutId) || session.status !== "done") {
+    return;
+  }
+
+  const stored = await walkService.loadWalk(database, workoutId);
+
+  session.route = routeFromPoints(stored.points);
+  session.fix =
+    session.route.length > 0 && session.route[session.route.length - 1].length > 0
+      ? session.route[session.route.length - 1][session.route[session.route.length - 1].length - 1]
+      : null;
+  emit();
+}
+
 export async function leaveWalk() {
   if (!session) {
     return;

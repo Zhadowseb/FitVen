@@ -677,6 +677,9 @@ const PATHS = {
     ["repeatWorkoutToday", "RECENT"],
     ["copyWorkoutToProgramDay", "RECENT"],
   ],
+  // A walk read from a watch (Services/watchWalkService.js): started nowhere in
+  // the app, so "other".
+  "src/Services/watchWalkService.js": [["createQuickWorkout", "OTHER"]],
   // Copying a workout to another day in the calendar.
   "src/Pages/WorkoutCalendarPage/WorkoutCalendarPage.js": [
     ["copyWorkoutToProgramDay", "CALENDAR"],

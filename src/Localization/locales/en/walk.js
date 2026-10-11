@@ -37,6 +37,9 @@ export default {
     label: "Route map of your walk so far",
     waitingForFix: "Finding your position…",
     noRoute: "No route was recorded for this walk.",
+    noRouteWatch: "This walk came from your watch. Its route is not on this phone yet.",
+    watchRouteTried: "No route came through. Health Connect asks every time, and the watch may not have recorded one.",
+    loadWatchRoute: "Show the route from your watch",
     notStarted: "The route is drawn here once the walk has started.",
     denied: "FitVen needs your location to draw the route and measure the distance.",
     blocked:

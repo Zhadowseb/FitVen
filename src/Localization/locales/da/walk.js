@@ -37,6 +37,9 @@ export default {
     label: "Kort over din rute indtil nu",
     waitingForFix: "Finder din position…",
     noRoute: "Der blev ikke optaget en rute for denne gåtur.",
+    noRouteWatch: "Denne gåtur kom fra dit ur. Dens rute er ikke på telefonen endnu.",
+    watchRouteTried: "Der kom ingen rute. Health Connect spørger hver gang, og uret har måske ikke optaget en.",
+    loadWatchRoute: "Vis ruten fra dit ur",
     notStarted: "Ruten tegnes her, når turen er startet.",
     denied: "FitVen skal bruge din placering for at tegne ruten og måle distancen.",
     blocked:

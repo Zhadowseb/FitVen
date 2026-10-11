@@ -19,7 +19,7 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-11.3";
+export const PRIVACY_POLICY_VERSION = "2026-10-11.4";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
@@ -50,7 +50,7 @@ Exercises you make yourself: the name, the muscles, the equipment, the weight mo
 
 Centres: the centre you choose as yours, or else the one you have trained in most over the last 90 days; the centre each workout was done in; and the lifts from those workouts that go on a centre's leaderboard.
 
-Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, the route, distance and steps of the walks you track with FitVen, and the location and route of runs you tracked with an earlier version of FitVen. A walk's route, distance and steps stay on your phone; only the walk itself, with its date and time, is stored with your account like any other workout.
+Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, the route, distance and steps of the walks you track with FitVen or - on an Android phone, if you allow it - start on a watch or in a health app, and the location and route of runs you tracked with an earlier version of FitVen. A walk's route, distance and steps stay on your phone; only the walk itself, with its date and time, is stored with your account like any other workout.
 
 Daily steps: if you allow it, FitVen reads your step count for each day from Apple Health on an iPhone or from Health Connect on an Android phone, and - where there is no health app to read - from your phone's own step counter (on an iPhone, its motion history). On an Android phone with no health app FitVen counts the steps itself: it needs the Physical activity permission, and it reads the step counter about every fifteen minutes - also while the app is closed - and keeps those readings on your phone, only for as long as it takes to turn them into the day's steps. FitVen only reads steps; it never writes anything to Apple Health or Health Connect. For each day FitVen keeps one number, the steps, and which of those sources it came from, on your phone and in your account, so your history is still there on a new phone. Finished strength workouts are counted as steps from their length, and that is worked out on your phone and not stored.
 
@@ -80,7 +80,9 @@ Location is read in two cases, and only if you allow it. Once when you start a w
 
 While a walk runs, FitVen also reads your phone's step counter (Motion & Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone.
 
-Your daily steps are read from Apple Health, Health Connect or your phone's step counter on your phone, and the number for each day is stored on Supabase with the rest of your account, where only you can read it. It is not shared with other people, not used for advertising and not used for anything but showing it to you. You can stop FitVen reading your steps at any time in Apple Health, in Health Connect or in your phone's settings; the days already stored stay until you delete them by deleting your account.
+Your daily steps are read from Apple Health, Health Connect or your phone's step counter on your phone, and the number for each day is stored on Supabase with the rest of your account, where only you can read it. It is not shared with other people, not used for advertising and not used for anything but showing it to you. On an Android phone you can also let FitVen read the walks you started on a watch or in a health app, from Health Connect: when each walk started and how long it lasted, how far it went, the steps in it and, only when you ask for it on that walk - Health Connect asks you each time - its route. FitVen only reads; it never writes anything to Health Connect. The route, distance and steps stay on your phone, and only the walk itself, with its date and time, is stored with your account like any other workout. It is switched off until you switch it on, and you can switch it off again; the walks already added stay.
+
+You can stop FitVen reading your steps at any time in Apple Health, in Health Connect or in your phone's settings; the days already stored stay until you delete them by deleting your account.
 
 Exercise videos are stored on Supabase with the rest of your data.
 

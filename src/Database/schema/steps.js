@@ -24,4 +24,19 @@ export const stepsSchemaSql = `
     day TEXT PRIMARY KEY NOT NULL,
     steps REAL NOT NULL
   );
+
+  -- The watch walks (exercise sessions of Health Connect) that have been made
+  -- into walks, one row each (Services/watchWalkService.js). It is how a session
+  -- is never imported twice - also when the walk was deleted afterwards, which
+  -- is why the row stays - and how a walk finds its session again to load the
+  -- route. Times in ms. On the phone only.
+  CREATE TABLE IF NOT EXISTS Imported_Health_Walk (
+    hc_id TEXT PRIMARY KEY NOT NULL,
+    workout_id INTEGER,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER NOT NULL,
+    origin TEXT,
+    imported_at INTEGER NOT NULL,
+    route_loaded INTEGER NOT NULL DEFAULT 0
+  );
 `;

@@ -83,7 +83,7 @@ async function writeAsked() {
 // Connect while FitVen is open is noticed without closing the app.
 let healthConnectReady = false;
 
-async function prepareHealthConnect() {
+export async function prepareHealthConnect() {
   const connect = getHealthConnect();
 
   if (!connect) {

@@ -1,4 +1,5 @@
 export * as customExerciseRepository from "./customExerciseRepository";
+export * as healthWalkRepository from "./healthWalkRepository";
 export * as locationRepository from "./locationRepository";
 export * as programRepository from "./programRepository";
 export * as runningRepository from "./runningRepository";
