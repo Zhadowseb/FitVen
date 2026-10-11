@@ -71,8 +71,12 @@ export default function StepsCard({ refreshKey = 0 }) {
     }
   };
 
-  /* No health app on this phone, and nothing of our own to show: no card at all. */
-  if (data.status === "unavailable" && !hasNumber) {
+  // No health app to read, and nothing of our own to show. On an iPhone there is
+  // nothing to ask for. On Android it is Health Connect that is missing (or this
+  // build has no module for it), and the card says so instead of going quiet.
+  const missing = data.status === "unavailable" && !hasNumber;
+
+  if (missing && Platform.OS !== "android") {
     return null;
   }
 
@@ -85,7 +89,11 @@ export default function StepsCard({ refreshKey = 0 }) {
         <View style={styles.topRow}>
           <Footsteps width={16} height={16} color={theme.stepZones.sweetSpot} thickness={2} />
           <ThemedText style={styles.askText} setColor={theme.text}>
-            {asking ? t("steps.access.ask") : t("steps.access.blocked", { app: healthApp })}
+            {asking
+              ? t("steps.access.ask")
+              : missing
+                ? t("steps.access.unavailable", { app: healthApp })
+                : t("steps.access.blocked", { app: healthApp })}
           </ThemedText>
           <TouchableOpacity
             accessibilityRole="button"
@@ -94,7 +102,11 @@ export default function StepsCard({ refreshKey = 0 }) {
             style={[styles.askButton, { backgroundColor: withAlpha(theme.primary, 0.14) }]}
           >
             <ThemedText style={styles.askButtonText} setColor={theme.primaryText}>
-              {asking ? t("steps.access.askButton") : t("steps.access.openApp", { app: healthApp })}
+              {asking
+                ? t("steps.access.askButton")
+                : missing
+                  ? t("steps.access.getApp", { app: healthApp })
+                  : t("steps.access.openApp", { app: healthApp })}
             </ThemedText>
           </TouchableOpacity>
         </View>

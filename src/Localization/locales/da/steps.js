@@ -22,6 +22,8 @@ export default {
     askButton: "Tillad",
     blocked: "FitVen skal kunne læse dine skridt i {app}.",
     openApp: "Åbn {app}",
+    unavailable: "Installér {app} for at se dine skridt ved siden af dine træninger.",
+    getApp: "Hent {app}",
   },
   card: {
     steps: "skridt",

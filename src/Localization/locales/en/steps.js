@@ -22,6 +22,8 @@ export default {
     askButton: "Allow",
     blocked: "FitVen needs to read your steps in {app}.",
     openApp: "Open {app}",
+    unavailable: "Install {app} to see your steps next to your workouts.",
+    getApp: "Get {app}",
   },
   card: {
     steps: "steps",
