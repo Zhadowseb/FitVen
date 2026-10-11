@@ -5,7 +5,6 @@ import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../../Resources/GlobalStyling/colors";
 import ThemedText from "../../../Resources/ThemedComponents/ThemedText";
-import SoftGradient from "../../../Resources/Components/SoftGradient";
 import Book from "../../../Resources/Icons/UI-icons/Book";
 import ChevronRight from "../../../Resources/Icons/UI-icons/ChevronRight";
 import { ARTICLES } from "../../../Resources/Knowledge";
@@ -13,9 +12,9 @@ import { useAuth } from "../../../Contexts/AuthContext";
 import { knowledgeService } from "../../../Services";
 import { hasNewArticles } from "../../../Utils/knowledge";
 
-// The way into Knowledge, under the tiles on Explore: a soft wash from the
-// accent to the secondary, the book, the name - with a small NEW badge while
-// there are articles nobody has opened yet - and one line of what is inside.
+// The way into Knowledge, as one more tile under the others on Explore: the
+// same card, border and icon square as they have, the same type sizes, and a
+// small NEW badge while there are articles nobody has opened yet.
 
 export default function KnowledgeCard() {
   const { t } = useTranslation();
@@ -23,7 +22,8 @@ export default function KnowledgeCard() {
   const { user } = useAuth();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
-  const green = theme.secondary ?? theme.primary;
+  const isLight = colorScheme === "light";
+  const tone = theme.secondary ?? theme.primary;
   const [showNew, setShowNew] = useState(false);
 
   useFocusEffect(
@@ -46,19 +46,17 @@ export default function KnowledgeCard() {
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={t("knowledge.explore.a11y")}
-      activeOpacity={0.9}
+      activeOpacity={0.85}
       onPress={() => navigation.navigate("KnowledgePage")}
-      style={[styles.card, { borderColor: theme.cardBorder }]}
+      style={[styles.tile, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
     >
-      <SoftGradient id="exploreKnowledge" from={withAlpha(theme.primary, 0.16)} to={withAlpha(green, 0.12)} />
-
-      <View style={[styles.iconBox, { backgroundColor: withAlpha(green, 0.16) }]}>
-        <Book width={20} height={20} color={green} thickness={2} />
+      <View style={[styles.icon, { backgroundColor: withAlpha(tone, isLight ? 0.12 : 0.14) }]}>
+        <Book width={18} height={18} color={tone} thickness={1.6} />
       </View>
 
-      <View style={styles.texts}>
-        <View style={styles.nameRow}>
-          <ThemedText style={styles.name} setColor={theme.title}>
+      <View style={styles.copy}>
+        <View style={styles.titleRow}>
+          <ThemedText style={styles.title} setColor={theme.title} numberOfLines={1}>
             {t("knowledge.explore.title")}
           </ThemedText>
           {showNew ? (
@@ -69,7 +67,7 @@ export default function KnowledgeCard() {
             </View>
           ) : null}
         </View>
-        <ThemedText style={styles.subtitle} setColor={theme.quietText}>
+        <ThemedText style={styles.detail} setColor={theme.quietText} numberOfLines={1}>
           {t("knowledge.explore.subtitle")}
         </ThemedText>
       </View>
@@ -79,38 +77,39 @@ export default function KnowledgeCard() {
   );
 }
 
+// The sizes are the tiles' own (ExplorePageStyle: tile, tileIcon, tileTitle,
+// tileDetail), laid out as a row because this one spans the width.
 const styles = StyleSheet.create({
-  card: {
+  tile: {
     marginHorizontal: 20,
     marginTop: 8,
-    minHeight: 72,
+    minHeight: 64,
     paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 13,
     borderRadius: 16,
     borderWidth: 1,
-    overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  icon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
-  texts: {
+  copy: {
     flex: 1,
     minWidth: 0,
-    gap: 2,
+    gap: 1,
   },
-  nameRow: {
+  titleRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 7,
   },
-  name: {
+  title: {
     fontSize: 15,
     lineHeight: 19,
     fontWeight: "800",
@@ -126,9 +125,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     textTransform: "uppercase",
   },
-  subtitle: {
-    fontSize: 11.5,
-    lineHeight: 15,
-    fontWeight: "600",
+  detail: {
+    fontSize: 10.5,
+    lineHeight: 14,
+    fontWeight: "700",
   },
 });

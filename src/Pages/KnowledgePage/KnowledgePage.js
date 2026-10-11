@@ -5,7 +5,6 @@ import { getLocaleTag, useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { ThemedText, ThemedView } from "../../Resources/ThemedComponents";
-import SoftGradient from "../../Resources/Components/SoftGradient";
 import Book from "../../Resources/Icons/UI-icons/Book";
 import ChevronLeft from "../../Resources/Icons/UI-icons/ChevronLeft";
 import ChevronRight from "../../Resources/Icons/UI-icons/ChevronRight";
@@ -175,9 +174,8 @@ export default function KnowledgePage() {
             accessibilityLabel={`${featured.title}. ${meta(featured)}`}
             activeOpacity={0.9}
             onPress={() => open(featured)}
-            style={[styles.featured, { borderColor: theme.border }]}
+            style={[styles.featured, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}
           >
-            <SoftGradient id="knowledgeFeatured" from={withAlpha(theme.primary, 0.22)} to={withAlpha(green, 0.16)} />
             <View style={styles.featuredTop}>
               <ThemedText style={styles.featuredLabel} setColor={theme.primaryText ?? theme.primary} numberOfLines={1}>
                 {t("knowledge.featured", { category: t(categoryLabelKey(featured)) })}
