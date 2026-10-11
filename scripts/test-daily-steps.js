@@ -224,11 +224,53 @@ loadAppModule.stubModule("@react-native-async-storage/async-storage", {
     multiRemove: async (keys) => keys.forEach((key) => storage.delete(key)),
   },
 });
+// The native step sensor of an Android phone, driven by the test.
+const nativeSensor = {
+  present: false,
+  permission: false,
+  recording: false,
+  now: null,
+  store: [],
+  trimmedBefore: [],
+};
+
+loadAppModule.stubModule("expo", {
+  requireOptionalNativeModule: () =>
+    nativeSensor.present
+      ? {
+          isAvailable: () => nativeSensor.present,
+          hasPermission: () => nativeSensor.permission,
+          readNow: async () => {
+            if (nativeSensor.now) {
+              nativeSensor.store.push(nativeSensor.now);
+            }
+
+            return nativeSensor.now;
+          },
+          startRecording: async () => {
+            nativeSensor.recording = true;
+          },
+          stopRecording: async () => {
+            nativeSensor.recording = false;
+          },
+          isRecording: async () => nativeSensor.recording,
+          readSnapshots: async (after) => JSON.stringify(nativeSensor.store.filter((entry) => entry.time > after)),
+          trimSnapshots: async (before) => {
+            nativeSensor.trimmedBefore.push(before);
+          },
+        }
+      : null,
+});
 loadAppModule.stubModule("expo-sensors", {
   Pedometer: {
     isAvailableAsync: async () => motion.available,
     getPermissionsAsync: async () => ({ granted: motion.permission === "granted", status: motion.permission, canAskAgain: true }),
-    requestPermissionsAsync: async () => ({ granted: true, status: "granted", canAskAgain: true }),
+    requestPermissionsAsync: async () => {
+      nativeSensor.permission = true;
+      motion.permission = "granted";
+
+      return { granted: true, status: "granted", canAskAgain: true };
+    },
     getStepCountAsync: async (start, end) => {
       motion.reads.push([start, end]);
 
@@ -238,7 +280,7 @@ loadAppModule.stubModule("expo-sensors", {
     },
   },
 });
-const hc = { calls: [] };
+const hc = { calls: [], respond: null };
 
 loadAppModule.stubModule("react-native-health-connect", {
   SdkAvailabilityStatus: { SDK_UNAVAILABLE: 1, SDK_AVAILABLE: 3 },
@@ -250,7 +292,7 @@ loadAppModule.stubModule("react-native-health-connect", {
   aggregateGroupByPeriod: async (request) => {
     hc.calls.push(request);
 
-    return [];
+    return hc.respond ? hc.respond(request) : [];
   },
 });
 
@@ -279,6 +321,8 @@ const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
 const { stepsSchemaSql } = loadAppModule("src/Database/schema/steps.js");
 const dailyLog = loadAppModule("src/Utils/dailySteps.js");
 const steps = loadAppModule("src/Services/dailyStepsService.js");
+const stepsService = loadAppModule("src/Services/stepsService.js");
+const sensorService = loadAppModule("src/Services/stepSensorService.js");
 const stepCounter = loadAppModule("src/Services/stepCounterService.js");
 const stepsRepository = loadAppModule("src/Repository/stepsRepository.js");
 
@@ -291,6 +335,12 @@ function createDatabase() {
 
   return {
     sqlite,
+    async execAsync(sql) {
+      sqlite.exec(sql);
+    },
+    async isInTransactionAsync() {
+      return Boolean(sqlite.isTransaction);
+    },
     async runAsync(sql, params) {
       const result = sqlite.prepare(sql).run(...bind(params));
 
@@ -578,6 +628,129 @@ async function main() {
     assert.strictEqual(kept(db)[0].needs_sync, 1, "it is not cleared for a row that is no longer the one that was sent");
     await stepsRepository.markDailyStepSynced(db, { day: day(-1), updatedAt: 1000 });
     assert.strictEqual(kept(db)[0].needs_sync, 0);
+  }
+
+  /* ----------------------------------------- Android: the phone's own step sensor -- */
+
+  {
+    platform.OS = "android";
+    nativeSensor.present = true;
+    nativeSensor.permission = true;
+    nativeSensor.recording = false;
+    nativeSensor.trimmedBefore = [];
+    hc.respond = null; // Health Connect is there and has nothing.
+
+    const bootTime = Date.now() - 36 * 60 * 60 * 1000;
+    const at = (offset, hour, minute = 0) => {
+      const date = new Date(day(offset) + "T00:00:00");
+
+      date.setHours(hour, minute, 0, 0);
+
+      return date.getTime();
+    };
+
+    // Not allowed yet: nothing is counted, nothing recorded.
+    {
+      const db = createDatabase();
+
+      nativeSensor.store = [{ time: at(-1, 10), counter: 1000, bootTime }];
+      nativeSensor.now = { time: Date.now(), counter: 2500, bootTime };
+      assert.strictEqual(await steps.refreshRecentDailySteps(db), 0);
+      assert.strictEqual(nativeSensor.recording, false, "no periodic job before Allow");
+      assert.strictEqual(kept(db).length, 0);
+    }
+
+    // Allowed: the sensor counts, and a day with no health number gets its steps from it.
+    const db = createDatabase();
+
+    await stepsRepository.setStepsEnabled(db);
+    nativeSensor.store = [
+      { time: at(-1, 10), counter: 1000, bootTime },
+      { time: at(-1, 14), counter: 1500, bootTime },
+      { time: at(-1, 20), counter: 2400, bootTime },
+    ];
+    nativeSensor.now = { time: Date.now(), counter: 2500, bootTime };
+    nativeSensor.permission = false;
+    assert.strictEqual(await steps.refreshRecentDailySteps(db), 0, "without the permission it counts nothing");
+    assert.strictEqual(nativeSensor.recording, false);
+    nativeSensor.permission = true;
+
+    await steps.refreshRecentDailySteps(db);
+
+    assert.strictEqual(nativeSensor.recording, true, "the periodic read is started");
+
+    const rows = kept(db).filter((entry) => entry.source === "sensor");
+    const counted = rows.reduce((sum, entry) => sum + entry.steps, 0);
+
+    assert.ok(rows.length >= 1 && rows.every((entry) => entry.needs_sync === 1), "the days are kept as the sensor's, waiting for the cloud");
+    assert.ok(Math.abs(counted - 1500) <= 2, "the steps between the first reading and now: " + counted);
+    assert.ok(rows.find((entry) => entry.day === day(-1))?.steps >= 1400, "most of them on yesterday");
+    assert.ok(nativeSensor.trimmedBefore.length > 0, "the readings that were counted are let go natively");
+
+    // Counting what was counted again adds nothing.
+    nativeSensor.now = null;
+    await steps.refreshRecentDailySteps(db);
+    assert.strictEqual(kept(db).filter((entry) => entry.source === "sensor").reduce((sum, entry) => sum + entry.steps, 0), counted);
+
+    // More steps later are added on top.
+    nativeSensor.now = { time: Date.now() + 60 * 60 * 1000, counter: 2700, bootTime };
+    await steps.refreshRecentDailySteps(db, { now: Date.now() + 60 * 60 * 1000 });
+    assert.ok(
+      Math.abs(kept(db).filter((entry) => entry.source === "sensor").reduce((sum, entry) => sum + entry.steps, 0) - 1700) <= 3,
+      "200 more steps"
+    );
+    nativeSensor.now = null;
+
+    // A health app that has a number for the day wins - the sensor's is never added to it.
+    hc.respond = () => [{ startTime: day(-1) + "T00:00", result: { COUNT_TOTAL: 9000 } }];
+    await steps.refreshRecentDailySteps(db);
+    assert.deepStrictEqual(
+      kept(db).filter((entry) => entry.day === day(-1)).map((entry) => [entry.steps, entry.source]),
+      [[9000, "health"]],
+      "the better source's number, not the two added"
+    );
+    hc.respond = null;
+
+    // And if the health app goes quiet again, the day keeps its number.
+    await steps.refreshRecentDailySteps(db);
+    assert.strictEqual(kept(db).find((entry) => entry.day === day(-1)).source, "health");
+
+    // The sensor's own working is kept apart, and stays on the phone.
+    assert.ok(db.sqlite.prepare("SELECT COUNT(*) AS n FROM Sensor_Steps").get().n >= 1);
+  }
+  {
+    // The yes, asked once: on Android the sensor's permission is asked for when no
+    // health app has anything - not before, and not again when it has been given.
+    const db = createDatabase();
+
+    nativeSensor.present = true;
+    nativeSensor.permission = false;
+    nativeSensor.recording = false;
+    nativeSensor.store = [];
+    nativeSensor.now = { time: Date.now(), counter: 100, bootTime: Date.now() - 1000000 };
+
+    assert.strictEqual(await stepsService.getStepsAccess(db), "undetermined", "the sensor is always a way in, so the first answer is a question");
+    assert.strictEqual(await stepsService.requestStepsAccess(db), "granted", "asked, and the sensor's permission given");
+    assert.strictEqual(nativeSensor.permission, true);
+    assert.strictEqual(nativeSensor.recording, true, "and counting has started");
+    assert.strictEqual(await stepsRepository.getStepsEnabled(db), true);
+
+    // The walks and workouts are not what this is about: no such tables, no such rows.
+    const realGetAll = db.getAllAsync.bind(db);
+
+    db.getAllAsync = async (sql, params) => {
+      return /(Run|Workout)/.test(sql) && !/Daily_Steps|Sensor_Steps|App_Metadata/.test(sql) ? [] : realGetAll(sql, params);
+    };
+
+    const { hasPhoneSource, days } = await stepsService.loadStepDays(db, { fromIso: day(-1), toIso: day(0) });
+
+    assert.strictEqual(hasPhoneSource, true, "counting, though it has not counted a step yet");
+    assert.strictEqual(days[days.length - 1].walked, 0, "today is a morning with no steps yet, not a refusal");
+
+    nativeSensor.permission = false;
+    assert.strictEqual(await stepsService.getStepsAccess(db), "granted", "a health app that answers keeps it granted (Health Connect is granted here)");
+    nativeSensor.present = false;
+    platform.OS = "ios";
   }
 
   /* ---------------------------------------------------------- the migration -- */

@@ -4,6 +4,7 @@ export default {
   title: "Steps",
   eyebrow: "Activity",
   noData: "No steps in this period yet.",
+  ownCountNote: "Counted by FitVen on this phone. A health app or a watch gives more exact numbers and a longer history.",
   // Where the phone's own count is read.
   healthApp: {
     ios: "Health",
@@ -22,6 +23,8 @@ export default {
     askButton: "Allow",
     blocked: "FitVen needs to read your steps in {app}.",
     openApp: "Open {app}",
+    blockedSensor: "FitVen needs permission to count your steps. Allow Physical activity in the app's settings.",
+    openSettings: "Open settings",
     unavailable: "Install {app} to see your steps next to your workouts.",
     getApp: "Get {app}",
   },

@@ -106,6 +106,9 @@ export function buildDay(row, { countTraining = true, theme } = {}) {
 
   return {
     date: row.date,
+    // Which source the phone's number came from, when it was kept: "health",
+    // "motion" or "sensor" - the last one is FitVen's own count, an estimate.
+    phoneSource: row.phoneSource ?? null,
     source,
     walked,
     walks,

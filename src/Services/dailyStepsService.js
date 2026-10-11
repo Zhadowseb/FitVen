@@ -11,6 +11,7 @@ import {
 } from "../Utils/dailyStepLog";
 import * as healthStepsService from "./healthStepsService";
 import * as stepCounterService from "./stepCounterService";
+import * as stepSensorService from "./stepSensorService";
 
 // The one number a day keeps - on the phone (Daily_Steps) and in the cloud
 // (public.daily_steps) - and how it gets there. Utils/dailyStepLog.js has the
@@ -36,10 +37,15 @@ const CLOUD_TABLE = "daily_steps";
 
 /* ------------------------------------------------------------------ local -- */
 
+// Best first. The sensor is read from what has been counted (collecting is a
+// step of its own, below), and has no history to backfill: it starts counting
+// when it is allowed.
 const SOURCE_READERS = {
-  health: (fromIso, toIso) => healthStepsService.readDailySteps(fromIso, toIso),
-  motion: (fromIso, toIso) => stepCounterService.readMotionDailySteps(fromIso, toIso),
+  health: (db, fromIso, toIso) => healthStepsService.readDailySteps(fromIso, toIso),
+  motion: (db, fromIso, toIso) => stepCounterService.readMotionDailySteps(fromIso, toIso),
+  sensor: (db, fromIso, toIso) => stepSensorService.readSensorDailySteps(db, fromIso, toIso),
 };
+const BACKFILLED_SOURCES = ["health", "motion"];
 
 /**
  * Reads the sources for the days and keeps what is better than what is there.
@@ -52,14 +58,14 @@ const SOURCE_READERS = {
  * for a walk, and that is not a yes to the whole day.
  */
 export async function refreshDailySteps(db, { fromIso, toIso, sources = Object.keys(SOURCE_READERS), now = Date.now() }) {
-  const none = { written: 0, answered: { health: false, motion: false } };
+  const none = { written: 0, answered: { health: false, motion: false, sensor: false } };
 
   if (!(await stepsRepository.getStepsEnabled(db))) {
     return none;
   }
 
   const [readings, rows] = await Promise.all([
-    Promise.all(sources.map((source) => SOURCE_READERS[source](fromIso, toIso))),
+    Promise.all(sources.map((source) => SOURCE_READERS[source](db, fromIso, toIso))),
     stepsRepository.getDailySteps(db, { fromIso, toIso }),
   ]);
   const byName = Object.fromEntries(sources.map((source, index) => [source, readings[index]]));
@@ -76,7 +82,11 @@ export async function refreshDailySteps(db, { fromIso, toIso, sources = Object.k
 
   return {
     written: writes.length,
-    answered: { health: byName.health != null, motion: byName.motion != null },
+    answered: {
+      health: byName.health != null,
+      motion: byName.motion != null,
+      sensor: byName.sensor != null,
+    },
   };
 }
 
@@ -90,12 +100,35 @@ export async function refreshDailySteps(db, { fromIso, toIso, sources = Object.k
  * asked uses nothing up.
  */
 export async function refreshRecentDailySteps(db, { now = Date.now() } = {}) {
+  if (!(await stepsRepository.getStepsEnabled(db))) {
+    return 0;
+  }
+
   const todayIso = localIsoDate(new Date(now));
   const recentFrom = addDays(todayIso, -(RECENT_DAYS - 1));
+
+  // The step sensor counts while the app is closed: start its periodic read if
+  // it is not running, and add up what it has read since the last time.
+  await stepSensorService.ensureSensorRecording();
+
+  const collected = await stepSensorService.collectSensorSteps(db);
   const recent = await refreshDailySteps(db, { fromIso: recentFrom, toIso: todayIso, now });
   let written = recent.written;
 
-  for (const source of Object.keys(SOURCE_READERS)) {
+  // Days further back than the last few that got steps while the app was not
+  // opened: the sensor says what it counted for them.
+  if (collected?.touchedFrom && collected.touchedFrom < recentFrom) {
+    written += (
+      await refreshDailySteps(db, {
+        fromIso: collected.touchedFrom,
+        toIso: addDays(recentFrom, -1),
+        sources: ["sensor"],
+        now,
+      })
+    ).written;
+  }
+
+  for (const source of BACKFILLED_SOURCES) {
     if (!recent.answered[source] || (await stepsRepository.getBackfillDoneAt(db, source)) > 0) {
       continue;
     }

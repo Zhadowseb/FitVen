@@ -14,4 +14,14 @@ export const stepsSchemaSql = `
     updated_at INTEGER NOT NULL,
     needs_sync INTEGER NOT NULL DEFAULT 1
   );
+
+  -- What FitVen's own step sensor has counted for each day, added up as the
+  -- readings come in (Services/stepSensorService.js). The steps keep their
+  -- fractions, so adding many small intervals loses nothing; they become the
+  -- day's whole number in Daily_Steps. Stays on the phone: it is the working
+  -- of one source, not the day's number.
+  CREATE TABLE IF NOT EXISTS Sensor_Steps (
+    day TEXT PRIMARY KEY NOT NULL,
+    steps REAL NOT NULL
+  );
 `;

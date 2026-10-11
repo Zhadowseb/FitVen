@@ -65,6 +65,43 @@ async function setMetadata(db, key, value) {
   );
 }
 
+/* ------------------------------------------------------- the step sensor's days -- */
+
+export async function getSensorDays(db, { fromIso, toIso }) {
+  return db.getAllAsync(
+    `SELECT day, steps FROM Sensor_Steps WHERE day BETWEEN ? AND ? ORDER BY day ASC;`,
+    [fromIso, toIso]
+  );
+}
+
+/** Adds steps to days: { "2026-10-05": 312.4 }. */
+export async function addSensorSteps(db, days) {
+  for (const [day, steps] of Object.entries(days)) {
+    await db.runAsync(
+      `INSERT INTO Sensor_Steps (day, steps) VALUES (?, ?)
+       ON CONFLICT(day) DO UPDATE SET steps = steps + excluded.steps;`,
+      [day, steps]
+    );
+  }
+}
+
+const SENSOR_ANCHOR_KEY = "steps_sensor_anchor";
+
+/** The last reading of the step counter that was counted, or null before the first. */
+export async function getSensorAnchor(db) {
+  try {
+    const value = JSON.parse((await getMetadata(db, SENSOR_ANCHOR_KEY)) ?? "null");
+
+    return value && Number.isFinite(value.time) ? value : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function setSensorAnchor(db, reading) {
+  await setMetadata(db, SENSOR_ANCHOR_KEY, JSON.stringify(reading));
+}
+
 const STEPS_ENABLED_KEY = "steps_enabled";
 
 /**

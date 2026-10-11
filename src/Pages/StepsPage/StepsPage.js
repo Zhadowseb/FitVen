@@ -73,6 +73,7 @@ export default function StepsPage() {
   const [period, setPeriod] = useState("week");
   const [settings, setSettings] = useState(null);
   const [access, setAccess] = useState(null);
+  const [accessKind, setAccessKind] = useState("health");
   const [loaded, setLoaded] = useState(null);
   const [targetSheetVisible, setTargetSheetVisible] = useState(false);
 
@@ -83,8 +84,9 @@ export default function StepsPage() {
     try {
       const [nextSettings, nextAccess] = await Promise.all([
         stepsService.getStepsSettings(),
-        stepsService.getStepsAccess(),
+        stepsService.getStepsAccess(db),
       ]);
+      const nextKind = await stepsService.getStepsAccessKind();
       const result = await stepsService.loadStepDays(db, {
         fromIso: range.from,
         toIso: range.to,
@@ -94,6 +96,7 @@ export default function StepsPage() {
 
       setSettings(nextSettings);
       setAccess(nextAccess);
+      setAccessKind(nextKind);
       setLoaded(result);
     } catch (error) {
       console.warn("Could not load the steps page:", error);
@@ -191,7 +194,10 @@ export default function StepsPage() {
   }
 
   const asking = access === "undetermined";
-  const needsAccess = access === "undetermined" || access === "denied" || (access === "granted" && loaded && !loaded.days.some((day) => day.source === "phone" && day.walked > 0));
+  const needsAccess =
+    access === "undetermined" ||
+    access === "denied" ||
+    (access === "granted" && loaded && !loaded.hasPhoneSource);
   const showPrompt = access !== null && access !== "unavailable" && needsAccess;
 
   const chartSummary = summary
@@ -214,6 +220,9 @@ export default function StepsPage() {
       : t(`programs.weekdays.${weekdayKeyOf(best.date)}`)
     : "";
 
+  // Some of these days are FitVen's own count with the phone's step sensor: an
+  // estimate, and the page says so rather than letting it pass for a health app's.
+  const usesOwnCount = Boolean(view?.days.some((day) => day.phoneSource === "sensor"));
   const trainingList = view && withTraining ? listTrainingWorkouts(view.days) : [];
   const shares = summary?.shares ?? null;
 
@@ -253,15 +262,23 @@ export default function StepsPage() {
         {showPrompt ? (
           <View style={[styles.prompt, { backgroundColor: theme.cardBackground, borderColor: theme.cardBorder }]}>
             <ThemedText style={styles.promptText} setColor={theme.text}>
-              {asking ? t("steps.access.ask") : t("steps.access.blocked", { app: healthApp })}
+              {asking
+                ? t("steps.access.ask")
+                : accessKind === "sensor"
+                  ? t("steps.access.blockedSensor")
+                  : t("steps.access.blocked", { app: healthApp })}
             </ThemedText>
             <TouchableOpacity
               accessibilityRole="button"
-              onPress={asking ? askForAccess : () => stepsService.openStepsSettings()}
+              onPress={asking ? askForAccess : () => stepsService.openStepsSettings(accessKind)}
               style={[styles.promptButton, { backgroundColor: withAlpha(theme.primary, 0.14) }]}
             >
               <ThemedText style={styles.promptButtonText} setColor={theme.primaryText}>
-                {asking ? t("steps.access.askButton") : t("steps.access.openApp", { app: healthApp })}
+                {asking
+                  ? t("steps.access.askButton")
+                  : accessKind === "sensor"
+                    ? t("steps.access.openSettings")
+                    : t("steps.access.openApp", { app: healthApp })}
               </ThemedText>
             </TouchableOpacity>
           </View>
@@ -337,6 +354,11 @@ export default function StepsPage() {
                       </View>
                     ) : null}
                   </View>
+                  {usesOwnCount ? (
+                    <ThemedText style={styles.ownCountNote} setColor={theme.quietText}>
+                      {t("steps.ownCountNote")}
+                    </ThemedText>
+                  ) : null}
                 </>
               ) : (
                 <ThemedText style={styles.noData} setColor={theme.quietText}>
