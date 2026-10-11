@@ -13,7 +13,7 @@ name: Android native check
 
 on:
   pull_request:
-    branches: [master, "release/**"]
+    branches: [master, "release/**", "minor/**", "fix/**"]
     paths:
       - "modules/**"
       - "plugins/**"

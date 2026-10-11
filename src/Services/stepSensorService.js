@@ -47,6 +47,13 @@ export async function ensureSensorRecording() {
   return StepSensor.startRecording();
 }
 
+/** Stops the periodic read, when something better is giving the steps. */
+export async function stopSensorRecording() {
+  if (await StepSensor.isRecording()) {
+    await StepSensor.stopRecording();
+  }
+}
+
 /**
  * Takes a reading now and counts every reading since the last one that was
  * counted. Resolves to { touchedFrom } - the oldest day that got steps this

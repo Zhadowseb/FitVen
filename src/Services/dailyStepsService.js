@@ -107,11 +107,21 @@ export async function refreshRecentDailySteps(db, { now = Date.now() } = {}) {
   const todayIso = localIsoDate(new Date(now));
   const recentFrom = addDays(todayIso, -(RECENT_DAYS - 1));
 
-  // The step sensor counts while the app is closed: start its periodic read if
-  // it is not running, and add up what it has read since the last time.
-  await stepSensorService.ensureSensorRecording();
+  // The step sensor is for a phone with no health app: while a health app has
+  // given a number this week, FitVen does not count on its own - and the
+  // periodic read, which keeps counting while the app is closed, is stopped.
+  // Otherwise it is started if it is not running, and what it has read since
+  // the last time is added up.
+  const week = await stepsRepository.getDailySteps(db, { fromIso: recentFrom, toIso: todayIso });
+  let collected = null;
 
-  const collected = await stepSensorService.collectSensorSteps(db);
+  if (week.some((row) => row.source === "health")) {
+    await stepSensorService.stopSensorRecording();
+  } else {
+    await stepSensorService.ensureSensorRecording();
+    collected = await stepSensorService.collectSensorSteps(db);
+  }
+
   const recent = await refreshDailySteps(db, { fromIso: recentFrom, toIso: todayIso, now });
   let written = recent.written;
 
