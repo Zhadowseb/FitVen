@@ -88,6 +88,7 @@ import WorkoutTypeInstanceSync from "./src/Sync/WorkoutTypeInstanceSync";
 import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
+import DailyStepsSync from "./src/Sync/DailyStepsSync";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
@@ -513,6 +514,7 @@ function UserScopedDatabaseApp() {
       <WorkoutMusicSync />
       <GymMatchSync />
       <AppOpenSync />
+      <DailyStepsSync />
       <LiveWorkoutSync />
       <PrivacyConsentGate>
         {/* Keyed on the language too: a screen's header options and anything

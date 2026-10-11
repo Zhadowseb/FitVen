@@ -4,7 +4,7 @@
 - **"Daily steps" on Statistics,** between "Biggest gains" and "Volume per week": the walked steps per day, averaged per week over the last 12 weeks, each bar in its step zone's colour, with the change against the week before.
 - **The five step zones** live in one module (`src/Utils/stepZones.js`) with fixed colours in the theme (darker in light mode): Inactive under 2,000, Moving, Active, Sweet spot 7,000-9,999, Bonus 10,000+.
 - **Training as steps:** each minute of a finished strength workout counts as 115 steps (Tæl Skridt, Dansk Firmaidrætsforbund), to the nearest 25 - 30 min is 3,450. It is computed, not stored, so the switch and the rate recompute every day at once.
-- **Nothing about the steps is stored or uploaded.** The phone keeps the history; FitVen reads it and shows it. A Walk's own steps are inside the phone's count and only split Walks from Everyday, so they are never counted twice.
+- **A Walk's own steps are inside the phone's count** and only split Walks from Everyday, so they are never counted twice. (The one number a day is kept - see the daily steps log.)
 
 ### Changed
 - **This needs a new development build and a new store build:** `@kingstinct/react-native-healthkit` and `react-native-health-connect` (and `react-native-nitro-modules`) are native. An older development client goes on without them, with no steps card. Android raises `minSdkVersion` to 26 and declares `READ_STEPS`; iOS gets the HealthKit entitlement (no background delivery) and `NSHealthShareUsageDescription`.

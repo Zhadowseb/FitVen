@@ -5,6 +5,7 @@ import {
 } from './schema/weightlifting';
 import { runningSchemaSql } from './schema/running';
 import { locationSchemaSql } from './schema/location';
+import { stepsSchemaSql } from './schema/steps';
 import { SQLITE_UUID_SQL } from "../Utils/syncUtils";
 import { withTransaction } from "./transaction";
 
@@ -1688,6 +1689,7 @@ export async function initializeDatabase(db) {
     ${weightliftingSchemaSql}
     ${runningSchemaSql}
     ${locationSchemaSql}
+    ${stepsSchemaSql}
 
     PRAGMA journal_mode = WAL;
     PRAGMA busy_timeout = 5000;

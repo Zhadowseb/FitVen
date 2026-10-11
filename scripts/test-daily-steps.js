@@ -1,0 +1,479 @@
+// The one number a day keeps: which source's number wins, what a refresh
+// writes, how the phone and the cloud meet, and the iPhone's own motion
+// history - the real services on real SQLite, with the cloud faked.
+const assert = require("assert");
+const { DatabaseSync } = require("node:sqlite");
+const loadAppModule = require("./lib/loadAppModule");
+
+console.warn = () => {};
+
+const log = loadAppModule("src/Utils/dailyStepLog.js");
+
+/* ------------------------------------------------------------------ rules -- */
+
+assert.deepStrictEqual(log.STEP_SOURCES, ["health", "motion", "sensor"], "best first");
+assert.strictEqual(log.normalizeDailySteps(8000.4), 8000);
+assert.strictEqual(log.normalizeDailySteps(-1), null);
+assert.strictEqual(log.normalizeDailySteps(200001), null, "more than a person can walk is a fault");
+assert.strictEqual(log.normalizeDailySteps("x"), null);
+assert.deepStrictEqual(log.normalizeDayRow({ day: "2026-10-05", steps: 100, source: "health" }), { day: "2026-10-05", steps: 100, source: "health" });
+assert.strictEqual(log.normalizeDayRow({ day: "5 Oct", steps: 100, source: "health" }), null);
+assert.strictEqual(log.normalizeDayRow({ day: "2026-10-05", steps: 100, source: "gps" }), null, "a source nobody knows");
+
+const row = (steps, source) => ({ day: "2026-10-05", steps, source });
+
+assert.strictEqual(log.pickDay(row(9000, "motion"), row(3000, "health")).source, "health", "the better source wins even with the smaller number");
+assert.strictEqual(log.pickDay(row(3000, "health"), row(9000, "sensor")).source, "health", "and a worse one never replaces it");
+assert.strictEqual(log.pickDay(row(6000, "health"), row(6500, "health")).steps, 6500, "between equals the larger number: a day only grows");
+assert.strictEqual(log.pickDay(row(6500, "health"), row(6000, "health")).steps, 6500);
+assert.strictEqual(log.pickDay(null, row(1, "sensor")).steps, 1);
+assert.strictEqual(log.pickDay(row(1, "sensor"), null).steps, 1);
+// Commutative: the order the phones speak in does not matter.
+for (const [left, right] of [[row(5, "health"), row(9, "motion")], [row(5, "sensor"), row(9, "sensor")], [row(7, "motion"), row(7, "motion")]]) {
+  assert.deepStrictEqual(log.pickDay(left, right), log.pickDay(right, left));
+}
+
+const NOW = 1_800_000_000_000;
+const days = ["2026-10-05", "2026-10-06", "2026-10-07"];
+
+{
+  const plan = log.planRefresh({
+    days,
+    readings: {
+      health: { "2026-10-05": 8000, "2026-10-06": 0 },
+      motion: { "2026-10-05": 7000, "2026-10-06": 4000, "2026-10-07": 0 },
+    },
+    existing: new Map(),
+    now: NOW,
+  });
+
+  assert.deepStrictEqual(
+    plan.map((write) => [write.day, write.steps, write.source]),
+    [["2026-10-05", 8000, "health"], ["2026-10-06", 4000, "motion"]],
+    "health wins where it has a number; a 0 is not a number, so motion answers for the day health is silent on; nothing for a day neither knows"
+  );
+  assert.ok(plan.every((write) => write.needsSync && write.updatedAt === NOW), "and every write is on its way to the cloud");
+}
+{
+  const existing = new Map([["2026-10-05", { steps: 8000, source: "health" }]]);
+
+  // The health app has gone quiet (permission taken away): the day stays.
+  assert.deepStrictEqual(log.planRefresh({ days, readings: { health: null, motion: { "2026-10-05": 6000 } }, existing, now: NOW }), []);
+  // Nothing new: nothing written.
+  assert.deepStrictEqual(log.planRefresh({ days, readings: { health: { "2026-10-05": 8000 } }, existing, now: NOW }), []);
+  // The same source, later in the day: more steps.
+  assert.deepStrictEqual(
+    log.planRefresh({ days, readings: { health: { "2026-10-05": 9100 } }, existing, now: NOW }).map((write) => write.steps),
+    [9100]
+  );
+  // The same source, fewer (a record deleted in the health app): the day keeps what it had.
+  assert.deepStrictEqual(log.planRefresh({ days, readings: { health: { "2026-10-05": 100 } }, existing, now: NOW }), []);
+  // A better source arrives for a day that had a worse one.
+  assert.deepStrictEqual(
+    log
+      .planRefresh({ days, readings: { health: { "2026-10-06": 2000 } }, existing: new Map([["2026-10-06", { steps: 5000, source: "motion" }]]), now: NOW })
+      .map((write) => [write.steps, write.source]),
+    [[2000, "health"]],
+    "upgraded, even to a smaller number"
+  );
+  // A fault is not a number.
+  assert.deepStrictEqual(log.planRefresh({ days, readings: { health: { "2026-10-07": 999999 } }, existing: new Map(), now: NOW }), []);
+}
+
+{
+  const local = new Map([
+    ["2026-10-05", { day: "2026-10-05", steps: 8000, source: "health" }],
+    ["2026-10-06", { day: "2026-10-06", steps: 3000, source: "motion" }],
+    ["2026-10-07", { day: "2026-10-07", steps: 5000, source: "health" }],
+    ["2026-10-08", { day: "2026-10-08", steps: 100, source: "sensor" }],
+  ]);
+  const plan = log.planCloudMerge({
+    local,
+    cloud: [
+      { day: "2026-10-04", steps: 4000, source: "health" }, // a day this phone has not seen
+      { day: "2026-10-05", steps: 8000, source: "health" }, // the same
+      { day: "2026-10-06", steps: 9000, source: "health" }, // better than ours
+      { day: "2026-10-07", steps: 2000, source: "sensor" }, // worse than ours
+      { day: "2026-10-08", steps: 100, source: "sensor", extra: 1 }, // the same
+      { day: "bad", steps: 1, source: "health" },
+    ],
+    now: NOW,
+  });
+
+  assert.deepStrictEqual(plan.writeLocal.map((write) => [write.day, write.steps, write.source, write.needsSync]), [
+    ["2026-10-04", 4000, "health", false],
+    ["2026-10-06", 9000, "health", false],
+  ], "the cloud's number is kept here when it is new or better, and then it is not sent back");
+  assert.deepStrictEqual(plan.inSync, ["2026-10-05", "2026-10-08"]);
+  assert.deepStrictEqual(plan.goUp, ["2026-10-07"], "ours is the better one: it goes up over the cloud's");
+}
+
+assert.ok(log.isMissingDailyStepsTableError({ code: "42P01", message: "relation \"public.daily_steps\" does not exist" }));
+assert.ok(log.isMissingDailyStepsTableError({ code: "PGRST205", message: "Could not find the table 'public.daily_steps' in the schema cache" }));
+assert.ok(!log.isMissingDailyStepsTableError({ code: "42501", message: "new row violates row-level security policy for table \"daily_steps\"" }), "a refusal is not a missing table");
+assert.ok(!log.isMissingDailyStepsTableError(null));
+
+/* ---------------------------------------------------------- the services -- */
+
+const storage = new Map();
+const world = {
+  userId: "u1",
+  acceptedPolicy: "2026-10-11.1",
+  tables: { daily_steps: [] },
+  tableMissing: false,
+  calls: [],
+};
+
+function fakeFrom(table) {
+  const query = { table, filters: [], order: null, op: "select" };
+  const run = () => {
+    world.calls.push(`${table}:${query.op}`);
+
+    if (table === "profile_private") {
+      return { data: [{ user_id: world.userId, privacy_policy_version: world.acceptedPolicy }], error: null };
+    }
+
+    if (world.tableMissing) {
+      return { data: null, error: { code: "42P01", message: "relation \"public.daily_steps\" does not exist" } };
+    }
+
+    if (query.op === "upsert") {
+      for (const incoming of query.rows) {
+        const at = world.tables.daily_steps.findIndex((existing) => existing.user_id === incoming.user_id && existing.day === incoming.day);
+
+        if (at >= 0) {
+          world.tables.daily_steps[at] = { ...incoming };
+        } else {
+          world.tables.daily_steps.push({ ...incoming });
+        }
+      }
+
+      return { data: null, error: null };
+    }
+
+    let rows = world.tables.daily_steps.filter((entry) =>
+      query.filters.every(([kind, column, value]) => (kind === "eq" ? entry[column] === value : entry[column] >= value))
+    );
+
+    if (query.order) {
+      rows = [...rows].sort((left, right) => (left[query.order] < right[query.order] ? -1 : 1));
+    }
+
+    return { data: rows.map((entry) => ({ ...entry })), error: null };
+  };
+
+  const builder = {
+    select() {
+      return builder;
+    },
+    eq(column, value) {
+      query.filters.push(["eq", column, value]);
+      return builder;
+    },
+    gte(column, value) {
+      query.filters.push(["gte", column, value]);
+      return builder;
+    },
+    order(column) {
+      query.order = column;
+      return builder;
+    },
+    maybeSingle() {
+      const result = run();
+
+      return Promise.resolve({ data: result.data?.[0] ?? null, error: result.error });
+    },
+    upsert(rows) {
+      query.op = "upsert";
+      query.rows = rows;
+
+      return Promise.resolve(run());
+    },
+    then(resolve, reject) {
+      return Promise.resolve(run()).then(resolve, reject);
+    },
+  };
+
+  return builder;
+}
+
+const platform = { OS: "ios" };
+const motion = { permission: "granted", available: true, reads: [], steps: {} };
+
+loadAppModule.stubModule("@supabase/supabase-js", {
+  createClient: () => ({
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    },
+    from: fakeFrom,
+  }),
+  processLock: () => {},
+});
+loadAppModule.stubModule("react-native", {
+  Platform: platform,
+  Linking: { openURL: async () => {} },
+});
+loadAppModule.stubModule("@react-native-async-storage/async-storage", {
+  __esModule: true,
+  default: {
+    getItem: async (key) => (storage.has(key) ? storage.get(key) : null),
+    setItem: async (key, value) => storage.set(key, String(value)),
+    removeItem: async (key) => storage.delete(key),
+    getAllKeys: async () => [...storage.keys()],
+    multiRemove: async (keys) => keys.forEach((key) => storage.delete(key)),
+  },
+});
+loadAppModule.stubModule("expo-sensors", {
+  Pedometer: {
+    isAvailableAsync: async () => motion.available,
+    getPermissionsAsync: async () => ({ granted: motion.permission === "granted", status: motion.permission, canAskAgain: true }),
+    requestPermissionsAsync: async () => ({ granted: true, status: "granted", canAskAgain: true }),
+    getStepCountAsync: async (start, end) => {
+      motion.reads.push([start, end]);
+
+      const iso = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+
+      return { steps: motion.steps[iso] ?? 0 };
+    },
+  },
+});
+loadAppModule.stubModule("expo-constants", { default: {} });
+loadAppModule.stubModule("react-native-url-polyfill/auto", {});
+loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
+loadAppModule.stubModule("expo-secure-store", {});
+
+const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
+const { stepsSchemaSql } = loadAppModule("src/Database/schema/steps.js");
+const dailyLog = loadAppModule("src/Utils/dailySteps.js");
+const steps = loadAppModule("src/Services/dailyStepsService.js");
+const stepCounter = loadAppModule("src/Services/stepCounterService.js");
+const stepsRepository = loadAppModule("src/Repository/stepsRepository.js");
+
+function createDatabase() {
+  const sqlite = new DatabaseSync(":memory:");
+  const bind = (params) => (Array.isArray(params) ? params : params === undefined ? [] : [params]).map((value) => (value === undefined ? null : value));
+
+  sqlite.exec(programSchemaSql);
+  sqlite.exec(stepsSchemaSql);
+
+  return {
+    sqlite,
+    async runAsync(sql, params) {
+      const result = sqlite.prepare(sql).run(...bind(params));
+
+      return { lastInsertRowId: Number(result.lastInsertRowid), changes: Number(result.changes) };
+    },
+    async getAllAsync(sql, params) {
+      return sqlite.prepare(sql).all(...bind(params)).map((entry) => ({ ...entry }));
+    },
+    async getFirstAsync(sql, params) {
+      const entry = sqlite.prepare(sql).get(...bind(params));
+
+      return entry ? { ...entry } : null;
+    },
+  };
+}
+
+const TODAY = dailyLog.localIsoDate();
+const day = (offset) => dailyLog.addDays(TODAY, offset);
+const kept = (db) => db.sqlite.prepare("SELECT day, steps, source, needs_sync FROM Daily_Steps ORDER BY day").all().map((entry) => ({ ...entry }));
+const put = (db, offset, stepsValue, source, needsSync = 1) =>
+  db.sqlite
+    .prepare("INSERT OR REPLACE INTO Daily_Steps (day, steps, source, updated_at, needs_sync) VALUES (?, ?, ?, ?, ?)")
+    .run(day(offset), stepsValue, source, 1000, needsSync);
+
+async function main() {
+  /* -------------------------------------------- the iPhone's motion history -- */
+
+  {
+    motion.steps = { [day(-6)]: 600, [day(-3)]: 3000, [day(-1)]: 5000, [day(0)]: 250 };
+    motion.reads = [];
+
+    const read = await stepCounter.readMotionDailySteps(day(-30), day(0));
+
+    assert.deepStrictEqual(Object.keys(read), [day(-6), day(-5), day(-4), day(-3), day(-2), day(-1), day(0)], "only the week Core Motion remembers");
+    assert.strictEqual(read[day(-3)], 3000);
+    assert.strictEqual(read[day(0)], 250);
+    assert.strictEqual(motion.reads.length, 7);
+
+    motion.permission = "undetermined";
+    motion.reads = [];
+    assert.strictEqual(await stepCounter.readMotionDailySteps(day(-6), day(0)), null, "it never asks: without the permission it reads nothing");
+    assert.strictEqual(motion.reads.length, 0);
+    motion.permission = "granted";
+
+    platform.OS = "android";
+    assert.strictEqual(await stepCounter.readMotionDailySteps(day(-6), day(0)), null, "and it is the iPhone's history, not Android's");
+    platform.OS = "ios";
+  }
+
+  /* ------------------------------------------------ reading sources into the table -- */
+
+  {
+    const db = createDatabase();
+
+    motion.steps = { [day(-1)]: 5000, [day(0)]: 250 };
+
+    const written = await steps.refreshRecentDailySteps(db);
+
+    assert.ok(written >= 2, "the sources were read into the table");
+    assert.deepStrictEqual(
+      kept(db).filter((entry) => entry.day >= day(-1)).map((entry) => [entry.day, entry.steps, entry.source, entry.needs_sync]),
+      [[day(-1), 5000, "motion", 1], [day(0), 250, "motion", 1]],
+      "the iPhone's own history stands in where there is no health app"
+    );
+    assert.strictEqual(await steps.refreshRecentDailySteps(db), 0, "a second look finds nothing new and writes nothing");
+  }
+  {
+    // The first opening, before the question has been asked, does not use up the history.
+    const db = createDatabase();
+
+    motion.permission = "undetermined";
+    await steps.refreshRecentDailySteps(db);
+    assert.strictEqual(await stepsRepository.getBackfillTriedAt(db), 0, "no source answered, so no try was spent");
+    motion.permission = "granted";
+    motion.steps = { [day(-5)]: 4000 };
+    await steps.refreshRecentDailySteps(db);
+    assert.ok((await stepsRepository.getBackfillTriedAt(db)) > 0, "the history is asked for once a source answers");
+    assert.ok(kept(db).some((entry) => entry.day === day(-5) && entry.steps === 4000));
+
+    // ...and the try belongs to this person's database, not to the phone.
+    const other = createDatabase();
+
+    assert.strictEqual(await stepsRepository.getBackfillTriedAt(other), 0);
+  }
+
+  /* ------------------------------------------------------------- the cloud -- */
+
+  const sync = (db, extra = {}) => steps.syncDailyStepsWithCloud(db, { userId: "u1", policyVersion: "2026-10-11.1", ...extra });
+
+  assert.deepStrictEqual(await steps.syncDailyStepsWithCloud(createDatabase(), { userId: null, policyVersion: "x" }), { skipped: "signed_out" });
+
+  {
+    world.calls = [];
+    world.acceptedPolicy = "2026-10-04.1";
+
+    const db = createDatabase();
+
+    put(db, -1, 7000, "health");
+    assert.deepStrictEqual(await sync(db), { skipped: "policy_not_accepted" }, "health data goes up only under the policy this build carries");
+    assert.deepStrictEqual(world.calls, ["profile_private:select"], "and nothing else is asked of the cloud");
+    assert.strictEqual(kept(db)[0].needs_sync, 1, "the day waits on the phone");
+    world.acceptedPolicy = "2026-10-11.1";
+  }
+  {
+    // The first meeting: what the phone has goes up, and is then not dirty.
+    world.tables.daily_steps = [];
+
+    const db = createDatabase();
+
+    put(db, -2, 6000, "health");
+    put(db, -1, 7000, "motion");
+
+    const result = await sync(db);
+
+    assert.deepStrictEqual(result, { pulled: 0, pushed: 2 });
+    assert.deepStrictEqual(
+      world.tables.daily_steps.map((entry) => [entry.user_id, entry.day, entry.steps, entry.source]),
+      [["u1", day(-2), 6000, "health"], ["u1", day(-1), 7000, "motion"]]
+    );
+    assert.ok(world.tables.daily_steps.every((entry) => !Number.isNaN(Date.parse(entry.updated_at))), "with a real timestamp");
+    assert.ok(kept(db).every((entry) => entry.needs_sync === 0), "and the phone knows the cloud has them");
+    assert.deepStrictEqual(await sync(db), { pulled: 0, pushed: 0 }, "a second meeting sends nothing");
+  }
+  {
+    // A new phone: its history comes back from the cloud, and nothing goes up.
+    const db = createDatabase();
+    const result = await sync(db);
+
+    assert.deepStrictEqual(result, { pulled: 2, pushed: 0 });
+    assert.deepStrictEqual(kept(db).map((entry) => [entry.day, entry.steps, entry.source, entry.needs_sync]), [
+      [day(-2), 6000, "health", 0],
+      [day(-1), 7000, "motion", 0],
+    ]);
+  }
+  {
+    // Two phones that disagree: the better source wins on both, whoever speaks first.
+    world.tables.daily_steps = [
+      { user_id: "u1", day: day(-3), steps: 9000, source: "health", updated_at: new Date(1000).toISOString() },
+      { user_id: "u1", day: day(-2), steps: 100, source: "sensor", updated_at: new Date(1000).toISOString() },
+    ];
+
+    const db = createDatabase();
+
+    put(db, -3, 3000, "sensor"); // worse than the cloud's
+    put(db, -2, 4000, "motion"); // better than the cloud's
+
+    const result = await sync(db);
+
+    assert.deepStrictEqual(result, { pulled: 1, pushed: 1 });
+    assert.deepStrictEqual(
+      kept(db).map((entry) => [entry.day, entry.steps, entry.source, entry.needs_sync]),
+      [[day(-3), 9000, "health", 0], [day(-2), 4000, "motion", 0]],
+      "the cloud's health number replaced the sensor's here"
+    );
+    assert.deepStrictEqual(
+      world.tables.daily_steps.map((entry) => [entry.day, entry.steps, entry.source]),
+      [[day(-3), 9000, "health"], [day(-2), 4000, "motion"]],
+      "and the motion number replaced the sensor's there - the worse one never wins"
+    );
+  }
+  {
+    // A row only the owner can touch: nothing written for somebody else's id.
+    world.tables.daily_steps = [{ user_id: "somebody-else", day: day(-1), steps: 12345, source: "health", updated_at: new Date(1000).toISOString() }];
+
+    const db = createDatabase();
+
+    assert.deepStrictEqual(await sync(db), { pulled: 0, pushed: 0 }, "another person's day is not this person's history");
+    assert.strictEqual(kept(db).length, 0);
+  }
+  {
+    // The migration has not been run: the days stay on the phone, and nothing breaks.
+    world.tableMissing = true;
+
+    const db = createDatabase();
+
+    put(db, -1, 7000, "health");
+    assert.deepStrictEqual(await sync(db), { skipped: "cloud_missing" });
+    assert.strictEqual(kept(db)[0].needs_sync, 1, "still waiting");
+    world.tableMissing = false;
+  }
+  {
+    // A number that changed while the upload was out goes again.
+    const db = createDatabase();
+
+    put(db, -1, 7000, "health");
+    await stepsRepository.markDailyStepSynced(db, { day: day(-1), updatedAt: 999 });
+    assert.strictEqual(kept(db)[0].needs_sync, 1, "it is not cleared for a row that is no longer the one that was sent");
+    await stepsRepository.markDailyStepSynced(db, { day: day(-1), updatedAt: 1000 });
+    assert.strictEqual(kept(db)[0].needs_sync, 0);
+  }
+
+  /* ---------------------------------------------------------- the migration -- */
+
+  {
+    const fs = require("fs");
+    const path = require("path");
+    const sql = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261011090000_daily-steps.sql"), "utf8");
+
+    assert.ok(/primary key \(user_id, day\)/.test(sql), "one row for each person and day");
+    assert.ok(/references public\.profiles\(id\) on delete cascade/.test(sql), "deleted with the account");
+    assert.ok(/enable row level security/.test(sql));
+    assert.ok(/check \(source in \('health', 'motion', 'sensor'\)\)/.test(sql), "the sources the app knows");
+    assert.ok(/steps >= 0 and steps <= 200000/.test(sql), "the same limit as the app");
+    assert.ok(!/to anon/.test(sql) && /revoke all on public\.daily_steps from anon, authenticated/.test(sql), "nothing for anon");
+    assert.ok(!/user_follows/.test(sql), "followers cannot read it");
+    assert.strictEqual((sql.match(/privacy_policy_version is not null/g) ?? []).length, 2, "a write needs the policy accepted, for insert and for update");
+    assert.ok(sql.includes(sql.match(/20261010090000_more-catalog-exercises\.sql/)?.[0] ?? "?"), "it says what it runs after");
+  }
+}
+
+main()
+  .then(() => {
+    console.log("Daily steps: the rules (best source wins, a worse never replaces it), reading sources into the table, the iPhone's motion history, meeting the cloud, and the migration.");
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
