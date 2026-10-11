@@ -5,6 +5,7 @@ import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./StatisticsOverviewStyle";
 import DailyStepsCard from "../DailyStepsCard/DailyStepsCard";
+import ScienceLink from "@resources/Components/ScienceLink";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import RecordStar from "@resources/Components/RecordStar/RecordStar";
 import { ThemedSegmentedControl, ThemedText } from "@resources/ThemedComponents";
@@ -168,6 +169,7 @@ export default function StatisticsOverview({
           <View style={styles.section}>
             {sectionHead(t("statistics.steps.title"))}
             <DailyStepsCard steps={steps} onOpen={onOpenSteps} />
+            <ScienceLink articleId="step-zones" />
           </View>
         ) : null}
       </View>
@@ -399,6 +401,7 @@ export default function StatisticsOverview({
         <View style={styles.section}>
           {sectionHead(t("statistics.steps.title"))}
           <DailyStepsCard steps={steps} onOpen={onOpenSteps} />
+            <ScienceLink articleId="step-zones" />
         </View>
       ) : null}
 
