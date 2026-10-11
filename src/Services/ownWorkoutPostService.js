@@ -4,9 +4,10 @@ import {
   buildLocalWorkoutSummaryPost,
   getHiddenWorkoutSummaryExerciseIds,
   getOwnPostedWorkoutSummaries,
+  getWalkPostShareRoute,
 } from "./socialPostService";
 
-const SUPPORTED_WORKOUT_TYPES = ["Resistance"];
+const SUPPORTED_WORKOUT_TYPES = ["Resistance", "Walk"];
 
 /**
  * Every completed workout the user owns, rendered as a post whether or not it
@@ -35,6 +36,7 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
         w.workout_id,
         w.cloud_workout_type_instance_id,
         w.workout_type,
+        w.label,
         w.elapsed_time,
         w.done,
         w.gym_id,
@@ -72,6 +74,8 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
     ensureOwnProfile(user),
     getOwnPostedWorkoutSummaries({ user }),
     getHiddenWorkoutSummaryExerciseIds({ user }),
+    // What a walk's card would carry, by the person's own default.
+    getWalkPostShareRoute({ user }),
     // Where each workout was done, for the line on its card. The centre is on
     // the phone's own workout; only its name has to come from the cloud.
     getGymsByIds(workouts.map((workout) => workout.gym_id).filter(Boolean)),
@@ -85,7 +89,8 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
   const postStatusKnown = results[1].status === "fulfilled";
   const publishedByCloudId = postStatusKnown ? results[1].value : new Map();
   const hiddenExerciseIds = results[2].status === "fulfilled" ? results[2].value : [];
-  const gymsById = results[3].status === "fulfilled" ? results[3].value : new Map();
+  const walkShareRoute = results[3].status === "fulfilled" ? results[3].value : true;
+  const gymsById = results[4].status === "fulfilled" ? results[4].value : new Map();
 
   const author = {
     id: user.id,
@@ -104,9 +109,15 @@ export async function getOwnWorkoutPosts(db, { user, limit = null } = {}) {
         author,
         hiddenExerciseIds,
         postStatusKnown,
+        walkShareRoute,
         publishedPost:
           publishedByCloudId.get(Number(workout.cloud_workout_type_instance_id)) ?? null,
       });
+
+      // A walk this phone has no record of has no card.
+      if (!post) {
+        continue;
+      }
 
       posts.push({
         ...post,

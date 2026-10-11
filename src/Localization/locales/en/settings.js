@@ -102,6 +102,9 @@ export default {
     visibilityNote:
       "Decides who can see your workout summary posts. Only me keeps them out of every other feed.",
     exercisesEyebrow: "Exercises",
+    walksEyebrow: "Walks",
+    shareWalkRoute: "Share the route of a walk",
+    shareWalkRouteNote: "The default for the Share route switch when you post a walk. The start and the end of the route are always left out, and the exact route never leaves your phone.",
     exerciseVisibility: "Exercise visibility",
     exerciseVisibilityBody: "Choose which exercises can appear in top sets and PR badges.",
     errors: {

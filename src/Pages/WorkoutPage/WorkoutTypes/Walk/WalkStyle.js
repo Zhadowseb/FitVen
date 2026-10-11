@@ -4,6 +4,28 @@ import { StyleSheet } from "react-native";
 // them after this file has run, so the screen sets them inline (see
 // src/Pages/AGENTS.md). Sizes follow WalkWorkout.dc.html.
 export default StyleSheet.create({
+  postNoteInput: {
+    minHeight: 84,
+    textAlignVertical: "top",
+  },
+  shareRouteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginTop: 14,
+  },
+  shareRouteCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  shareRouteTitle: {
+    fontSize: 14.5,
+    fontWeight: "800",
+  },
+  shareRouteHint: {
+    fontSize: 12.5,
+    lineHeight: 17,
+  },
   screen: {
     flex: 1,
   },

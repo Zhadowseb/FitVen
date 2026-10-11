@@ -85,6 +85,15 @@ export default {
       other: "{count} steps",
     },
   },
+  // Sharing a finished walk to the feed.
+  post: {
+    message: "{summary}. Post it to your feed so the people who follow you can see it?",
+    confirm: "Post it",
+    keepPrivate: "Keep it private",
+    notePlaceholder: "Add a note (optional)",
+    shareRoute: "Share route",
+    shareRouteHint: "The start and the end of your walk are left out.",
+  },
   errors: {
     finishFailedTitle: "Could not finish the walk",
     finishFailedMessage: "Nothing was lost. Try again in a moment.",
