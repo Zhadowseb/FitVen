@@ -364,6 +364,9 @@ export default function StepsPage() {
                       {t("steps.ownCountNote")}
                     </ThemedText>
                   ) : null}
+                  {usesOwnCount ? (
+                    <ScienceLink articleId="health-connect" style={{ marginTop: 10 }} />
+                  ) : null}
                   <ScienceLink articleId="step-zones" style={{ marginTop: 10 }} />
                 </>
               ) : (

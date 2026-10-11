@@ -92,6 +92,7 @@ import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
 import DailyStepsSync from "./src/Sync/DailyStepsSync";
 import WatchWalkPrompt from "./src/Resources/Components/WatchWalkPrompt/WatchWalkPrompt";
+import TestFeedbackButton from "./src/Resources/Components/TestFeedbackButton/TestFeedbackButton";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
@@ -527,6 +528,8 @@ function UserScopedDatabaseApp() {
         <RootNavigator key={`accent-${accentTheme}-${language}`} />
         {/* A walk found on the phone: add it to FitVen? After the policy is accepted. */}
         <WatchWalkPrompt />
+        {/* TEMPORARY, internal test builds only (EXPO_PUBLIC_TEST_BUILD): a "Test" tab for feedback. */}
+        <TestFeedbackButton />
       </PrivacyConsentGate>
     </SQLiteProvider>
   );
