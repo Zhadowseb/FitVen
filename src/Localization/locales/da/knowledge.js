@@ -42,6 +42,11 @@ export default {
     label: "Læs videnskaben · {minutes} min",
     a11y: "Læs videnskaben: {title}, {minutes} min læsning",
   },
+  // En vejledning, ikke en undersøgelse.
+  guideLink: {
+    label: "Vejledning · {minutes} min",
+    a11y: "Vejledning: {title}, {minutes} min læsning",
+  },
   curve: {
     benefit: "Sundhedsgevinst",
     a11y: "Kurve over sundhedsgevinst efter daglige skridt: stejl op til 4.000, flader ud efter 7.000 til 10.000",

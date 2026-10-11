@@ -41,6 +41,11 @@ export default {
     label: "Read the science · {minutes} min",
     a11y: "Read the science: {title}, {minutes} min read",
   },
+  // A how-to, not a study.
+  guideLink: {
+    label: "Guide · {minutes} min",
+    a11y: "Guide: {title}, {minutes} min read",
+  },
   curve: {
     benefit: "Health benefit",
     a11y: "Curve of health benefit by daily steps: steep up to 4,000, flattening after 7,000 to 10,000",

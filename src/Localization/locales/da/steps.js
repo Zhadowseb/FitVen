@@ -23,6 +23,7 @@ export default {
     blocked: "FitVen skal kunne læse dine skridt i {app}.",
     openApp: "Åbn {app}",
     unavailable: "Installér {app} for at se dine skridt ved siden af dine træninger.",
+    whyHealthConnect: "Hvorfor Health Connect, og hvordan du sætter det op →",
     getApp: "Hent {app}",
   },
   card: {

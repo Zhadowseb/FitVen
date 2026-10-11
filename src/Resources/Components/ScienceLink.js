@@ -14,6 +14,9 @@ import { localizeArticle } from "../../Utils/knowledge";
 // drift from it. The wording is always "Read the science", never "Read the
 // article".
 //
+// A guide (`kind: "guide"`, how to set something up) is not science and is
+// called a "Guide" - the "Read the science" wording is only for the studies.
+//
 // Without an `onPress` it opens the article.
 
 export default function ScienceLink({ articleId, onPress, style }) {
@@ -28,11 +31,13 @@ export default function ScienceLink({ articleId, onPress, style }) {
   }
 
   const green = theme.secondary ?? theme.primary;
+  const isGuide = article.kind === "guide";
+  const keys = isGuide ? "knowledge.guideLink" : "knowledge.scienceLink";
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={t("knowledge.scienceLink.a11y", {
+      accessibilityLabel={t(`${keys}.a11y`, {
         title: article.title,
         minutes: article.readMinutes,
       })}
@@ -50,7 +55,7 @@ export default function ScienceLink({ articleId, onPress, style }) {
 
       <View style={styles.texts}>
         <ThemedText style={styles.label} setColor={green}>
-          {t("knowledge.scienceLink.label", { minutes: article.readMinutes })}
+          {t(`${keys}.label`, { minutes: article.readMinutes })}
         </ThemedText>
         <ThemedText style={styles.title} setColor={theme.title}>
           {article.title}

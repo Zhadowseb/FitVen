@@ -1,3 +1,4 @@
+import healthConnect from "./healthConnect";
 import stepZones from "./stepZones";
 import strengthCountsAsSteps from "./strengthCountsAsSteps";
 
@@ -9,7 +10,7 @@ import strengthCountsAsSteps from "./strengthCountsAsSteps";
 //
 // Moving them to Supabase later is a separate decision; it changes how NEW is
 // worked out, not the shape of an article.
-export const ARTICLES = [stepZones, strengthCountsAsSteps];
+export const ARTICLES = [healthConnect, stepZones, strengthCountsAsSteps];
 
 export function getArticleById(id) {
   return ARTICLES.find((article) => article.id === id) ?? null;

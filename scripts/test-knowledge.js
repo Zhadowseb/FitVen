@@ -27,7 +27,7 @@ const format = loadAppModule("src/Utils/knowledgeFormat.js");
 
 assert.deepStrictEqual(
   ARTICLES.map((article) => article.id).sort(),
-  ["step-zones", "strength-counts-as-steps"],
+  ["health-connect", "step-zones", "strength-counts-as-steps"],
   "only articles with a text are shipped: the two that have none yet are left out"
 );
 assert.strictEqual(new Set(ARTICLES.map((article) => article.id)).size, ARTICLES.length, "ids are unique");
@@ -166,7 +166,7 @@ assert.deepStrictEqual(rules.categoriesWithArticles([]), []);
 
   assert.deepStrictEqual(rules.filterArticles(articles, {}).map((article) => article.id), ARTICLES.map((article) => article.id));
   assert.deepStrictEqual(rules.filterArticles(articles, { category: "strength" }).map((article) => article.id), ["strength-counts-as-steps"], "a category with the article in it");
-  assert.deepStrictEqual(rules.filterArticles(articles, { category: "steps" }).map((article) => article.id).sort(), ["step-zones", "strength-counts-as-steps"], "steps & strength is filed under both");
+  assert.deepStrictEqual(rules.filterArticles(articles, { category: "steps" }).map((article) => article.id).sort(), ["health-connect", "step-zones", "strength-counts-as-steps"], "steps & strength is filed under both");
   assert.deepStrictEqual(rules.filterArticles(articles, { query: "ZONES" }).map((article) => article.id), [], "the title says steps, not zones - and case does not matter");
   assert.deepStrictEqual(rules.filterArticles(articles, { query: "  really need " }).map((article) => article.id), ["step-zones"], "a title");
   assert.deepStrictEqual(rules.filterArticles(articles, { query: "walking can't" }).map((article) => article.id), ["strength-counts-as-steps"], "a summary");
