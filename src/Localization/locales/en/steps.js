@@ -34,6 +34,7 @@ export default {
     blockedSensor: "FitVen needs permission to count your steps. Allow Physical activity in the app's settings.",
     openSettings: "Open settings",
     unavailable: "Install {app} to see your steps next to your workouts.",
+    whyHealthConnect: "Why Health Connect, and how to set it up →",
     getApp: "Get {app}",
   },
   card: {
