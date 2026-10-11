@@ -67,6 +67,15 @@ export default {
       other: "{count} skridt",
     },
   },
+  // Deling af en færdig gåtur i feedet.
+  post: {
+    message: "{summary}. Vil du dele den i dit feed, så dem der følger dig kan se den?",
+    confirm: "Del den",
+    keepPrivate: "Hold den privat",
+    notePlaceholder: "Tilføj en note (valgfrit)",
+    shareRoute: "Del ruten",
+    shareRouteHint: "Start og slut på din gåtur bliver ikke vist.",
+  },
   errors: {
     finishFailedTitle: "Kunne ikke afslutte gåturen",
     finishFailedMessage: "Intet gik tabt. Prøv igen om lidt.",

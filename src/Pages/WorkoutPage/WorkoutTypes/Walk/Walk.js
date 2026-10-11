@@ -6,6 +6,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Switch,
   TouchableOpacity,
   Vibration,
   View,
@@ -17,10 +18,17 @@ import Svg, { Path, Rect } from "react-native-svg";
 import { useTranslation } from "@localization";
 
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
-import { ThemedConfirmModal, ThemedText } from "../../../../Resources/ThemedComponents";
+import { ThemedConfirmModal, ThemedText, ThemedTextInput } from "../../../../Resources/ThemedComponents";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
-import { walkTrackerService } from "../../../../Services";
+import {
+  socialPostService,
+  walkPostService,
+  walkTrackerService,
+  workoutService,
+} from "../../../../Services";
+import { useAuth } from "../../../../Contexts/AuthContext";
+import { goHome } from "@utils/goHome";
 import {
   formatClockTime,
   getCurrentStoredTimestampSeconds,
@@ -199,7 +207,14 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
   const [now, setNow] = useState(() => Date.now());
   const [locked, setLocked] = useState(false);
   const [finishConfirmVisible, setFinishConfirmVisible] = useState(false);
+  const { user } = useAuth();
   const [finishedSummary, setFinishedSummary] = useState(null);
+  // "Share this walk to your feed?" - asked after Finish, like a strength workout.
+  const [summaryVisible, setSummaryVisible] = useState(false);
+  const [postConfirmVisible, setPostConfirmVisible] = useState(false);
+  const [postNote, setPostNote] = useState("");
+  const [canShareRoute, setCanShareRoute] = useState(false);
+  const [shareRoute, setShareRoute] = useState(true);
   const [reduceMotionSetting, setReduceMotionSetting] = useState(null);
   const handledRestartRef = useRef(restartRequestKey);
 
@@ -370,11 +385,74 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
       if (result) {
         Vibration.vibrate(500);
         setFinishedSummary(result);
+
+        // The share question replaces the summary when there is one to ask.
+        if (!(await offerToPost())) {
+          setSummaryVisible(true);
+        }
       }
     } catch (error) {
       console.error("Failed to finish the walk:", error);
       Alert.alert(t("walk.errors.finishFailedTitle"), t("walk.errors.finishFailedMessage"));
     }
+  };
+
+  // Posting is asked, not done: unless the person has turned workout posts off,
+  // or nothing was recorded that this phone can post. Resolves to whether the
+  // question is on screen.
+  const offerToPost = async () => {
+    if (!user?.id) {
+      return false;
+    }
+
+    try {
+      const postMode = await socialPostService.getWorkoutSummaryPostMode({ user });
+
+      if (postMode === socialPostService.WORKOUT_SUMMARY_POST_MODES.OFF) {
+        return false;
+      }
+
+      const offer = await walkPostService.getWalkPostOffer(db, workout_id);
+
+      if (!offer.canPost) {
+        return false;
+      }
+
+      // A "summary only" post never carries the route, so there is nothing to ask.
+      const routeAllowed =
+        offer.canShareRoute &&
+        postMode !== socialPostService.WORKOUT_SUMMARY_POST_MODES.SUMMARY_ONLY;
+
+      setCanShareRoute(routeAllowed);
+      setShareRoute(routeAllowed ? await socialPostService.getWalkPostShareRoute({ user }) : false);
+      setPostNote("");
+      setPostConfirmVisible(true);
+
+      return true;
+    } catch (error) {
+      console.error("Could not read the walk post setting:", error);
+
+      return false;
+    }
+  };
+
+  // The post goes on in the background, as a strength workout's does; Home
+  // shows how it is getting on.
+  const postWalk = () => {
+    workoutService.postWorkoutSummaryInBackground(db, {
+      workoutId: workout_id,
+      note: postNote,
+      shareRoute: canShareRoute && shareRoute,
+    });
+
+    if (canShareRoute) {
+      socialPostService
+        .setWalkPostShareRoute({ user, shareRoute })
+        .catch((error) => console.warn("Could not keep the share route choice:", error));
+    }
+
+    setPostConfirmVisible(false);
+    goHome(navigation);
   };
 
   const summaryText = (summary) => {
@@ -709,14 +787,53 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
       />
 
       <ThemedConfirmModal
-        visible={finishedSummary !== null}
+        visible={postConfirmVisible}
+        title={t("walk.finished.title")}
+        message={t("walk.post.message", { summary: summaryText(finishedSummary) })}
+        confirmLabel={t("walk.post.confirm")}
+        cancelLabel={t("walk.post.keepPrivate")}
+        tone="positive"
+        onConfirm={postWalk}
+        onClose={() => setPostConfirmVisible(false)}
+      >
+        <ThemedTextInput
+          value={postNote}
+          onChangeText={setPostNote}
+          placeholder={t("walk.post.notePlaceholder")}
+          multiline
+          inputStyle={styles.postNoteInput}
+        />
+
+        {canShareRoute ? (
+          <View style={styles.shareRouteRow}>
+            <View style={styles.shareRouteCopy}>
+              <ThemedText style={styles.shareRouteTitle} setColor={theme.title}>
+                {t("walk.post.shareRoute")}
+              </ThemedText>
+              <ThemedText style={styles.shareRouteHint} setColor={theme.quietText}>
+                {t("walk.post.shareRouteHint")}
+              </ThemedText>
+            </View>
+            <Switch
+              accessibilityLabel={t("walk.post.shareRoute")}
+              value={shareRoute}
+              onValueChange={setShareRoute}
+              trackColor={{ true: green, false: withAlpha(theme.quietText, 0.35) }}
+              thumbColor={theme.onDanger}
+            />
+          </View>
+        ) : null}
+      </ThemedConfirmModal>
+
+      <ThemedConfirmModal
+        visible={summaryVisible}
         title={t("walk.finished.title")}
         message={summaryText(finishedSummary)}
         confirmLabel={t("common.done")}
         cancelLabel=""
         tone="positive"
-        onConfirm={() => setFinishedSummary(null)}
-        onClose={() => setFinishedSummary(null)}
+        onConfirm={() => setSummaryVisible(false)}
+        onClose={() => setSummaryVisible(false)}
       />
     </View>
   );

@@ -24,6 +24,7 @@ export * as socialService from "./socialService";
 export * as splitService from "./splitService";
 export * as statisticsService from "./statisticsService";
 export * as trainService from "./trainService";
+export * as walkPostService from "./walkPostService";
 export * as walkService from "./walkService";
 export * as walkTrackerService from "./walkTrackerService";
 export * as weightliftingService from "./weightliftingService";

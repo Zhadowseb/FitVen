@@ -126,7 +126,7 @@ const WorkoutPage = ({ route }) => {
     workoutType === "StrengthTraining";
   const supportsTimerRestart =
     isRunWorkout || isWalkWorkout || isStrengthWorkout;
-  const canRepostWorkoutSummary = workoutType === "Resistance";
+  const canRepostWorkoutSummary = workoutType === "Resistance" || isWalkWorkout;
 
   const openLabelModal = () => {
     // A workout nobody named is labelled with its type id ("Resistance"),

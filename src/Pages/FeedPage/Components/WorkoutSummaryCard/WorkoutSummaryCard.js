@@ -5,6 +5,8 @@ import { useTranslation } from "@localization";
 import styles from "./WorkoutSummaryCardStyle";
 import PostHeaderGlow from "./PostHeaderGlow";
 import ProgressionBar from "./ProgressionBar";
+import WalkSummaryBody from "./WalkSummaryBody";
+import WalkIcon from "../../../../Resources/Icons/WorkoutLabels/Walk";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Star from "../../../../Resources/Icons/UI-icons/Star";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
@@ -171,7 +173,12 @@ export default function WorkoutSummaryCard({
   const setsCount = Number(payload.setsCount) || 0;
   const exerciseCount = Number(payload.exerciseCount) || 0;
 
+  // A walk post is the same card in green where a strength post is orange: the
+  // avatar ring, the glow, the type label and the note rule. The like and the
+  // "Post" button stay in the accent, so nothing else changes colour.
+  const isWalk = workoutType.toLowerCase() === "walk";
   const accent = theme.primary;
+  const tone = isWalk ? theme.secondary ?? accent : accent;
   const gold = theme.planned;
   const titleColor = theme.title;
   const bodyText = theme.textStrong ?? titleColor;
@@ -181,7 +188,7 @@ export default function WorkoutSummaryCard({
   const cardBorder = theme.cardBorder ?? theme.hairline;
   const divider = withAlpha(titleColor, 0.06);
   const barTrack = withAlpha(titleColor, colorScheme === "dark" ? 0.055 : 0.07);
-  const glowColor = prCount > 0 ? gold : accent;
+  const glowColor = prCount > 0 ? gold : tone;
   const likeColor = post?.isLiked ? accent : quietText;
   // The picture and the lines beside it are one target, so a thumb aimed at
   // the name does not have to find a 15 pt line of text.
@@ -218,8 +225,8 @@ export default function WorkoutSummaryCard({
                 uri={post.author?.avatarUrl}
                 size={42}
                 iconSize={21}
-                iconColor={accent}
-                borderColor={accent}
+                iconColor={tone}
+                borderColor={tone}
                 borderWidth={2}
               />
 
@@ -246,8 +253,11 @@ export default function WorkoutSummaryCard({
                           style={[styles.metaDot, { backgroundColor: quietText }]}
                         />
                       ) : null}
+                      {isWalk ? (
+                        <WalkIcon width={13} height={13} primaryColor={tone} />
+                      ) : null}
                       {/* Stored, and posted, as the English id. */}
-                      <ThemedText style={styles.workoutType} setColor={accent}>
+                      <ThemedText style={styles.workoutType} setColor={tone}>
                         {workoutTypeLabel(workoutType, t)}
                       </ThemedText>
                     </>
@@ -315,7 +325,7 @@ export default function WorkoutSummaryCard({
               <View
                 style={[
                   styles.noteRule,
-                  { backgroundColor: withAlpha(accent, 0.45) },
+                  { backgroundColor: withAlpha(tone, 0.45) },
                 ]}
               />
               <ThemedText style={styles.noteText} setColor={noteColor}>
@@ -324,6 +334,7 @@ export default function WorkoutSummaryCard({
             </View>
           ) : null}
 
+          {isWalk ? null : (
           <View style={styles.statsRow}>
             <View style={styles.statsGroup}>
               {durationParts.map((part) => (
@@ -358,7 +369,18 @@ export default function WorkoutSummaryCard({
               </ThemedText>
             </View>
           </View>
+          )}
         </View>
+
+        {isWalk ? (
+          <WalkSummaryBody
+            payload={payload}
+            authorName={authorName}
+            theme={theme}
+            green={tone}
+            divider={divider}
+          />
+        ) : null}
 
         <View style={[styles.divider, { backgroundColor: divider }]} />
 

@@ -10,6 +10,7 @@ import { ensureOwnProfile } from "./socialService";
 import { formatOptionalNumber } from "../Utils/numberUtils";
 import { TOTAL, convertWeight, totalLoadSql, weightModeOf } from "@utils/weightMode";
 import { attachAvatarUrls } from "./avatarUrls";
+import * as walkPostService from "./walkPostService";
 
 const SOCIAL_POST_TABLE = "social_post";
 const SOCIAL_POST_LIKE_TABLE = "social_post_like";
@@ -21,6 +22,7 @@ const WORKOUT_SUMMARY_POST_MODE_STORAGE_PREFIX =
   "fitven:workout-summary-post-mode";
 const WORKOUT_SUMMARY_POST_VISIBILITY_STORAGE_PREFIX =
   "fitven:workout-summary-post-visibility";
+const WALK_POST_SHARE_ROUTE_STORAGE_PREFIX = "fitven:walk-post-share-route";
 export const WORKOUT_SUMMARY_POST_MODES = Object.freeze({
   FULL_INFO: "full_info",
   SUMMARY_ONLY: "summary_only",
@@ -57,7 +59,7 @@ const SOCIAL_POST_SELECT_FIELDS = `
     updated_at
   )
 `;
-const SUPPORTED_AUTO_POST_WORKOUT_TYPES = new Set(["Resistance"]);
+const SUPPORTED_AUTO_POST_WORKOUT_TYPES = new Set(["Resistance", "Walk"]);
 
 function normalizeWorkoutSummaryPostMode(mode) {
   return Object.values(WORKOUT_SUMMARY_POST_MODES).includes(mode)
@@ -103,6 +105,43 @@ export async function setWorkoutSummaryPostMode({ user, mode }) {
   );
 
   return nextMode;
+}
+
+/**
+ * Whether a walk's post carries its route by default - the "Share route" switch
+ * after a walk starts from this. Shared (trimmed: Utils/walkPost.js) until the
+ * person says no, and remembered for them, like the visibility.
+ */
+export async function getWalkPostShareRoute({ user } = {}) {
+  if (!user?.id) {
+    return true;
+  }
+
+  try {
+    const stored = await AsyncStorage.getItem(
+      `${WALK_POST_SHARE_ROUTE_STORAGE_PREFIX}:${user.id}`
+    );
+
+    return stored === null ? true : stored === "1";
+  } catch (error) {
+    console.warn("Could not read the share route setting:", error);
+    return true;
+  }
+}
+
+export async function setWalkPostShareRoute({ user, shareRoute }) {
+  if (!user?.id) {
+    throw new Error(t("errors.socialPost.signInToUpdatePostSettings"));
+  }
+
+  const next = Boolean(shareRoute);
+
+  await AsyncStorage.setItem(
+    `${WALK_POST_SHARE_ROUTE_STORAGE_PREFIX}:${user.id}`,
+    next ? "1" : "0"
+  );
+
+  return next;
 }
 
 export async function getWorkoutSummaryPostVisibility({ user } = {}) {
@@ -974,19 +1013,31 @@ export async function buildLocalWorkoutSummaryPost(
     publishedPost = null,
     hiddenExerciseIds = [],
     postStatusKnown = true,
+    walkShareRoute = true,
   }
 ) {
+  const isWalk = workout.workout_type === "Walk";
   // Same hidden-exercise filter the publish path uses, so the preview matches
   // what would actually go out.
-  const payload = await buildWorkoutSummaryPayload(
-    db,
-    {
-      workout_id: workout.workout_id,
-      workout_type: workout.workout_type,
-      elapsed_time: workout.elapsed_time,
-    },
-    { hiddenExerciseIds }
-  );
+  const payload = isWalk
+    ? await walkPostService.buildWalkSummaryPayload(db, workout.workout_id, {
+        shareRoute: walkShareRoute,
+      })
+    : await buildWorkoutSummaryPayload(
+        db,
+        {
+          workout_id: workout.workout_id,
+          workout_type: workout.workout_type,
+          elapsed_time: workout.elapsed_time,
+        },
+        { hiddenExerciseIds }
+      );
+
+  // A walk this phone has no record of (it was tracked on another one, or has
+  // nothing in it) has no card to show.
+  if (isWalk && !payload) {
+    return null;
+  }
 
   return {
     // Keyed by the workout, so the row is stable whether or not it is posted.
@@ -1000,7 +1051,9 @@ export async function buildLocalWorkoutSummaryPost(
       0
     ),
     workoutType: workout.workout_type,
-    title: workout.workout_label ?? workout.workout_type,
+    title: isWalk
+      ? walkPostService.walkPostTitle(workout)
+      : workout.workout_label ?? workout.workout_type,
     body: publishedPost?.body ?? "",
     payload,
     performedDate: workout.date ?? null,
@@ -1117,7 +1170,7 @@ export async function backfillWorkoutSummaryPostBaselines(
 
 export async function createWorkoutSummaryPostForCompletedWorkout(
   db,
-  { workoutId, source = "automatic", note = null }
+  { workoutId, source = "automatic", note = null, shareRoute = null }
 ) {
   const user = await getAuthenticatedUser();
 
@@ -1157,26 +1210,59 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
   }
 
   await ensureOwnProfile(user);
-  const hiddenExerciseIds = await getHiddenWorkoutSummaryExerciseIds({ user });
-  const summaryPayload = await buildWorkoutSummaryPayload(db, workoutSource, {
-    hiddenExerciseIds,
-  });
 
-  // SPM-12: a post reading "1 hour 6 min - 0 sets across 0 exercises" tells the
-  // people following you nothing, and reads as a bug in the feed. A workout
-  // with nothing recorded in it is not a summary.
-  if (normalizeInteger(summaryPayload.setsCount, 0) <= 0) {
-    return { skipped: true, reason: "no_sets_logged" };
+  const isWalk = workoutSource.workout_type === "Walk";
+  let payload;
+  let postTitle = workoutSource.workout_label ?? workoutSource.workout_type;
+
+  if (isWalk) {
+    // A walk's numbers are on the phone that tracked it. Without them - a new
+    // phone, nothing recorded - there is no post, and a post that is already
+    // out is left as it is rather than rewritten with zeros.
+    const walkPayload = await walkPostService.buildWalkSummaryPayload(
+      db,
+      workoutId,
+      {
+        shareRoute: shareRoute ?? (await getWalkPostShareRoute({ user })),
+        summaryOnly:
+          selectedPostMode === WORKOUT_SUMMARY_POST_MODES.SUMMARY_ONLY,
+      }
+    );
+
+    if (!walkPayload) {
+      return { skipped: true, reason: "nothing_recorded" };
+    }
+
+    payload = {
+      ...walkPayload,
+      postMode: normalizeWorkoutSummaryPostMode(selectedPostMode),
+    };
+    postTitle = walkPostService.walkPostTitle(workoutSource);
+  } else {
+    const hiddenExerciseIds = await getHiddenWorkoutSummaryExerciseIds({ user });
+    const summaryPayload = await buildWorkoutSummaryPayload(db, workoutSource, {
+      hiddenExerciseIds,
+    });
+
+    // SPM-12: a post reading "1 hour 6 min - 0 sets across 0 exercises" tells the
+    // people following you nothing, and reads as a bug in the feed. A workout
+    // with nothing recorded in it is not a summary.
+    if (normalizeInteger(summaryPayload.setsCount, 0) <= 0) {
+      return { skipped: true, reason: "no_sets_logged" };
+    }
+
+    payload = applyWorkoutSummaryPostMode(summaryPayload, selectedPostMode);
   }
-
-  const payload = applyWorkoutSummaryPostMode(summaryPayload, selectedPostMode);
 
   const existingPost = await getExistingWorkoutSummaryPost({
     userId: user.id,
     cloudWorkoutTypeInstanceId,
   });
 
+  // A walk's post is written again every time: the person may have changed
+  // their mind about the route.
   if (
+    !isWalk &&
     shouldKeepExistingWorkoutSummaryPost(existingPost, payload, {
       visibility: selectedPostVisibility,
     })
@@ -1198,7 +1284,7 @@ export async function createWorkoutSummaryPostForCompletedWorkout(
         source_workout_type_instance_id: cloudWorkoutTypeInstanceId,
         visibility: selectedPostVisibility,
         workout_type: workoutSource.workout_type,
-        title: workoutSource.workout_label ?? workoutSource.workout_type,
+        title: postTitle,
         body,
         payload,
         completed_at: now,

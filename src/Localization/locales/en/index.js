@@ -34,6 +34,7 @@ import train from "./train";
 import trainCalendar from "./trainCalendar";
 import trainLibrary from "./trainLibrary";
 import walk from "./walk";
+import walkPost from "./walkPost";
 import workout from "./workout";
 import workoutStart from "./workoutStart";
 import workoutTypes from "./workoutTypes";
@@ -72,6 +73,7 @@ export default {
   trainCalendar,
   trainLibrary,
   walk,
+  walkPost,
   workout,
   workoutStart,
   workoutTypes,
