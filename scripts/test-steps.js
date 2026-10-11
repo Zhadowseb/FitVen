@@ -230,8 +230,10 @@ const hc = {
   calls: [],
 };
 
+const platform = { OS: "android" };
+
 loadAppModule.stubModule("react-native", {
-  Platform: { OS: "android" },
+  Platform: platform,
   Linking: { openURL: async () => {} },
 });
 loadAppModule.stubModule("@react-native-async-storage/async-storage", {
@@ -352,6 +354,24 @@ async function main() {
   await stepsService.setTargetZone("moving");
   assert.strictEqual((await stepsService.getStepsSettings()).targetZoneId, "sweetSpot", "an unknown target is the default");
 
+  /* ---------------------------- Health Connect leaves a day out -- */
+
+  hc.status = 3;
+  stepsService.clearStepsCache();
+  hc.groups = [
+    { startTime: "2026-10-05T00:00", result: { COUNT_TOTAL: 100 } },
+    { startTime: "2026-10-07T00:00", result: { COUNT_TOTAL: 200 } },
+    { startTime: "2026-10-08T00:00", result: { COUNT_TOTAL: 5000 } },
+  ];
+
+  const gap = await stepsService.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
+
+  assert.deepStrictEqual(
+    gap.days.map((day) => day.walked),
+    [100, 0, 200, 5000],
+    "a day Health Connect leaves out is 0 and the days after it keep their own numbers"
+  );
+
   /* ------------------------------------------------ no health app -- */
 
   hc.status = 1;
@@ -367,6 +387,62 @@ async function main() {
   assert.strictEqual(without.hasPhoneSource, false, "no health app is said, not shown as a quiet week");
   assert.deepStrictEqual(without.days.map((day) => day.walked), [null, null, null, 3000], "only the walk is known");
   assert.deepStrictEqual(without.days.map((day) => day.active), [5175, null, 5750, 3000], "training and walks stand alone, and a day with nothing has no number");
+
+  /* --------------------------------------------------------- iOS -- */
+
+  const kit = { status: 0, requested: [], reads: [], rows: [] };
+
+  platform.OS = "ios";
+  loadAppModule.stubModule("@kingstinct/react-native-healthkit", {
+    isHealthDataAvailableAsync: async () => true,
+    getRequestStatusForAuthorization: async () => kit.status,
+    requestAuthorization: async (request) => {
+      kit.requested.push(request);
+      kit.status = 2;
+
+      return true;
+    },
+    queryStatisticsCollectionForQuantity: async (...args) => {
+      kit.reads.push(args);
+
+      return kit.rows;
+    },
+  });
+
+  const ios = loadAppModule("src/Services/stepsService.js");
+
+  for (const unaskedStatus of [0, 1]) {
+    kit.status = unaskedStatus;
+    ios.clearStepsCache();
+
+    assert.strictEqual(await ios.getStepsAccess(), "undetermined", `status ${unaskedStatus} is not a yes`);
+
+    const unasked = await ios.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08" });
+
+    assert.strictEqual(unasked.hasPhoneSource, false, "nothing is read before the question has been asked");
+    assert.strictEqual(kit.reads.length, 0, `HealthKit is not touched with status ${unaskedStatus}`);
+  }
+
+  kit.status = 1;
+  assert.strictEqual(await ios.requestStepsAccess(), "granted", "asked, so it is read");
+  assert.deepStrictEqual(kit.requested, [{ toRead: ["HKQuantityTypeIdentifierStepCount"], toShare: [] }], "only reading steps is asked for");
+
+  kit.rows = [
+    { startDate: new Date(2026, 9, 5), sumQuantity: { quantity: 8000, unit: "count" } },
+    { startDate: new Date(2026, 9, 7), sumQuantity: { quantity: 6000, unit: "count" } },
+  ];
+
+  const ask = await ios.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
+
+  assert.deepStrictEqual(ask.days.map((day) => day.walked), [8000, 0, 6000, 3000], "rows are told apart by their start date, and a day with none is 0 (the 8th shows the walk's own 3,000)");
+  assert.strictEqual(kit.reads.length, 1);
+  assert.strictEqual(kit.reads[0][0], "HKQuantityTypeIdentifierStepCount");
+  assert.deepStrictEqual(kit.reads[0][1], ["cumulativeSum"]);
+  assert.deepStrictEqual(kit.reads[0][3], { day: 1 }, "a day at a time");
+  assert.strictEqual(kit.reads[0][4].unit, "count");
+  assert.strictEqual(kit.reads[0][4].filter.date.startDate.getDate(), 5, "from the start of the first day");
+  assert.strictEqual(kit.reads[0][4].filter.date.endDate.getDate(), 9, "to the start of the day after the last");
+  platform.OS = "android";
 }
 
 main()

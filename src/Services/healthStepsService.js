@@ -126,8 +126,9 @@ export async function getHealthStepsStatus() {
         toShare: [],
       });
 
-      // shouldRequest = 1, unnecessary = 2 (asked already)
-      return Number(request) === 1 ? "undetermined" : "granted";
+      // unknown = 0, shouldRequest = 1, unnecessary = 2 (asked already). Only
+      // "asked already" is a yes: reading before that ends the app.
+      return Number(request) === 2 ? "granted" : "undetermined";
     }
 
     if (Platform.OS === "android") {
@@ -272,10 +273,20 @@ export async function readDailySteps(fromIso, toIso) {
         timeRangeSlicer: { period: "DAYS", length: 1 },
       });
 
-      // Group n is day n of the range, whatever the zone's clock did that day.
-      return Object.fromEntries(
-        dates.map((date, index) => [date, Math.round(Number(groups?.[index]?.result?.COUNT_TOTAL) || 0)])
-      );
+      // A group is told by its own start (a local date-time, "2026-10-05T00:00"),
+      // so a day Health Connect leaves out cannot shift the days after it. Only a
+      // group with no start falls back to its place in the list.
+      const byDate = {};
+
+      (groups ?? []).forEach((group, index) => {
+        const date = typeof group?.startTime === "string" ? group.startTime.slice(0, 10) : dates[index];
+
+        if (date) {
+          byDate[date] = Math.round(Number(group?.result?.COUNT_TOTAL) || 0);
+        }
+      });
+
+      return Object.fromEntries(dates.map((date) => [date, byDate[date] ?? 0]));
     }
   } catch (error) {
     console.warn("Could not read the steps:", error);

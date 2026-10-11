@@ -162,6 +162,14 @@ export default function StatisticsOverview({
             {t("statistics.empty.body")}
           </ThemedText>
         </View>
+
+        {/* Somebody who only walks has no sets, and still has steps. */}
+        {steps ? (
+          <View style={styles.section}>
+            {sectionHead(t("statistics.steps.title"))}
+            <DailyStepsCard steps={steps} onOpen={onOpenSteps} />
+          </View>
+        ) : null}
       </View>
     );
   }
