@@ -97,7 +97,10 @@ export async function getStepsAccess(db) {
     return health;
   }
 
-  if (!(await stepsRepository.getStepsEnabled(db))) {
+  // Health Connect is there but FitVen has not asked it yet (it was installed
+  // after the sensor was allowed, say): ask first, because it is the better
+  // source and FitVen is not in its list of apps until it has asked.
+  if (health === "undetermined" || !(await stepsRepository.getStepsEnabled(db))) {
     return "undetermined";
   }
 

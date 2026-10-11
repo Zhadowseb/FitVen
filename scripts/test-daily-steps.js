@@ -281,12 +281,13 @@ loadAppModule.stubModule("expo-sensors", {
   },
 });
 const hc = { calls: [], respond: null };
+const healthConnectGranted = { value: true };
 
 loadAppModule.stubModule("react-native-health-connect", {
   SdkAvailabilityStatus: { SDK_UNAVAILABLE: 1, SDK_AVAILABLE: 3 },
   getSdkStatus: async () => 3,
   initialize: async () => true,
-  getGrantedPermissions: async () => [{ accessType: "read", recordType: "Steps" }],
+  getGrantedPermissions: async () => (healthConnectGranted.value ? [{ accessType: "read", recordType: "Steps" }] : []),
   requestPermission: async (permissions) => permissions,
   openHealthConnectSettings() {},
   aggregateGroupByPeriod: async (request) => {
@@ -749,6 +750,14 @@ async function main() {
 
     nativeSensor.permission = false;
     assert.strictEqual(await stepsService.getStepsAccess(db), "granted", "a health app that answers keeps it granted (Health Connect is granted here)");
+
+    // Health Connect installed after the sensor was allowed: not asked yet, so the
+    // card asks - it never shows the sensor's "granted" over a question not put.
+    nativeSensor.permission = true;
+    healthConnectGranted.value = false;
+    storage.delete("fitven.steps.healthAsked");
+    assert.strictEqual(await stepsService.getStepsAccess(db), "undetermined", "Health Connect has not been asked: ask it");
+    healthConnectGranted.value = true;
     nativeSensor.present = false;
     platform.OS = "ios";
   }

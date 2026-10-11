@@ -8,3 +8,4 @@
 ### Changed
 - **The privacy policy now says the step counter is read in the background** (about every 15 minutes, readings kept on the phone only until they are turned into the day's steps), and its version is raised, so everybody is asked to accept it once more; `web/privacy/index.html` is rebuilt.
 - The Play Console's Data safety form and the "Physical activity" permission need the same sentence before this ships to Android.
+- **Health Connect installed after the sensor was allowed is asked for.** The card used to say "granted" because the sensor was, so Health Connect was never asked and FitVen never showed up in its list of apps; it now asks, and Health Connect being installed while the app is open is noticed without closing the app.
