@@ -8,11 +8,12 @@ import { Colors, withAlpha } from "../../Resources/GlobalStyling/colors";
 import { ThemedText } from "../../Resources/ThemedComponents";
 import { watchWalkService } from "../../Services";
 
-// "Walks from your watch": the switch that lets FitVen read the walks started
-// on a watch (or in a health app) out of Health Connect and keep them as walks
-// (Services/watchWalkService.js). Android only, and only where Health Connect is
-// on the phone. Nothing is read until it is switched on; the walks already
-// imported stay when it is switched off.
+// "Walks from your watch": the switch that lets FitVen look for the walks
+// started on a watch (or in a health app) in Health Connect and offer them
+// (Services/watchWalkService.js, the prompt is Resources/Components/WatchWalkPrompt).
+// Android only, and only where Health Connect is on the phone. Nothing is read
+// until it is switched on, and no walk is made without a yes; the walks already
+// added stay when it is switched off.
 
 export default function WatchWalksCard() {
   const { t } = useTranslation();
@@ -52,7 +53,9 @@ export default function WatchWalksCard() {
         setMessage(
           result.access !== "granted"
             ? t("steps.watchWalks.denied")
-            : t("steps.watchWalks.imported", { count: result.imported })
+            : result.found > 0
+              ? t("steps.watchWalks.found", { count: result.found })
+              : t("steps.watchWalks.none")
         );
       } else {
         await watchWalkService.disableWatchWalks(db);

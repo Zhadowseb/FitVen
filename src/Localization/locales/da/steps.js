@@ -20,9 +20,10 @@ export default {
   },
   watchWalks: {
     title: "Gåture fra dit ur",
-    subtitle: "Gåture, du starter på dit ur eller i en sundhedsapp, kommer med i FitVen, med skridt og distance.",
+    subtitle: "Når en gåtur, du har startet på dit ur eller i en sundhedsapp, bliver fundet, spørger FitVen, om du vil oprette den.",
     switch: "Læs gåture fra Health Connect",
-    imported: "Gåture tilføjet: {count}",
+    found: "Gåture fundet: {count}.",
+    none: "Ingen nye gåture lige nu. FitVen kigger, når du åbner appen.",
     denied: "Health Connect gav ikke FitVen adgang til gåture. Du kan ændre det i Health Connect.",
   },
   access: {

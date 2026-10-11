@@ -1,10 +1,9 @@
-// Walks that came from a watch, through Health Connect: which sessions have
-// been made into walks (Imported_Health_Walk, on the phone only), and the few
-// facts kept beside it. The rules are in Utils/watchWalks.js and the work in
+// Walks that came from a watch, through Health Connect: which sessions the
+// person has answered - made into walks or dismissed (Imported_Health_Walk, on
+// the phone only) - and the one fact kept beside it. The rules are in Utils/watchWalks.js and the work in
 // Services/watchWalkService.js.
 
 const ENABLED_KEY = "watch_walks_enabled";
-const LAST_IMPORT_KEY = "watch_walks_last_import_at";
 
 async function getMetadata(db, key) {
   const row = await db.getFirstAsync(
@@ -33,21 +32,11 @@ export async function setWatchWalksEnabled(db, enabled) {
   await setMetadata(db, ENABLED_KEY, enabled ? "1" : "0");
 }
 
-/** When the sessions were last read (ms), or 0. */
-export async function getLastImportAt(db) {
-  const value = Number(await getMetadata(db, LAST_IMPORT_KEY));
-
-  return Number.isFinite(value) ? value : 0;
-}
-
-export async function setLastImportAt(db, timestamp) {
-  await setMetadata(db, LAST_IMPORT_KEY, timestamp);
-}
-
 /**
  * Every trace FitVen has of a walk between two times (ms), as
- * { hcId, startMs, endMs }: the sessions imported before - also when the walk
- * has been deleted since, so it is not brought back - and every walk with a
+ * { hcId, startMs, endMs }: the sessions answered before - made into a walk
+ * (also when the walk has been deleted since, so it is not brought back) or
+ * dismissed - and every walk with a
  * start, deleted or not, whether it was tracked here or came back from the
  * cloud on this phone (those have no session id).
  */
@@ -78,12 +67,16 @@ export async function getExistingWalkWindows(db, { fromMs, toMs }) {
   ];
 }
 
-export async function insertImportedWalk(db, { hcId, workoutId, startMs, endMs, origin, importedAt }) {
+/** Remembers an answer: status is 'imported' (with its workout) or 'dismissed' (without). */
+export async function insertImportedWalk(
+  db,
+  { hcId, workoutId = null, startMs, endMs, origin, importedAt, status = "imported" }
+) {
   await db.runAsync(
     `INSERT OR IGNORE INTO Imported_Health_Walk
-       (hc_id, workout_id, started_at, ended_at, origin, imported_at, route_loaded)
-     VALUES (?, ?, ?, ?, ?, ?, 0);`,
-    [hcId, workoutId, startMs, endMs, origin ?? null, importedAt]
+       (hc_id, status, workout_id, started_at, ended_at, origin, imported_at, route_loaded)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0);`,
+    [hcId, status, workoutId, startMs, endMs, origin ?? null, importedAt]
   );
 }
 

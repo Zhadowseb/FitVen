@@ -33,6 +33,21 @@ export default {
   units: {
     km: "km",
   },
+  // "Der er registreret en gåtur på din telefon. Vil du oprette den i FitVen?"
+  watchPrompt: {
+    titleOne: "Der er registreret en gåtur på din telefon",
+    titleMany: "Der er registreret {count} gåture på din telefon",
+    subtitleOne: "Den blev optaget med dit ur eller en sundhedsapp. Vil du oprette den i FitVen?",
+    subtitleMany: "De blev optaget med dit ur eller en sundhedsapp. Vil du oprette dem i FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} skridt",
+    add: "Opret i FitVen",
+    skip: "Spring over",
+    skipHint: "FitVen spørger ikke om denne gåtur igen",
+    addAll: "Opret alle",
+    later: "Ikke nu",
+  },
   map: {
     label: "Kort over din rute indtil nu",
     waitingForFix: "Finder din position…",

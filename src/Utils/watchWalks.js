@@ -1,6 +1,7 @@
-// Walks recorded with a watch, read from Health Connect and made into FitVen
-// walks (Services/watchWalkService.js). The rules for which sessions become a
-// walk live here, without the phone, so they can be tested:
+// Walks recorded with a watch, read from Health Connect and - when the person
+// says yes - made into FitVen walks (Services/watchWalkService.js). The rules
+// for which sessions are offered live here, without the phone, so they can be
+// tested:
 //
 //   - only walking, and only a walk somebody started: a watch that "auto
 //     detects workouts" writes a session for every stroll, and those are not
@@ -28,7 +29,8 @@ export const MIN_WALK_SECONDS = 5 * 60;
 // the second, and a synced row has its start in whole seconds.
 export const SAME_WALK_TOLERANCE_MS = 2 * 60 * 1000;
 
-// The first time, this many days back; after that, since the last import.
+// How far back the sessions are looked for. A walk that has been offered and
+// answered is remembered, so looking at the same days again asks nothing twice.
 export const IMPORT_WINDOW_DAYS = 14;
 
 /**
@@ -124,13 +126,7 @@ export function walkNumbers({ durationSeconds, distanceMeters, steps }) {
   };
 }
 
-/** Which days back to read: the first time a fixed number, then since the last import with a day to spare. */
-export function importFromMs({ lastImportMs, now }) {
-  const day = 24 * 60 * 60 * 1000;
-
-  if (!lastImportMs) {
-    return now - IMPORT_WINDOW_DAYS * day;
-  }
-
-  return Math.max(now - IMPORT_WINDOW_DAYS * day, lastImportMs - day);
+/** The start of the days the sessions are read from. */
+export function windowStartMs(now) {
+  return now - IMPORT_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 }

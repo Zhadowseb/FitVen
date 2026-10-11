@@ -20,9 +20,10 @@ export default {
   },
   watchWalks: {
     title: "Walks from your watch",
-    subtitle: "Walks you start on your watch or in a health app show up in FitVen, with their steps and distance.",
+    subtitle: "When a walk you started on your watch or in a health app is found, FitVen asks if you want to add it.",
     switch: "Read walks from Health Connect",
-    imported: "Walks added: {count}",
+    found: "Walks found: {count}.",
+    none: "No new walks right now. FitVen looks when you open the app.",
     denied: "Health Connect did not give FitVen access to walks. You can change that in Health Connect.",
   },
   access: {

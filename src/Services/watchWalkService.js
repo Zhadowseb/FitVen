@@ -2,22 +2,26 @@ import { Platform } from "react-native";
 
 import { healthWalkRepository, locationRepository, workoutRepository } from "../Repository";
 import { STARTED_FROM } from "../Utils/startedFrom";
-import { importFromMs, pickWalksToImport, walkNumbers } from "../Utils/watchWalks";
+import { pickWalksToImport, walkNumbers, windowStartMs } from "../Utils/watchWalks";
 import * as healthWorkoutsService from "./healthWorkoutsService";
 import * as programService from "./programService";
 import * as walkService from "./walkService";
 import { withTransaction } from "./shared";
 
-// Walks recorded with a watch - or any health app - become walks in FitVen, so
-// the person who starts their walks on the watch has them next to the ones they
-// start here. The steps and the distance come from Health Connect, which has
-// already put the watch and the phone together; the route is fetched when the
-// person asks for it, because Health Connect asks them for each one.
+// A walk recorded with a watch - or any health app - is found in Health Connect
+// and OFFERED to the person ("A walk was found on your phone. Add it to
+// FitVen?"); it only becomes a walk when they say yes. The steps and the
+// distance come from Health Connect, which has already put the watch and the
+// phone together; the route is fetched when the person asks for it, because
+// Health Connect asks them for each one.
 //
-// Only if they have said yes (the switch on the Steps page), only on Android
-// and only walks they started - see Utils/watchWalks.js for which sessions
-// count. A walk tracked in FitVen is never touched or doubled: its own
-// numbers are the ones, and a session on top of it is skipped.
+// Only if they have said yes to FitVen reading them (the switch on the Steps
+// page), only on Android and only walks they started - see Utils/watchWalks.js
+// for which sessions are offered. A walk tracked in FitVen is never touched or
+// doubled: its own numbers are the ones, and a session on top of it is not
+// offered. An answer is remembered, so a walk is asked about once: "Add" makes
+// it a walk, "Skip" is "do not ask about this one", and "Not now" is only the
+// prompt closing for this time (the prompt, Resources/Components/WatchWalkPrompt).
 //
 // A walk made this way is finished, like one tracked here: it is in the
 // calendar and the statistics, syncs like any workout, and its steps are
@@ -44,31 +48,129 @@ export async function getWatchWalkState(db) {
   return { access, enabled: enabled && access === "granted" };
 }
 
-/** The yes: asks Health Connect, and reads the walks at once if it said yes. */
+/** The yes: asks Health Connect, and looks for walks at once if it said yes. */
 export async function enableWatchWalks(db) {
   const access = await healthWorkoutsService.requestWatchWalkAccess();
 
   if (access !== "granted") {
-    return { access, enabled: false, imported: 0 };
+    return { access, enabled: false, found: 0 };
   }
 
   await healthWalkRepository.setWatchWalksEnabled(db, true);
 
-  const imported = await importWatchWalks(db);
+  const found = await refreshPendingWatchWalks(db);
 
-  return { access, enabled: true, imported };
+  return { access, enabled: true, found: found.length };
 }
 
-/** The walks that are already in FitVen stay; no new ones are read. */
+/** The walks already in FitVen stay; no new ones are offered. */
 export async function disableWatchWalks(db) {
   await healthWalkRepository.setWatchWalksEnabled(db, false);
+  setPending([]);
 }
 
-async function importOne(db, walk, totals) {
+/* ------------------------------------------------------------ the offer -- */
+
+let pending = [];
+const listeners = new Set();
+
+function setPending(next) {
+  pending = next;
+  listeners.forEach((listener) => listener(pending));
+}
+
+/** The walks that have been found and not answered yet. */
+export function getPendingWatchWalks() {
+  return pending;
+}
+
+/** Calls `listener` with the pending walks every time they change. Returns the way to stop. */
+export function subscribePendingWatchWalks(listener) {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/**
+ * Looks in Health Connect for walks nobody has answered, with their distance and
+ * steps: [{ hcId, startMs, endMs, durationSeconds, origin, distanceMeters, steps }].
+ * Empty when it is not switched on or Health Connect cannot be read. Never throws.
+ */
+export async function findNewWatchWalks(db, { now = Date.now() } = {}) {
+  try {
+    const state = await getWatchWalkState(db);
+
+    if (!state.enabled) {
+      return null;
+    }
+
+    const fromMs = windowStartMs(now);
+    const sessions = await healthWorkoutsService.readExerciseSessions({ fromMs, toMs: now });
+
+    if (sessions === null) {
+      return null;
+    }
+
+    const existing = await healthWalkRepository.getExistingWalkWindows(db, { fromMs, toMs: now });
+    const found = [];
+
+    for (const walk of pickWalksToImport({ sessions, existing })) {
+      const totals = await healthWorkoutsService.readWalkTotals({
+        startMs: walk.startMs,
+        endMs: walk.endMs,
+      });
+
+      found.push({ ...walk, distanceMeters: totals.distanceMeters, steps: totals.steps });
+    }
+
+    return found;
+  } catch (error) {
+    console.warn("Could not look for walks from the watch:", error);
+    return null;
+  }
+}
+
+let refreshing = null;
+
+/**
+ * Looks again and publishes what it finds to whoever listens (the prompt). A
+ * look that could not be done leaves what was there. Resolves to the pending walks.
+ */
+export function refreshPendingWatchWalks(db, { now = Date.now() } = {}) {
+  if (refreshing) {
+    return refreshing;
+  }
+
+  refreshing = (async () => {
+    try {
+      const found = await findNewWatchWalks(db, { now });
+
+      if (found !== null) {
+        setPending(found);
+      }
+
+      return pending;
+    } finally {
+      refreshing = null;
+    }
+  })();
+
+  return refreshing;
+}
+
+const without = (walks, answered) => {
+  const ids = new Set(answered.map((walk) => walk.hcId));
+
+  return walks.filter((walk) => !ids.has(walk.hcId));
+};
+
+async function createWalk(db, walk) {
   const numbers = walkNumbers({
     durationSeconds: walk.durationSeconds,
-    distanceMeters: totals.distanceMeters,
-    steps: totals.steps,
+    distanceMeters: walk.distanceMeters,
+    steps: walk.steps,
   });
 
   const created = await programService.createQuickWorkout(db, {
@@ -101,70 +203,47 @@ async function importOne(db, walk, totals) {
     endMs: walk.endMs,
     origin: walk.origin,
     importedAt: Date.now(),
+    status: "imported",
   });
 
   return created.workout_id;
 }
 
-let importing = null;
+/** "Add": makes the walks into walks. Resolves to the ids of the walks it made. */
+export async function addWatchWalks(db, walks) {
+  const made = [];
 
-/**
- * Reads the walks since the last time (the first time, a couple of weeks) and
- * makes the new ones into walks. Resolves to how many it made; 0 when it is not
- * switched on, there is nothing to read or Health Connect cannot be read.
- * Never throws: the steps do not wait for it.
- */
-export function importWatchWalks(db, { now = Date.now() } = {}) {
-  if (importing) {
-    return importing;
+  for (const walk of walks) {
+    try {
+      made.push(await createWalk(db, walk));
+      setPending(without(pending, [walk]));
+    } catch (error) {
+      // This one stays on offer; the others go on.
+      console.warn("Could not add a walk from the watch:", error);
+    }
   }
 
-  importing = (async () => {
-    try {
-      const state = await getWatchWalkState(db);
-
-      if (!state.enabled) {
-        return 0;
-      }
-
-      const lastImportAt = await healthWalkRepository.getLastImportAt(db);
-      const fromMs = importFromMs({ lastImportMs: lastImportAt, now });
-      const sessions = await healthWorkoutsService.readExerciseSessions({ fromMs, toMs: now });
-
-      if (sessions === null) {
-        return 0;
-      }
-
-      const existing = await healthWalkRepository.getExistingWalkWindows(db, {
-        fromMs,
-        toMs: now,
-      });
-      const picks = pickWalksToImport({ sessions, existing });
-      let made = 0;
-
-      for (const walk of picks) {
-        const totals = await healthWorkoutsService.readWalkTotals({
-          startMs: walk.startMs,
-          endMs: walk.endMs,
-        });
-
-        await importOne(db, walk, totals);
-        made += 1;
-      }
-
-      await healthWalkRepository.setLastImportAt(db, now);
-
-      return made;
-    } catch (error) {
-      console.warn("Could not import the walks from the watch:", error);
-      return 0;
-    } finally {
-      importing = null;
-    }
-  })();
-
-  return importing;
+  return made;
 }
+
+/** "Skip": do not ask about these walks again. Nothing is made. */
+export async function skipWatchWalks(db, walks) {
+  for (const walk of walks) {
+    await healthWalkRepository.insertImportedWalk(db, {
+      hcId: walk.hcId,
+      workoutId: null,
+      startMs: walk.startMs,
+      endMs: walk.endMs,
+      origin: walk.origin,
+      importedAt: Date.now(),
+      status: "dismissed",
+    });
+  }
+
+  setPending(without(pending, walks));
+}
+
+/* ------------------------------------------------------------- the route -- */
 
 /** Whether a walk came from a watch, and whether its route has been fetched. */
 export async function getWatchWalkOrigin(db, workoutId) {

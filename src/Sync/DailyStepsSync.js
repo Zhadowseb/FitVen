@@ -42,9 +42,10 @@ export default function DailyStepsSync() {
 
       try {
         await dailyStepsService.refreshRecentDailySteps(db);
-        // Walks the watch recorded, once the person has switched that on. It
-        // never throws and the steps do not wait for its answer.
-        await watchWalkService.importWatchWalks(db);
+        // Walks the watch recorded, once the person has switched that on: they
+        // are found and offered (the prompt asks), never made into walks here.
+        // It never throws.
+        await watchWalkService.refreshPendingWatchWalks(db);
         await dailyStepsService.syncDailyStepsWithCloud(db, {
           userId,
           policyVersion: PRIVACY_POLICY_VERSION,

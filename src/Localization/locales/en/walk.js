@@ -33,6 +33,21 @@ export default {
   units: {
     km: "km",
   },
+  // "A walk was found on your phone. Add it to FitVen?"
+  watchPrompt: {
+    titleOne: "A walk was found on your phone",
+    titleMany: "{count} walks were found on your phone",
+    subtitleOne: "It was recorded with your watch or a health app. Do you want to add it to FitVen?",
+    subtitleMany: "They were recorded with your watch or a health app. Do you want to add them to FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} steps",
+    add: "Add to FitVen",
+    skip: "Skip",
+    skipHint: "FitVen will not ask about this walk again",
+    addAll: "Add all",
+    later: "Not now",
+  },
   map: {
     label: "Route map of your walk so far",
     waitingForFix: "Finding your position…",
