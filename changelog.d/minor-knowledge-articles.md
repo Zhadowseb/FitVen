@@ -1,0 +1,8 @@
+### Added
+- **Knowledge, under Explore.** A card under the tiles opens the Knowledge list: a search over title and summary, a chip for each category that has an article (empty ones are not offered), the newest article featured, and the list. An article is **NEW** for 14 days until it has been opened, and **READ** after that; which ones were opened is kept on the phone per person. The card on Explore carries a small NEW badge while there is an article nobody has opened.
+- **Two articles, bundled in the app,** in English (the design's text, word for word) and Danish (a translation, to be read through): *Does strength training count as steps?* (3 min, five sources) and *How many steps do you really need?* (4 min, two sources). Each has an In short, sections with footnotes, its sources, and - last, after the sources - a box that says it was **written with AI**, with the date. The step-zone article draws the curve of benefit and the five zone rows from `Utils/stepZones.js`, so their names, ranges and colours cannot drift from the rest of the app. The two further articles in the design (*Why the first 4,000 steps matter most*, *Strength training: how little is enough?*) have no text yet and are left out.
+- **"Read the science"** (`ScienceLink`): one link, placed next to the topic it explains - under the step chart and in the training card on the Steps page, and under Daily steps on Statistics. Its title and minutes come from the article.
+- The AI box has its own colours in the theme (a fixed purple, darker in light mode).
+
+### Changed
+- `npm test` skips `src/Resources/Knowledge/` in the hard-coded strings check, like the legal texts: the articles are content written in two languages side by side, not interface text.

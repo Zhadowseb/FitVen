@@ -77,6 +77,10 @@ const SKIPPED_FILES = [
   // The privacy policy and the terms are legal texts; they stay in English
   // until a Danish version has been read by a person.
   /\/Resources\/Legal\//,
+  // The Knowledge articles are content, not interface: each is written in
+  // English and Danish side by side and chosen by language (Utils/knowledge.js,
+  // localizeArticle), not looked up through t().
+  /\/Resources\/Knowledge\//,
   /\/PrivacyPolicyPage\//,
   /\/TermsOfUsePage\//,
   /\/PrivacyPolicyBody\//,

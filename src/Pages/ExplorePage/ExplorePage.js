@@ -7,6 +7,7 @@ import { formatNumber, useTranslation } from "@localization";
 
 import styles from "./ExplorePageStyle";
 import ExerciseRailCard from "../CustomExercisesPage/Components/ExerciseRailCard";
+import KnowledgeCard from "./Components/KnowledgeCard";
 import { useAuth } from "@contexts/AuthContext";
 import { exerciseService, gymService, socialPostService } from "@services";
 import ChangeGymSheet from "@resources/Components/ChangeGymSheet/ChangeGymSheet";
@@ -371,6 +372,9 @@ export default function ExplorePage() {
             })}
           </View>
         </View>
+
+        {/* Knowledge, under the tiles. */}
+        <KnowledgeCard />
 
         {/* Your centre: what happened there since you last looked. */}
         {homeGym ? (
