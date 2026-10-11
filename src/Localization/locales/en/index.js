@@ -32,6 +32,7 @@ import settings from "./settings";
 import social from "./social";
 import statistics from "./statistics";
 import steps from "./steps";
+import testFeedback from "./testFeedback";
 import time from "./time";
 import train from "./train";
 import trainCalendar from "./trainCalendar";
@@ -74,6 +75,7 @@ export default {
   social,
   statistics,
   steps,
+  testFeedback,
   time,
   train,
   trainCalendar,
