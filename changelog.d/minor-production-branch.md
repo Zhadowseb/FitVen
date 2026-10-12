@@ -1,0 +1,7 @@
+### Added
+- **A `production` branch: what users have.** It points at the commit of the newest build that was submitted to a store, and moves only by fast-forward, when a submission is marked. `master` stays where work is integrated and is ahead of it; merging to master releases nothing, and the next release is made from master. A fix to what is live starts from `origin/production` (`hotfix/...`) and is merged back into master.
+- **`npm run release:mark -- <android|ios> <x.y.z> <commit>`** makes the store tag (`android/2.17.7`) and moves `production` to that commit; `--dry-run` shows what it would do, and `--push` publishes the tag and the branch with a plain push, never a forced one. A build of the other platform that is older than `production` gets its tag and leaves `production` where it is. A commit that does not contain what `production` holds - a hotfix that went out and was not merged into master - is refused, with the reason. The commit is named, never guessed (`eas build:list --json` has it as `gitCommitHash`).
+- **`npm run flow:state` says where `production` is** and how far master is ahead of it, and `npm run pr:check` warns when a `hotfix/` branch does not start from it.
+
+### Changed
+- `docs/VERSIONING.md`, the root `AGENTS.md` and the `git-steward` agent say that a fix to what is live starts from `production`, and that nobody commits to it or merges into it by hand.
