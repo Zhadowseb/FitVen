@@ -1,0 +1,23 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.stepsensor'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.stepsensor"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // The periodic read of the step counter while the app is closed. WorkManager
+  // survives a restart of the phone and is scheduled by the system, so there is
+  // no service and no notification.
+  implementation 'androidx.work:work-runtime:2.9.1'
+  implementation 'androidx.core:core-ktx:1.13.1'
+}

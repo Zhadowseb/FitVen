@@ -14,7 +14,7 @@ import {
   ThemedTitle,
   ThemedView,
 } from "@resources/ThemedComponents";
-import { statisticsService, weightliftingService } from "@services";
+import { statisticsService, stepsService, weightliftingService } from "@services";
 import { normalizeRecordRows } from "@utils/recordsInsights";
 import {
   buildTeasers,
@@ -51,6 +51,8 @@ export default function StatisticsPage() {
   // and swaps in the real numbers a moment later - and empty and not known
   // yet are different answers.
   const [source, setSource] = useState(null);
+  // The walked steps per week, or null when the phone has said nothing.
+  const [steps, setSteps] = useState(null);
   const [periodKey, setPeriodKey] = useState("3m");
   const [showAllMovers, setShowAllMovers] = useState(false);
   // Frozen for the life of the screen so a period switch cannot shift what
@@ -62,19 +64,21 @@ export default function StatisticsPage() {
       let cancelled = false;
 
       (async () => {
-        const [records, workouts, runSegments, setTypes] = await Promise.all([
+        const [records, workouts, runSegments, setTypes, weeklySteps] = await Promise.all([
           weightliftingService
             .getRecordsSourceData(db)
             .catch(orEmpty("strength sets", { rows: [], groupsByExercise: new Map() })),
           statisticsService.getCompletedWorkouts(db).catch(orEmpty("workouts", [])),
           statisticsService.getCompletedRunSegments(db).catch(orEmpty("runs", [])),
           statisticsService.getCompletedSetTypes(db).catch(orEmpty("set types", [])),
+          stepsService.loadWeeklySteps(db, { theme }).catch(orEmpty("steps", null)),
         ]);
 
         if (cancelled) {
           return;
         }
 
+        setSteps(weeklySteps);
         setSource({
           sets: normalizeRecordRows(records.rows),
           groupsByExercise: records.groupsByExercise,
@@ -87,7 +91,7 @@ export default function StatisticsPage() {
       return () => {
         cancelled = true;
       };
-    }, [db])
+    }, [db, theme])
   );
 
   const period = useMemo(() => resolvePeriod(periodKey, nowRef.current), [periodKey]);
@@ -136,6 +140,8 @@ export default function StatisticsPage() {
               onSelectExercise={openExercise}
               showAllMovers={showAllMovers}
               onToggleAllMovers={() => setShowAllMovers((value) => !value)}
+              steps={steps}
+              onOpenSteps={() => navigation.navigate("StepsPage")}
             />
             <GoDeeper teasers={teasers} onOpen={openMetric} />
           </View>

@@ -130,7 +130,8 @@ Work happens in several chats at the same time, so the flow is built to let PRs 
 - A work branch has a changelog fragment, `changelog.d/<branch>.md`, and leaves `CHANGELOG.md` and every version alone. `changelog.d/README.md` explains the format.
 - A release is its own small PR on a branch named `minor/release-<version>` (`release/...` is blocked by the ruleset): `npm run release:plan` says what it holds and what to call it, `npm run release:prepare -- <version>` folds the fragments into a dated entry, sets both versions and removes the fragments.
 - If a release closes one version line and the next work should start the next minor line, use `npm run version:sync -- <nextMinor>.0`.
-- See `docs/VERSIONING.md` for the full workflow, the order to merge in, and store tags.
+- **`master` is where work is integrated; `production` is what users have** (the newest submitted build). Merging to master releases nothing, but the next release is made from it. A fix to what is live starts from `origin/production` (`git worktree add ../FitVen-hotfix -b hotfix/<name> origin/production`) and is merged back into master. Nobody commits to `production` or merges into it: it moves only when the user has confirmed a submission, with `npm run release:mark -- <android|ios> <x.y.z> <commit> --push`, by fast-forward.
+- See `docs/VERSIONING.md` for the full workflow, the order to merge in, store tags and the `production` branch.
 
 ## Keeping These Guides True
 

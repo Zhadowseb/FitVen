@@ -15,6 +15,7 @@ import friends from "./friends";
 import gyms from "./gyms";
 import home from "./home";
 import homeExplore from "./homeExplore";
+import knowledge from "./knowledge";
 import liveWorkout from "./liveWorkout";
 import music from "./music";
 import myExercise from "./myExercise";
@@ -28,6 +29,7 @@ import run from "./run";
 import settings from "./settings";
 import social from "./social";
 import statistics from "./statistics";
+import steps from "./steps";
 import time from "./time";
 import train from "./train";
 import trainCalendar from "./trainCalendar";
@@ -54,6 +56,7 @@ export default {
   gyms,
   home,
   homeExplore,
+  knowledge,
   liveWorkout,
   music,
   myExercise,
@@ -67,6 +70,7 @@ export default {
   settings,
   social,
   statistics,
+  steps,
   time,
   train,
   trainCalendar,

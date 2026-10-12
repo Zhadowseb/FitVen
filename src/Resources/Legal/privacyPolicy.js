@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-10.2";
+export const PRIVACY_POLICY_VERSION = "2026-10-11.5";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "10 October 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "11 October 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -64,7 +64,7 @@ Notifications: the notifications you have been sent, and a push token identifyin
   },
   {
     title: "Health data and why we ask",
-    body: `Sickness entries, heart rate and route data are health data. European law treats health data as a special category and does not allow it to be stored on the basis of an ordinary legitimate interest — it needs your explicit consent, which is what the screen asking you to accept this policy is for.
+    body: `Sickness entries, heart rate, route data and daily steps are health data. European law treats health data as a special category and does not allow it to be stored on the basis of an ordinary legitimate interest — it needs your explicit consent, which is what the screen asking you to accept this policy is for.
 
 You can withdraw that consent at any time by deleting your account, which removes everything listed above. There is no way to keep the account and withdraw consent separately, because the app has no use without this data.`,
   },
@@ -77,6 +77,10 @@ Push notifications are delivered through Expo's notification service, which mean
 Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone and is deleted with the walk. It is only sent to FitVen's server if you post the walk and choose to share its route, and then only as a simplified copy with the first and last 200 metres left out. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
 While a walk runs, FitVen also reads your phone's step counter (Motion & Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone, unless you post the walk.
+
+Your daily steps are read from Apple Health, Health Connect or your phone's step counter on your phone, and the number for each day is stored on Supabase with the rest of your account, where only you can read it. It is not shared with other people, not used for advertising and not used for anything but showing it to you. On an Android phone you can also let FitVen read the walks you started on a watch or in a health app, from Health Connect: when each walk started and how long it lasted, how far it went, the steps in it and, only when you ask for it on that walk - Health Connect asks you each time - its route. FitVen asks you before it adds a walk, and only reads; it never writes anything to Health Connect. The route, distance and steps stay on your phone, and only the walk itself, with its date and time, is stored with your account like any other workout. It is switched off until you switch it on, and you can switch it off again; the walks already added stay.
+
+You can stop FitVen reading your steps at any time in Apple Health, in Health Connect or in your phone's settings; the days already stored stay until you delete them by deleting your account.
 
 Exercise videos are stored on Supabase with the rest of your data.
 
