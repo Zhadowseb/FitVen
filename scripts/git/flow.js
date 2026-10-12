@@ -8,6 +8,10 @@
 //   node scripts/git/flow.js check          is this branch ready to merge?   (npm run pr:check)
 //   node scripts/git/flow.js release-plan   what a release would contain     (npm run release:plan)
 //
+// `production` is what users have and `master` is where work is integrated; a fix
+// to what is live starts from `production`. Marking a submission (the tag and
+// moving `production`) is scripts/git/mark-release.js (npm run release:mark).
+//
 // Flags: --base <ref> (default origin/master), --repo <dir>, --branch <name>,
 //        --ci (the branch is GITHUB_HEAD_REF, gh is used with the job's token),
 //        --no-gh, --no-fetch.
@@ -24,7 +28,7 @@ const fragments = require("../changelog-fragments");
 const BRANCH_PATTERN =
   /^(major|minor|fix|feat|feature|breaking|hotfix|bugfix|quickfix|minor-feature|major-feature|release)\/[a-z0-9][a-z0-9._-]*$/;
 const STABLE_VERSION = /^\d+\.\d+\.\d+$/;
-const PROTECTED_BRANCH = /^(master|main)$/;
+const PROTECTED_BRANCH = /^(master|main|production)$/;
 
 // Files two branches are likely to both want to change, so an overlap there is
 // the kind that conflicts rather than the kind that merges by itself.
@@ -91,6 +95,13 @@ function currentBranch(options) {
 
 function resolveBase(options) {
   const candidates = options.base ? [options.base] : ["origin/master", "master", "origin/main", "main"];
+
+  return candidates.find((ref) => git(options, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`])) ?? null;
+}
+
+/** `production`: the newest submitted build. The remote's, else the local one. */
+function resolveProduction(options) {
+  const candidates = ["origin/production", "production"];
 
   return candidates.find((ref) => git(options, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`])) ?? null;
 }
@@ -209,6 +220,23 @@ function check(options) {
     fail(nameProblem);
   } else {
     ok(`branch name ${branch}`);
+  }
+
+  // A fix to what users have starts from production. From master it would ship
+  // everything else that is merged there with it.
+  if (branch && /^hotfix\//.test(branch)) {
+    const production = resolveProduction(options);
+
+    if (!production) {
+      warn("there is no production branch to start a hotfix from (git fetch origin, or see docs/VERSIONING.md)");
+    } else if (git(options, ["merge-base", "--is-ancestor", production, "HEAD"]) === null) {
+      warn(
+        `this hotfix does not start from ${production}: branch it from there (git worktree add ../FitVen-hotfix -b ${branch} ${production}), ` +
+          "or it ships everything merged to master since the last submission"
+      );
+    } else {
+      ok(`starts from ${production}`);
+    }
   }
 
   if (!base) {
@@ -423,6 +451,25 @@ function state(options) {
     if (branch && !PROTECTED_BRANCH.test(branch) && Number(behind) > 0) {
       warnings.push(`${behind} commits behind ${base}: merge it in before opening or merging a PR`);
     }
+  }
+
+  // What users have, and how far master is from it: a release made now would hold the difference.
+  const production = resolveProduction(options);
+
+  if (production) {
+    const short = git(options, ["rev-parse", "--short", production]);
+    const tags = (git(options, ["tag", "--points-at", production]) ?? "").split(/\r?\n/).filter(Boolean);
+    const ahead = base ? git(options, ["rev-list", "--count", `${production}..${base}`]) : null;
+
+    lines.push(
+      `Production: ${short}${tags.length ? ` (${tags.join(", ")})` : ""}${ahead === null ? "" : `, ${base} is ${ahead} commits ahead`}. A fix to what is live starts here, not from master.`
+    );
+
+    if (branch === "production") {
+      warnings.push("You are on production. Nobody commits to it: it moves only with npm run release:mark, after a submission.");
+    }
+  } else {
+    warnings.push("no production branch yet: it marks the newest submitted build (docs/VERSIONING.md, release:mark).");
   }
 
   lines.push(`Uncommitted: ${dirty.length} files. Worktrees: ${Math.max(worktrees.length, 1)}.`);

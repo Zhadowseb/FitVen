@@ -31,6 +31,7 @@
     "test:notifications": "node scripts/test-notification-registration.js",
     "release:prepare": "node scripts/version.js release",
     "release:plan": "node scripts/git/flow.js release-plan",
+    "release:mark": "node scripts/git/mark-release.js",
     "pr:check": "node scripts/git/flow.js check",
     "flow:state": "node scripts/git/flow.js state",
     "demo:plan": "node scripts/demo/seed-demo.js plan",

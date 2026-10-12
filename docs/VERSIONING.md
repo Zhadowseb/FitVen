@@ -40,18 +40,58 @@ these tags for the developer overview: how long master has waited since the
 newest tag per store, and which features are in a store build. A submission
 without its tag reads as unreleased there.
 
-**This is the branch point for a hotfix**, and it is the whole reason the tags
-exist. `master` is where work is integrated, not what users have: it is
-routinely several versions ahead, and none of that has been through review.
-Branching a fix from `master` ships everything else with it.
+## Two Long-Lived Branches: `master` And `production`
+
+- **`master`** is where work is **integrated**. Every PR is merged here, and
+  it is routinely ahead of what users have. Merging to master does not release
+  anything: nothing is built or published by a merge, and a build only happens
+  when somebody runs a release command. It is also what the *next* release is
+  made from, so what is merged here is what the next release holds.
+- **`production`** is what users **have**: the commit of the newest build that
+  was submitted to a store. It moves only when a submission is marked (below),
+  only by fast-forward, and nobody commits to it or merges into it by hand.
+
+**A fix to what is live starts from `production`**, and is merged back into
+`master` like any other PR. Branching a fix from `master` ships everything
+else that is merged there with it - features nobody has tested on a device, and
+permissions a store has not been told about.
 
 ```bash
-git switch -c fix/whatever ios/1.1.2
+git fetch origin
+git worktree add ../FitVen-hotfix -b hotfix/whatever origin/production
 ```
 
-Tag at the moment a build is submitted, not when a branch is merged. If you
-forget, `eas build:list --json` carries `gitCommitHash` for every build, which
-is how these two were recovered after the fact.
+`npm run pr:check` warns when a `hotfix/` branch does not start from
+`production`. If the two platforms are on different builds (`production` is
+the newest submission, so one of them is behind it), start from that platform's
+tag instead: `git worktree add ../FitVen-hotfix -b hotfix/whatever ios/1.1.2`.
+
+**Merge a hotfix into `master` before the next release.** `production` only
+moves forward, so a release made from a commit that does not contain the hotfix
+is refused: that would throw away something users already have.
+
+### Marking a submission
+
+A tag per platform and `production` are made together, **after the user has
+confirmed that the build was submitted** (not when a branch is merged, and not
+when a build finishes):
+
+```bash
+eas build:list --platform android --limit 3 --json     # gitCommitHash of the build
+npm run release:mark -- android 2.17.7 <commit> --dry-run
+npm run release:mark -- android 2.17.7 <commit> --push
+```
+
+`release:mark` tags `android/2.17.7` (a tag is never moved), moves
+`production` forward to that commit, and with `--push` publishes both with a
+plain push, never a forced one. A build of the *other* platform that is older
+than `production` gets its tag and leaves `production` where it is. A commit
+that does not contain what `production` holds is refused, and the message says
+why. The commit is never guessed. If a submission was not marked at the time,
+the same command marks it afterwards from `gitCommitHash`.
+
+`production` is a pointer to the newest build, so no CI runs on it and no PR
+targets it.
 
 ## Goals
 
@@ -96,6 +136,7 @@ npm run version:status      # on a work branch: is the fragment there and finish
 npm run pr:check            # is this branch ready to merge?
 npm run flow:state          # branch, worktrees, open PRs
 npm run release:plan        # what a release would hold, and what it is called
+npm run release:mark -- android 2.17.7 <commit> --dry-run   # tag a submission and move production (see "Marking a submission")
 npm run release:prepare -- 0.4.0 dry-run
 npm run release:prepare -- 0.4.0
 npm run release:android -- 0.4.0
