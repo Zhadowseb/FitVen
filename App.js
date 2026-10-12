@@ -45,6 +45,7 @@ import ExerciseLibraryPage from "./src/Pages/ExerciseLibraryPage/ExerciseLibrary
 import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecordsPage";
 import RecordsExercisePage from "./src/Pages/RecordsExercisePage/RecordsExercisePage";
 import StatisticsPage from "./src/Pages/StatisticsPage/StatisticsPage";
+import StepsPage from "./src/Pages/StepsPage/StepsPage";
 import StatisticsDetailPage from "./src/Pages/StatisticsDetailPage/StatisticsDetailPage";
 import WorkoutLibraryPage from "./src/Pages/WorkoutLibraryPage/WorkoutLibraryPage";
 import WorkoutCalendarPage from "./src/Pages/WorkoutCalendarPage/WorkoutCalendarPage";
@@ -402,6 +403,7 @@ function RootNavigator() {
                 <Stack.Screen name="PersonalRecordsPage" component={PersonalRecordsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="RecordsExercisePage" component={RecordsExercisePage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsPage" component={StatisticsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="StepsPage" component={StepsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsDetailPage" component={StatisticsDetailPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutLibraryPage" component={WorkoutLibraryPage} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkoutPostsPage" component={WorkoutPostsPage} options={{ headerShown: false }} />

@@ -37,6 +37,15 @@ export default {
     empty: "Intet at måle endnu i perioden.",
     open: "Åbn {name}",
   },
+  steps: {
+    title: "Daglige skridt",
+    perDay: "pr. dag",
+    averageThisWeek: "Gennemsnit denne uge · {zone}",
+    averageLastWeek: "Gennemsnit sidste uge · {zone}",
+    last12Weeks: "Seneste 12 uger · farvet efter skridtzone",
+    see: "Se skridt",
+    a11y: "Daglige skridt: gennemsnit {average} om dagen, zonen {zone}. Åbn skridt",
+  },
   volume: {
     weekTitle: "Volumen pr. uge",
     monthTitle: "Volumen pr. måned",

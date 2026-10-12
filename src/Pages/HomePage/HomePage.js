@@ -20,6 +20,7 @@ import BackgroundPostBar from "./Components/BackgroundPostBar/BackgroundPostBar"
 import DaysSinceCard from "./Components/DaysSinceCard/DaysSinceCard";
 import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
 import SplitCards from "./Components/SplitCards/SplitCards";
+import StepsCard from "./Components/StepsCard/StepsCard";
 import ExploreCarousel from "./Components/ExploreCarousel/ExploreCarousel";
 import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivity";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
@@ -501,6 +502,9 @@ export default function HomePage() {
                 hasTrained={daysSinceLastWorkout !== null || firstWorkoutAt !== null}
               />
             </View>
+
+            {/* Today's steps: the phone's count, with training added in orange. */}
+            <StepsCard refreshKey={exploreRefreshKey} />
 
             <SplitCards
               groups={splitGroups}
