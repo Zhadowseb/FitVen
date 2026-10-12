@@ -174,6 +174,8 @@ A release is its own small PR; it is not part of a feature PR.
 2. On `master`, `npm run release:plan` lists the fragments and the version the branch names call for.
 3. `git worktree add ../FitVen-release -b minor/release-<version> origin/master`, then `npm run release:prepare -- <version>`. That is the whole commit: both versions, the dated entry, the fragments gone. (`release/<version>` is blocked by the ruleset, which is why the name is not that.)
 4. `npm run pr:check` (it knows the release commit), `npm test`, open the PR, merge it when the user says.
+
+   A version that is **already in a store** because it was built from a fix branch (its tag `android/x.y.z` or `ios/x.y.z` exists) is put right on master the other way round: set the versions with `npm run version:sync -- <version> skip-changelog`, write the dated entry from **only** the fragments of what that build held, and delete only those fragments. The fragments of everything merged since stay for the next release, and `pr:check` allows it (with a warning) because the tag exists.
 5. Build from the merge commit: `EAS_SKIP_AUTO_FINGERPRINT=1 npx eas build -p android|ios --profile production --non-interactive --no-wait`.
 6. When a build has been submitted to a store, tag the commit it was built from: `git tag -a ios/<version> <sha> -m "iOS <version>, build <n>, in the App Store."` (`android/<version>` for Play), and push the tag. `eas build:list --json` carries `gitCommitHash`.
 

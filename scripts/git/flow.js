@@ -368,8 +368,20 @@ function checkReleasePr({ options, headPackage, headApp, changed, fail, ok, warn
   const left = (git(options, ["ls-tree", "-r", "--name-only", "HEAD", fragments.FRAGMENT_DIR]) ?? "")
     .split(/\r?\n/)
     .filter((file) => file && !/readme\.md$/i.test(file));
+  // A version that is already in a store (its tag exists) was built from somewhere
+  // other than master - a fix branch, usually - and this commit is only putting
+  // master right about it. It holds what that build held, and the fragments of
+  // everything merged since stay for the next release.
+  const inStore = ["android", "ios"].filter((platform) =>
+    git(options, ["rev-parse", "--verify", "--quiet", `refs/tags/${platform}/${version}^{commit}`])
+  );
 
-  if (left.length) {
+  if (left.length && inStore.length) {
+    warn(
+      `${version} is already in a store (${inStore.map((platform) => `${platform}/${version}`).join(", ")}), so ` +
+        `${left.length} fragments stay for the next release: make sure the entry holds only what that build held`
+    );
+  } else if (left.length) {
     fail(`${left.length} changelog fragments are still in the branch (${left.join(", ")}): the release command folds them in and removes them`);
   }
 
