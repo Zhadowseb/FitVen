@@ -79,7 +79,9 @@ async function writeAsked() {
 }
 
 // Health Connect has to be initialised once before anything is asked of it.
-let healthConnectReady = null;
+// Only a success is remembered: a "no" is asked again, so installing Health
+// Connect while FitVen is open is noticed without closing the app.
+let healthConnectReady = false;
 
 async function prepareHealthConnect() {
   const connect = getHealthConnect();
@@ -88,24 +90,24 @@ async function prepareHealthConnect() {
     return null;
   }
 
-  if (!healthConnectReady) {
-    healthConnectReady = (async () => {
-      try {
-        const status = await connect.getSdkStatus();
-
-        if (status !== connect.SdkAvailabilityStatus.SDK_AVAILABLE) {
-          return false;
-        }
-
-        return Boolean(await connect.initialize());
-      } catch (error) {
-        console.warn("Could not start Health Connect:", error);
-        return false;
-      }
-    })();
+  if (healthConnectReady) {
+    return connect;
   }
 
-  return (await healthConnectReady) ? connect : null;
+  try {
+    const status = await connect.getSdkStatus();
+
+    if (status !== connect.SdkAvailabilityStatus.SDK_AVAILABLE) {
+      return null;
+    }
+
+    healthConnectReady = Boolean(await connect.initialize());
+  } catch (error) {
+    console.warn("Could not start Health Connect:", error);
+    return null;
+  }
+
+  return healthConnectReady ? connect : null;
 }
 
 const STEPS_READ_PERMISSION = { accessType: "read", recordType: "Steps" };

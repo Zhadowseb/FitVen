@@ -168,6 +168,11 @@ export default StyleSheet.create({
     height: 8,
     borderRadius: 2,
   },
+  ownCountNote: {
+    marginTop: 8,
+    fontSize: 11.5,
+    lineHeight: 16,
+  },
   noData: {
     paddingVertical: 32,
     textAlign: "center",

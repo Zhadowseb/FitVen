@@ -270,6 +270,8 @@ loadAppModule.stubModule("@supabase/supabase-js", {
   processLock: () => {},
 });
 loadAppModule.stubModule("expo-sensors", {});
+// No step sensor in this world: the iPhone and old builds have none.
+loadAppModule.stubModule("expo", { requireOptionalNativeModule: () => null });
 loadAppModule.stubModule("expo-constants", { default: {} });
 loadAppModule.stubModule("react-native-url-polyfill/auto", {});
 loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
@@ -325,6 +327,12 @@ function createDatabase() {
 
   return {
     sqlite,
+    async execAsync(sql) {
+      sqlite.exec(sql);
+    },
+    async isInTransactionAsync() {
+      return Boolean(sqlite.isTransaction);
+    },
     async runAsync(sql, params) {
       const result = sqlite.prepare(sql).run(...bind(params));
 

@@ -4,6 +4,7 @@ export default {
   title: "Skridt",
   eyebrow: "Aktivitet",
   noData: "Ingen skridt i perioden endnu.",
+  ownCountNote: "Talt af FitVen på denne telefon. En sundhedsapp eller et ur giver mere præcise tal og en længere historik.",
   // Hvor telefonens egen optælling læses fra.
   healthApp: {
     ios: "Sundhed",
@@ -22,6 +23,8 @@ export default {
     askButton: "Tillad",
     blocked: "FitVen skal kunne læse dine skridt i {app}.",
     openApp: "Åbn {app}",
+    blockedSensor: "FitVen skal have lov til at tælle dine skridt. Giv adgang til Fysisk aktivitet i appens indstillinger.",
+    openSettings: "Åbn indstillinger",
     unavailable: "Installér {app} for at se dine skridt ved siden af dine træninger.",
     whyHealthConnect: "Hvorfor Health Connect, og hvordan du sætter det op →",
     getApp: "Hent {app}",

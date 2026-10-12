@@ -93,12 +93,14 @@ export default function StepsCard({ refreshKey = 0 }) {
               ? t("steps.access.ask")
               : missing
                 ? t("steps.access.unavailable", { app: healthApp })
-                : t("steps.access.blocked", { app: healthApp })}
+                : data.kind === "sensor"
+                  ? t("steps.access.blockedSensor")
+                  : t("steps.access.blocked", { app: healthApp })}
           </ThemedText>
           <TouchableOpacity
             accessibilityRole="button"
             disabled={isAsking}
-            onPress={asking ? allow : () => stepsService.openStepsSettings()}
+            onPress={asking ? allow : () => stepsService.openStepsSettings(missing ? "health" : data.kind)}
             style={[styles.askButton, { backgroundColor: withAlpha(theme.primary, 0.14) }]}
           >
             <ThemedText style={styles.askButtonText} setColor={theme.primaryText}>
@@ -106,7 +108,9 @@ export default function StepsCard({ refreshKey = 0 }) {
                 ? t("steps.access.askButton")
                 : missing
                   ? t("steps.access.getApp", { app: healthApp })
-                  : t("steps.access.openApp", { app: healthApp })}
+                  : data.kind === "sensor"
+                    ? t("steps.access.openSettings")
+                    : t("steps.access.openApp", { app: healthApp })}
             </ThemedText>
           </TouchableOpacity>
         </View>
