@@ -1,6 +1,7 @@
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { runningRepository, workoutRepository } from "../Repository";
+import { runningRepository, stepsRepository, workoutRepository } from "../Repository";
 import {
   addDays,
   buildDay,
@@ -11,7 +12,9 @@ import {
 } from "../Utils/dailySteps";
 import { LIVE_STRENGTH_WORKOUT_TYPES } from "../Utils/liveWorkout";
 import { getTargetSteps, normalizeTargetZoneId } from "../Utils/stepZones";
+import * as dailyStepsService from "./dailyStepsService";
 import * as healthStepsService from "./healthStepsService";
+import * as stepCounterService from "./stepCounterService";
 
 // The steps of a day, as FitVen shows them: the phone's own count (Apple
 // Health / Health Connect), with the finished strength workouts added on top as
@@ -80,11 +83,41 @@ export function getStepsAccess() {
   return healthStepsService.getHealthStepsStatus();
 }
 
-/** Asks for the steps, and forgets what was read, so the answer shows at once. */
-export async function requestStepsAccess() {
+/**
+ * Asks for the steps, reads them at once, and forgets what was cached so the
+ * answer shows. On an iPhone, Apple Health does not say whether a read was
+ * refused - so when a week has no number after the question, the phone's own
+ * motion history is asked for instead, the next best source, and only then.
+ */
+export async function requestStepsAccess(db) {
+  // Tapping Allow is the yes: from here the steps are read. Before it, nothing is.
+  if (db) {
+    await stepsRepository.setStepsEnabled(db);
+  }
+
   const status = await healthStepsService.requestHealthStepsAccess();
 
   cache = null;
+
+  if (db) {
+    await dailyStepsService.refreshRecentDailySteps(db);
+
+    if (Platform.OS === "ios") {
+      const todayIso = localIsoDate();
+      const week = await dailyStepsService.readDailyStepRows(db, {
+        fromIso: addDays(todayIso, -6),
+        toIso: todayIso,
+      });
+
+      if (week.size === 0) {
+        const motion = await stepCounterService.requestStepPermission();
+
+        if (motion.status === "granted") {
+          await dailyStepsService.refreshDailySteps(db, { fromIso: addDays(todayIso, -6), toIso: todayIso });
+        }
+      }
+    }
+  }
 
   return status;
 }
@@ -102,8 +135,13 @@ async function readRows(db, { fromIso, toIso }) {
     return cache.rows;
   }
 
-  const [phone, walks, workouts] = await Promise.all([
-    healthStepsService.readDailySteps(fromIso, toIso),
+  // The sources are read into the table (the last few days each time, the
+  // history once), and the screens read the table: a day stays when the health
+  // app is switched off, and the history of a new phone comes from the cloud.
+  await dailyStepsService.refreshRecentDailySteps(db);
+
+  const [kept, walks, workouts] = await Promise.all([
+    dailyStepsService.readDailyStepRows(db, { fromIso, toIso }),
     runningRepository.getWalkTotalsByDay(db, { fromIso, toIso }),
     workoutRepository.getFinishedWorkoutsOfTypesBetween(db, {
       types: STRENGTH_TYPES,
@@ -126,11 +164,20 @@ async function readRows(db, { fromIso, toIso }) {
     ]);
   }
 
+  // A day nobody has counted is not a day of zero steps - except today, which
+  // simply has not had them yet when a source has been answering this week.
+  const todayIso = localIsoDate();
+  const answeredRecently = [...kept.keys()].some((day) => day >= addDays(todayIso, -6));
+
   const rows = {
-    hasPhoneSource: phone !== null,
+    hasPhoneSource: kept.size > 0,
     days: datesBetween(fromIso, toIso).map((date) => ({
       date,
-      phoneSteps: phone === null ? null : phone[date] ?? 0,
+      phoneSteps: kept.has(date)
+        ? kept.get(date).steps
+        : date === todayIso && answeredRecently
+          ? 0
+          : null,
       walkSteps: Number(walkByDate.get(date)?.steps) || 0,
       walkDistanceKm: Number(walkByDate.get(date)?.distance_km) || 0,
       workouts: workoutsByDate.get(date) ?? [],

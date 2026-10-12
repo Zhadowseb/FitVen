@@ -89,7 +89,7 @@
       [
         "expo-sensors",
         {
-          "motionPermission": "FitVen uses your motion and fitness data to count the steps of a walk and show your cadence."
+          "motionPermission": "FitVen uses your motion and fitness data to count the steps of a walk and show your cadence, and - if you allow it - to show your daily steps when you do not use Apple Health."
         }
       ],
       "react-native-health-connect",

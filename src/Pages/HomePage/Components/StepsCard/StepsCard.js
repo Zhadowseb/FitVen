@@ -64,7 +64,7 @@ export default function StepsCard({ refreshKey = 0 }) {
     setIsAsking(true);
 
     try {
-      await stepsService.requestStepsAccess();
+      await stepsService.requestStepsAccess(db);
       await load();
     } finally {
       setIsAsking(false);

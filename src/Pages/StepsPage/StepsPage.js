@@ -157,7 +157,7 @@ export default function StepsPage() {
   /* -------------------------------------------------------------- actions -- */
 
   const askForAccess = async () => {
-    await stepsService.requestStepsAccess();
+    await stepsService.requestStepsAccess(db);
     await load();
   };
 

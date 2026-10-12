@@ -221,11 +221,21 @@ assert.strictEqual(steps.changePercent(null, 8000), null);
 
 /* --------------------------------------------------------------- service -- */
 
+// The service reads the phone's sources into Daily_Steps and the screens read
+// the table, so every date here is counted from today: the refresh looks back
+// from the clock, and a test with fixed dates would stop passing in three months.
+const dailyLog = loadAppModule("src/Utils/dailySteps.js");
+const TODAY = dailyLog.localIsoDate();
+const D = [-4, -3, -2, -1].map((offset) => dailyLog.addDays(TODAY, offset)); // four days, oldest first
+const [FROM, TO] = [D[0], D[3]];
+const oldStyle = (iso) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+
 const storage = new Map();
 const hc = {
   status: 3,
   granted: [],
-  groups: null,
+  byDate: {},
+  omit: new Set(),
   requested: [],
   calls: [],
 };
@@ -242,8 +252,28 @@ loadAppModule.stubModule("@react-native-async-storage/async-storage", {
     getItem: async (key) => (storage.has(key) ? storage.get(key) : null),
     setItem: async (key, value) => storage.set(key, String(value)),
     removeItem: async (key) => storage.delete(key),
+    getAllKeys: async () => [...storage.keys()],
+    multiRemove: async (keys) => keys.forEach((key) => storage.delete(key)),
   },
 });
+// stepsService reads the daily table, whose service reaches for the cloud client.
+loadAppModule.stubModule("@supabase/supabase-js", {
+  createClient: () => ({
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
+    },
+    from() {
+      throw new Error("the steps reached for the cloud");
+    },
+  }),
+  processLock: () => {},
+});
+loadAppModule.stubModule("expo-sensors", {});
+loadAppModule.stubModule("expo-constants", { default: {} });
+loadAppModule.stubModule("react-native-url-polyfill/auto", {});
+loadAppModule.stubModule("expo-sqlite/localStorage/install", {});
+loadAppModule.stubModule("expo-secure-store", {});
 loadAppModule.stubModule("react-native-health-connect", {
   SdkAvailabilityStatus: { SDK_UNAVAILABLE: 1, SDK_AVAILABLE: 3 },
   getSdkStatus: async () => hc.status,
@@ -256,16 +286,31 @@ loadAppModule.stubModule("react-native-health-connect", {
     return permissions;
   },
   openHealthConnectSettings() {},
+  // One group for each day of the range, the way the phone answers - minus the
+  // days a test leaves out - each told by its own start.
   aggregateGroupByPeriod: async (request) => {
     hc.calls.push(request);
 
-    return hc.groups;
+    const groups = [];
+    const start = new Date(request.timeRangeFilter.startTime);
+    const end = new Date(request.timeRangeFilter.endTime);
+
+    for (const day = new Date(start); day < end; day.setDate(day.getDate() + 1)) {
+      const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+
+      if (!hc.omit.has(iso)) {
+        groups.push({ startTime: `${iso}T00:00`, result: { COUNT_TOTAL: hc.byDate[iso] ?? 0 } });
+      }
+    }
+
+    return groups;
   },
 });
 
 const { programSchemaSql } = loadAppModule("src/Database/schema/program.js");
 const { runningSchemaSql } = loadAppModule("src/Database/schema/running.js");
 const { weightliftingSchemaSql } = loadAppModule("src/Database/schema/weightlifting.js");
+const { stepsSchemaSql } = loadAppModule("src/Database/schema/steps.js");
 const stepsService = loadAppModule("src/Services/stepsService.js");
 
 function createDatabase() {
@@ -276,6 +321,7 @@ function createDatabase() {
   sqlite.exec(programSchemaSql);
   sqlite.exec(weightliftingSchemaSql);
   sqlite.exec(runningSchemaSql);
+  sqlite.exec(stepsSchemaSql);
 
   return {
     sqlite,
@@ -299,51 +345,82 @@ async function main() {
   const db = createDatabase();
   const run = (sql, ...params) => db.sqlite.prepare(sql).run(...params);
 
-  // Two days, one stored the old way ("DD.MM.YYYY").
-  run("INSERT INTO Day (day_id, Weekday, date) VALUES (1, 'Monday', '2026-10-05')");
-  run("INSERT INTO Day (day_id, Weekday, date) VALUES (2, 'Wednesday', '07.10.2026')");
-  run("INSERT INTO Day (day_id, Weekday, date) VALUES (3, 'Thursday', '2026-10-08')");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (1, 1, '2026-10-05', 'Resistance', 'Push A', 1, 2700)");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (2, 2, '07.10.2026', 'Legs', 'Legs', 1, 3000)");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (3, 2, '07.10.2026', 'Resistance', 'Unfinished', 0, 3000)");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (4, 3, '2026-10-08', 'Resistance', 'No clock', 1, NULL)");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (5, 3, '2026-10-08', 'Walk', NULL, 1, 1800)");
+  // Four days, one stored the old way ("DD.MM.YYYY").
+  run("INSERT INTO Day (day_id, Weekday, date) VALUES (1, 'Monday', ?)", D[0]);
+  run("INSERT INTO Day (day_id, Weekday, date) VALUES (2, 'Wednesday', ?)", oldStyle(D[2]));
+  run("INSERT INTO Day (day_id, Weekday, date) VALUES (3, 'Thursday', ?)", D[3]);
+  const workout = (id, dayId, date, type, label, done, seconds) =>
+    run(
+      "INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      id, dayId, date, type, label, done, seconds
+    );
+
+  workout(1, 1, D[0], "Resistance", "Push A", 1, 2700);
+  workout(2, 2, oldStyle(D[2]), "Legs", "Legs", 1, 3000);
+  workout(3, 2, oldStyle(D[2]), "Resistance", "Unfinished", 0, 3000);
+  workout(4, 3, D[3], "Resistance", "No clock", 1, null);
+  workout(5, 3, D[3], "Walk", null, 1, 1800);
   run("INSERT INTO Run (workout_id, type, set_number, is_pause, actual_distance, actual_duration_seconds, actual_steps, done) VALUES (5, 'WORKING_SET', 1, 0, 2.5, 1800, 3000, 1)");
-  run("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (6, 3, '2026-10-08', 'Walk', NULL, 0, 0)");
+  workout(6, 3, D[3], "Walk", null, 0, 0);
   run("INSERT INTO Run (workout_id, type, set_number, is_pause, actual_distance, actual_duration_seconds, actual_steps, done) VALUES (6, 'WORKING_SET', 1, 0, 9, 9, 9999, 0)");
 
   /* ---------------------------------------------------------- access -- */
 
   assert.strictEqual(await stepsService.getStepsAccess(), "undetermined", "never asked");
   assert.deepStrictEqual(hc.requested, [], "nothing is asked for just by looking");
-  assert.strictEqual(await stepsService.requestStepsAccess(), "granted");
+
+  const before = await stepsService.loadStepDays(db, { fromIso: FROM, toIso: TO });
+
+  assert.strictEqual(before.hasPhoneSource, false, "nothing is read before it has been asked");
+  assert.strictEqual(hc.calls.length, 0, "and the health app is not touched");
+
+  hc.byDate = { [D[0]]: 8000, [D[1]]: 0, [D[2]]: 6000, [D[3]]: 7500 };
+  stepsService.clearStepsCache();
+  assert.strictEqual(await stepsService.requestStepsAccess(db), "granted");
   assert.deepStrictEqual(hc.requested, [[{ accessType: "read", recordType: "Steps" }]], "only reading steps is asked for");
 
   /* ----------------------------------------------------------- days -- */
 
-  hc.groups = [8000, 0, 6000, 7500].map((count) => ({ result: { COUNT_TOTAL: count } }));
-
-  const range = await stepsService.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08" });
+  const range = await stepsService.loadStepDays(db, { fromIso: FROM, toIso: TO });
 
   assert.strictEqual(range.hasPhoneSource, true);
-  assert.strictEqual(hc.calls.length, 1);
+  assert.ok(hc.calls.length >= 1, "the sources were read");
   assert.strictEqual(hc.calls[0].recordType, "Steps");
   assert.deepStrictEqual(hc.calls[0].timeRangeSlicer, { period: "DAYS", length: 1 }, "a day at a time, by the phone's own calendar");
-  assert.deepStrictEqual(range.days.map((day) => day.walked), [8000, 0, 6000, 7500]);
+  assert.deepStrictEqual(range.days.map((day) => day.walked), [8000, null, 6000, 7500], "a day the phone has no steps for is not a day of zero");
   assert.deepStrictEqual(range.days.map((day) => day.training), [5175, 0, 5750, 0], "a finished strength workout is added; one that is not finished, or has no clock, is not");
-  assert.deepStrictEqual(range.days.map((day) => day.active), [13175, 0, 11750, 7500]);
+  assert.deepStrictEqual(range.days.map((day) => day.active), [13175, null, 11750, 7500]);
   assert.strictEqual(range.days[3].walks, 3000, "a finished walk is part of the phone's count");
   assert.strictEqual(range.days[3].everyday, 4500);
   assert.strictEqual(range.days[3].distanceKm, 2.5, "and its distance is the walk's");
   assert.strictEqual(range.days[2].trainingWorkouts[0].label, "Legs", "a day stored as DD.MM.YYYY is found");
 
+  const kept = db.sqlite.prepare("SELECT day, steps, source, needs_sync FROM Daily_Steps ORDER BY day").all();
+
+  assert.deepStrictEqual(
+    kept.map((row) => [row.day, row.steps, row.source, row.needs_sync]),
+    [[D[0], 8000, "health", 1], [D[2], 6000, "health", 1], [D[3], 7500, "health", 1]],
+    "the days are kept as rows with their source, waiting for the cloud - and a day of 0 is not kept"
+  );
+
   // The same range again is served without asking the phone twice.
-  await stepsService.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
-  assert.strictEqual(hc.calls.length, 1);
+  const calls = hc.calls.length;
 
-  const off = await stepsService.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
+  await stepsService.loadStepDays(db, { fromIso: FROM, toIso: TO, countTraining: false });
+  assert.strictEqual(hc.calls.length, calls);
 
-  assert.deepStrictEqual(off.days.map((day) => day.active), [8000, 0, 6000, 7500], "the switch recomputes the same days without training");
+  const off = await stepsService.loadStepDays(db, { fromIso: FROM, toIso: TO, countTraining: false });
+
+  assert.deepStrictEqual(off.days.map((day) => day.active), [8000, null, 6000, 7500], "the switch recomputes the same days without training");
+
+  // The days stay when the health app goes away: the table is what the screens read.
+  hc.status = 1;
+  stepsService.clearStepsCache();
+
+  const gone = await stepsService.loadStepDays(db, { fromIso: FROM, toIso: TO, countTraining: false });
+
+  assert.deepStrictEqual(gone.days.map((day) => day.walked), [8000, null, 6000, 7500], "a day that was seen is kept");
+  hc.status = 3;
 
   /* ----------------------------------------------------- settings -- */
 
@@ -356,41 +433,51 @@ async function main() {
 
   /* ---------------------------- Health Connect leaves a day out -- */
 
-  hc.status = 3;
-  stepsService.clearStepsCache();
-  hc.groups = [
-    { startTime: "2026-10-05T00:00", result: { COUNT_TOTAL: 100 } },
-    { startTime: "2026-10-07T00:00", result: { COUNT_TOTAL: 200 } },
-    { startTime: "2026-10-08T00:00", result: { COUNT_TOTAL: 5000 } },
-  ];
+  const gapDb = createDatabase();
 
-  const gap = await stepsService.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
+  hc.byDate = { [D[0]]: 100, [D[2]]: 200, [D[3]]: 5000 };
+  hc.omit = new Set([D[1]]);
+  stepsService.clearStepsCache();
+  await stepsService.requestStepsAccess(gapDb);
+
+  const gap = await stepsService.loadStepDays(gapDb, { fromIso: FROM, toIso: TO, countTraining: false });
 
   assert.deepStrictEqual(
     gap.days.map((day) => day.walked),
-    [100, 0, 200, 5000],
-    "a day Health Connect leaves out is 0 and the days after it keep their own numbers"
+    [100, null, 200, 5000],
+    "a day Health Connect leaves out is told by its own date: the days after it keep their numbers"
   );
+  hc.omit = new Set();
 
   /* ------------------------------------------------ no health app -- */
 
+  const noHealthDb = createDatabase();
+
+  noHealthDb.sqlite.prepare("INSERT INTO Day (day_id, Weekday, date) VALUES (3, 'Thursday', ?)").run(D[3]);
+  noHealthDb.sqlite.prepare("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, done, elapsed_time) VALUES (5, 3, ?, 'Walk', 1, 1800)").run(D[3]);
+  noHealthDb.sqlite.prepare("INSERT INTO Run (workout_id, type, set_number, is_pause, actual_distance, actual_steps, done) VALUES (5, 'WORKING_SET', 1, 0, 2.5, 3000, 1)").run();
+  noHealthDb.sqlite.prepare("INSERT INTO Day (day_id, Weekday, date) VALUES (1, 'Monday', ?)").run(D[0]);
+  noHealthDb.sqlite.prepare("INSERT INTO Workout_Type_Instance (workout_id, day_id, date, workout_type, label, done, elapsed_time) VALUES (1, 1, ?, 'Resistance', 'Push A', 1, 2700)").run(D[0]);
+
   hc.status = 1;
   stepsService.clearStepsCache();
-  // A fresh health service (re-stubbing clears the module cache) sees the unavailable provider.
+
+  // Re-stubbing clears the module cache, so this service sees the provider that is gone.
   loadAppModule.stubModule("expo-secure-store", {});
   const fresh = loadAppModule("src/Services/stepsService.js");
 
   assert.strictEqual(await fresh.getStepsAccess(), "unavailable");
 
-  const without = await fresh.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08" });
+  const without = await fresh.loadStepDays(noHealthDb, { fromIso: FROM, toIso: TO });
 
   assert.strictEqual(without.hasPhoneSource, false, "no health app is said, not shown as a quiet week");
   assert.deepStrictEqual(without.days.map((day) => day.walked), [null, null, null, 3000], "only the walk is known");
-  assert.deepStrictEqual(without.days.map((day) => day.active), [5175, null, 5750, 3000], "training and walks stand alone, and a day with nothing has no number");
+  assert.deepStrictEqual(without.days.map((day) => day.active), [5175, null, null, 3000], "training and walks stand alone, and a day with nothing has no number");
 
   /* --------------------------------------------------------- iOS -- */
 
   const kit = { status: 0, requested: [], reads: [], rows: [] };
+  const iosDb = createDatabase();
 
   platform.OS = "ios";
   loadAppModule.stubModule("@kingstinct/react-native-healthkit", {
@@ -417,37 +504,34 @@ async function main() {
 
     assert.strictEqual(await ios.getStepsAccess(), "undetermined", `status ${unaskedStatus} is not a yes`);
 
-    const unasked = await ios.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08" });
+    const unasked = await ios.loadStepDays(iosDb, { fromIso: FROM, toIso: TO });
 
     assert.strictEqual(unasked.hasPhoneSource, false, "nothing is read before the question has been asked");
     assert.strictEqual(kit.reads.length, 0, `HealthKit is not touched with status ${unaskedStatus}`);
   }
 
   kit.status = 1;
-  assert.strictEqual(await ios.requestStepsAccess(), "granted", "asked, so it is read");
+  kit.rows = [
+    { startDate: new Date(`${D[0]}T00:00:00`), sumQuantity: { quantity: 8000, unit: "count" } },
+    { startDate: new Date(`${D[2]}T00:00:00`), sumQuantity: { quantity: 6000, unit: "count" } },
+  ];
+  assert.strictEqual(await ios.requestStepsAccess(iosDb), "granted", "asked, so it is read");
   assert.deepStrictEqual(kit.requested, [{ toRead: ["HKQuantityTypeIdentifierStepCount"], toShare: [] }], "only reading steps is asked for");
 
-  kit.rows = [
-    { startDate: new Date(2026, 9, 5), sumQuantity: { quantity: 8000, unit: "count" } },
-    { startDate: new Date(2026, 9, 7), sumQuantity: { quantity: 6000, unit: "count" } },
-  ];
+  const asked = await ios.loadStepDays(iosDb, { fromIso: FROM, toIso: TO, countTraining: false });
 
-  const ask = await ios.loadStepDays(db, { fromIso: "2026-10-05", toIso: "2026-10-08", countTraining: false });
-
-  assert.deepStrictEqual(ask.days.map((day) => day.walked), [8000, 0, 6000, 3000], "rows are told apart by their start date, and a day with none is 0 (the 8th shows the walk's own 3,000)");
-  assert.strictEqual(kit.reads.length, 1);
+  assert.deepStrictEqual(asked.days.map((day) => day.walked), [8000, null, 6000, null], "rows are told apart by their start date");
+  assert.ok(kit.reads.length >= 1);
   assert.strictEqual(kit.reads[0][0], "HKQuantityTypeIdentifierStepCount");
   assert.deepStrictEqual(kit.reads[0][1], ["cumulativeSum"]);
   assert.deepStrictEqual(kit.reads[0][3], { day: 1 }, "a day at a time");
   assert.strictEqual(kit.reads[0][4].unit, "count");
-  assert.strictEqual(kit.reads[0][4].filter.date.startDate.getDate(), 5, "from the start of the first day");
-  assert.strictEqual(kit.reads[0][4].filter.date.endDate.getDate(), 9, "to the start of the day after the last");
   platform.OS = "android";
 }
 
 main()
   .then(() => {
-    console.log("Steps: zone boundaries, training as steps, a day from the phone, the walks and the workouts, period sums and the service against SQLite.");
+    console.log("Steps: zone boundaries, training as steps, a day from the phone, the walks and the workouts, period sums, and the service reading the table.");
   })
   .catch((error) => {
     console.error(error);
