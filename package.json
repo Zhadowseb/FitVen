@@ -93,6 +93,7 @@
     "test:exercise-picker": "node scripts/test-exercise-picker.js",
     "test:gym-categories": "node scripts/test-gym-categories.js",
     "test:store-stats": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-store-stats.js",
+    "test:store-stats-android": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-store-stats-android.js",
     "test:dev-kpi-sources": "node scripts/test-dev-kpi-sources.js",
     "test:dev-metrics-action": "node scripts/test-dev-metrics-action.js",
     "test:admin-guard": "node scripts/test-admin-guard.js",
