@@ -1965,6 +1965,7 @@ export async function initializeDatabase(db) {
     ["actual_distance", "REAL"],
     ["actual_duration_seconds", "INTEGER"],
     ["actual_pace", "REAL"],
+    ["actual_steps", "INTEGER"],
     ["done", "INTEGER NOT NULL DEFAULT 0"],
   ]);
 

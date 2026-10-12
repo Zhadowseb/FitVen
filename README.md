@@ -92,9 +92,9 @@ The schema is initialized in `src/Database/db.js`.
 - `Run`
   Structured run sets for a workout
 
-### Location (development currently paused)
+### Location
 - `LocationLog`
-  GPS points logged while an active workout is running
+  GPS points of a walk (and of runs recorded earlier), with a row of null coordinates wherever tracking stopped. Deleted with the workout.
 
 ---
 
@@ -261,5 +261,6 @@ For the detailed rules, see `docs/VERSIONING.md`.
 
 - The completed-workout route map uses `react-native-maps`, which on Android requires a Google Maps API key. The key is configured in `app.json` under `android.config.googleMaps.apiKey` and is baked into the native manifest, so **a new native build (dev client and release) is required** after changing it. Without the key, mounting the map crashes the app on Android; the app now falls back to a "Map unavailable" card instead of mounting the map in that case.
 - The configured key belongs to the same Google Cloud project as `google-services.json`. "Maps SDK for Android" must be enabled for that project in the Google Cloud console, otherwise the map renders blank tiles. Consider restricting the key to the Android package name and the Maps SDK.
-- GPS tracking for Run and Walk is switched off. It used a background location task with an Android foreground service, and Google Play will not take a release that declares `FOREGROUND_SERVICE_LOCATION` without a demo of the feature. `app.json` now blocks `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_LOCATION`, `locationService.startRunTracking` always fails with a message, and `npm test` (`scripts/test-no-foreground-service.js`) fails if a foreground service or background location comes back. Recorded runs keep their route and distance. Bringing tracking back means foreground-only tracking (`watchPositionAsync`) or a Play declaration first.
+- GPS tracking for Run is switched off. It used a background location task with an Android foreground service, and Google Play will not take a release that declares `FOREGROUND_SERVICE_LOCATION` without a demo of the feature. `app.json` blocks `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_LOCATION`, `locationService.startRunTracking` always fails with a message, and `npm test` (`scripts/test-no-foreground-service.js`) fails if a foreground service or background location comes back. Recorded runs keep their route and distance.
+- A Walk tracks with the app open: `locationService.startWalkTracking` is `Location.watchPositionAsync` with the when-in-use permission, and the steps come from the phone's step counter (`stepCounterService`, `expo-sensors`). Both are owned by `src/Services/walkTrackerService.js`, outside the screen, and stop on pause, finish and when the app goes to the background. A walk's route (`LocationLog`) and its one `Run` segment (distance, moving time, steps) stay on the phone: Run and Walk are not in the cloud. The walk itself syncs like any workout. Tracking with the screen off needs the location foreground service, so it needs the Play declaration first.
 - Gaps longer than the distance filter's `maxSegmentGapSeconds` are never counted as distance.

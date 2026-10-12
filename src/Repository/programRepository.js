@@ -1816,18 +1816,21 @@ export async function deleteExercisesByProgram(db, programId) {
 }
 
 export async function deleteRunsByProgram(db, programId) {
-  await db.runAsync(
-    `DELETE FROM Run
-     WHERE workout_id IN (
-       SELECT w.workout_id
-       FROM Workout_Type_Instance w
-       JOIN Day d ON d.day_id = w.day_id
-       JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
-       JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
-       WHERE m.program_id = ?
-     );`,
-    [programId]
-  );
+  // A walk's route is a place somebody went, and goes with the walk.
+  for (const table of ["LocationLog", "Run"]) {
+    await db.runAsync(
+      `DELETE FROM ${table}
+       WHERE workout_id IN (
+         SELECT w.workout_id
+         FROM Workout_Type_Instance w
+         JOIN Day d ON d.day_id = w.day_id
+         JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+         JOIN Mesocycle m ON m.mesocycle_id = mc.mesocycle_id
+         WHERE m.program_id = ?
+       );`,
+      [programId]
+    );
+  }
 }
 
 export async function deleteWorkoutsByProgram(db, programId) {
@@ -2190,17 +2193,19 @@ export async function deleteExercisesByMesocycle(db, mesocycleId) {
 }
 
 export async function deleteRunsByMesocycle(db, mesocycleId) {
-  await db.runAsync(
-    `DELETE FROM Run
-     WHERE workout_id IN (
-       SELECT w.workout_id
-       FROM Workout_Type_Instance w
-       JOIN Day d ON d.day_id = w.day_id
-       JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
-       WHERE mc.mesocycle_id = ?
-     );`,
-    [mesocycleId]
-  );
+  for (const table of ["LocationLog", "Run"]) {
+    await db.runAsync(
+      `DELETE FROM ${table}
+       WHERE workout_id IN (
+         SELECT w.workout_id
+         FROM Workout_Type_Instance w
+         JOIN Day d ON d.day_id = w.day_id
+         JOIN Microcycle mc ON mc.microcycle_id = d.microcycle_id
+         WHERE mc.mesocycle_id = ?
+       );`,
+      [mesocycleId]
+    );
+  }
 }
 
 export async function deleteWorkoutsByMesocycle(db, mesocycleId) {
@@ -3321,16 +3326,18 @@ export async function deleteExercisesByMicrocycle(db, microcycleId) {
 }
 
 export async function deleteRunsByMicrocycle(db, microcycleId) {
-  await db.runAsync(
-    `DELETE FROM Run
-     WHERE workout_id IN (
-       SELECT w.workout_id
-       FROM Workout_Type_Instance w
-       JOIN Day d ON d.day_id = w.day_id
-       WHERE d.microcycle_id = ?
-     );`,
-    [microcycleId]
-  );
+  for (const table of ["LocationLog", "Run"]) {
+    await db.runAsync(
+      `DELETE FROM ${table}
+       WHERE workout_id IN (
+         SELECT w.workout_id
+         FROM Workout_Type_Instance w
+         JOIN Day d ON d.day_id = w.day_id
+         WHERE d.microcycle_id = ?
+       );`,
+      [microcycleId]
+    );
+  }
 }
 
 export async function deleteWorkoutsByMicrocycle(db, microcycleId) {
