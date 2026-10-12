@@ -308,6 +308,19 @@ function fakeTable(stored = []) {
     assert.ok(!summary.problems[0].includes("BEGIN"), "no key in a message");
   }
 
+  // The reason Google gives is in the summary: a 403 with a message, and one that is not JSON.
+  {
+    const withReason = fakeGoogle({ status: () => 403 });
+    const detailed = await android.fetchMonthReport({ fetch: async (url, init) => (url.includes("/o/") ? new Response(JSON.stringify({ error: { code: 403, message: "fitven-play-stats@x does not have storage.objects.get access to the Google Cloud Storage object." } }), { status: 403 }) : withReason.fetch(url, init)), token: "t", bucket: BUCKET, packageName: PACKAGE, month: "202610" });
+
+    assert.deepStrictEqual(detailed, { kind: "auth_failed", status: 403, detail: "fitven-play-stats@x does not have storage.objects.get access to the Google Cloud Storage object." });
+
+    const plain = await android.fetchMonthReport({ fetch: async () => new Response("<html><body><h1>Forbidden</h1><p>Access denied.</p></body></html>", { status: 403 }), token: "t", bucket: BUCKET, packageName: PACKAGE, month: "202610" });
+
+    assert.match(plain.detail, /^HTTP 403: Forbidden Access denied.$/);
+    assert.strictEqual((await android.fetchMonthReport({ fetch: async () => new Response("", { status: 403 }), token: "t", bucket: BUCKET, packageName: PACKAGE, month: "202610" })).detail, "HTTP 403");
+  }
+
   // Google asks to slow down: not a failure, and the next run goes on.
   {
     const google = fakeGoogle({ status: () => 429 });

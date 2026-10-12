@@ -342,18 +342,34 @@ export function parseInstallsReport(text: string, packageName: string): Map<stri
   return days;
 }
 
+// What Google said, as text for the summary. The JSON error has the reason
+// ("... does not have storage.objects.get access ..."); an answer that is not
+// JSON is shown as it is, shortened - a bare "HTTP 403" cannot tell a missing
+// permission from a wrong bucket. No key is ever in an answer of Google's.
 async function readError(response: Response): Promise<string> {
-  try {
-    const body = await response.json();
+  let text = "";
 
-    return (
-      body?.error?.message ??
-      (typeof body?.error === "string" ? body.error : null) ??
-      `HTTP ${response.status}`
-    );
+  try {
+    text = await response.text();
   } catch {
     return `HTTP ${response.status}`;
   }
+
+  try {
+    const body = JSON.parse(text);
+    const message =
+      body?.error?.message ?? (typeof body?.error === "string" ? body.error : null);
+
+    if (message) {
+      return String(message).slice(0, 300);
+    }
+  } catch {
+    // Not JSON: the text itself, below.
+  }
+
+  const plain = text.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300);
+
+  return plain ? `HTTP ${response.status}: ${plain}` : `HTTP ${response.status}`;
 }
 
 /** One month's installs overview: what Google answered, as an outcome. */
