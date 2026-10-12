@@ -26,6 +26,7 @@ export default {
     blockedSensor: "FitVen skal have lov til at tælle dine skridt. Giv adgang til Fysisk aktivitet i appens indstillinger.",
     openSettings: "Åbn indstillinger",
     unavailable: "Installér {app} for at se dine skridt ved siden af dine træninger.",
+    whyHealthConnect: "Hvorfor Health Connect, og hvordan du sætter det op →",
     getApp: "Hent {app}",
   },
   card: {

@@ -60,6 +60,14 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  guideLink: {
+    marginTop: 10,
+    paddingVertical: 4,
+  },
+  guideLinkText: {
+    fontSize: 12.5,
+    fontWeight: "700",
+  },
   askButtonText: {
     fontSize: 13,
     fontWeight: "800",

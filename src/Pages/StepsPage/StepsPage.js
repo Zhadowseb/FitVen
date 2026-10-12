@@ -11,6 +11,7 @@ import {
   ThemedText,
   ThemedView,
 } from "../../Resources/ThemedComponents";
+import ScienceLink from "../../Resources/Components/ScienceLink";
 import StepsBarChart from "../../Resources/Components/StepsBarChart";
 import ChevronLeft from "../../Resources/Icons/UI-icons/ChevronLeft";
 import Dumbbell from "../../Resources/Icons/UI-icons/Dumbbell";
@@ -355,10 +356,14 @@ export default function StepsPage() {
                     ) : null}
                   </View>
                   {usesOwnCount ? (
-                    <ThemedText style={styles.ownCountNote} setColor={theme.quietText}>
-                      {t("steps.ownCountNote")}
-                    </ThemedText>
+                    <>
+                      <ThemedText style={styles.ownCountNote} setColor={theme.quietText}>
+                        {t("steps.ownCountNote")}
+                      </ThemedText>
+                      <ScienceLink articleId="health-connect" style={{ marginTop: 10 }} />
+                    </>
                   ) : null}
+                  <ScienceLink articleId="step-zones" style={{ marginTop: 10 }} />
                 </>
               ) : (
                 <ThemedText style={styles.noData} setColor={theme.quietText}>
@@ -481,6 +486,9 @@ export default function StepsPage() {
                   )}
                 </View>
               ) : null}
+              <View style={[styles.trainingScience, { borderTopColor: theme.border }]}>
+                <ScienceLink articleId="strength-counts-as-steps" />
+              </View>
             </View>
 
             {/* target */}
