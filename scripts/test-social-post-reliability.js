@@ -159,6 +159,7 @@ async function statusAndErrors() {
       return new Map([[101, { postId: 900, createdAt: "2026-09-20T10:15:00.000Z" }]]);
     },
     getHiddenWorkoutSummaryExerciseIds: async () => { throw new Error("Settings unavailable"); },
+    getWalkPostShareRoute: async () => { throw new Error("Settings unavailable"); },
     buildLocalWorkoutSummaryPost: (unused, args) => social.buildLocalWorkoutSummaryPost(db, args),
     getGymsByIds: async () => { throw new Error("Centres unavailable"); },
   });

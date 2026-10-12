@@ -9,6 +9,13 @@ const NORMALIZED_RUN_TYPE_SQL = `
   END
 `;
 
+// A day's date as "YYYY-MM-DD": a Day row holds it in either that or "DD.MM.YYYY".
+const DAY_ISO_SQL = `CASE
+  WHEN d.date LIKE '__.__.____'
+  THEN substr(d.date, 7, 4) || '-' || substr(d.date, 4, 2) || '-' || substr(d.date, 1, 2)
+  ELSE d.date
+END`;
+
 export async function getRunSets(db, { workoutId, type }) {
   return db.getAllAsync(
     `SELECT *
@@ -169,8 +176,149 @@ export async function updateRunSetPause(db, { runId, isPause }) {
 }
 
 export async function deleteRunSetsByWorkout(db, workoutId) {
+  // A walk's route is a place somebody went, and goes with the walk.
+  await db.runAsync(
+    `DELETE FROM LocationLog
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
   await db.runAsync(
     `DELETE FROM Run
+     WHERE workout_id = ?;`,
+    [workoutId]
+  );
+}
+
+/**
+ * The one row a walk keeps what it covered in: a working segment that is not a
+ * pause. A walk recorded by the old Run flow may have more rows, and this is
+ * the first of them.
+ */
+export async function getWalkSegment(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT *
+     FROM Run
+     WHERE workout_id = ?
+       AND COALESCE(is_pause, 0) = 0
+       AND ${NORMALIZED_RUN_TYPE_SQL} = 'WORKING_SET'
+     ORDER BY set_number ASC, Run_id ASC
+     LIMIT 1;`,
+    [workoutId]
+  );
+}
+
+/** What every finished segment of the workout added up to. */
+export async function getWalkTotals(db, workoutId) {
+  return db.getFirstAsync(
+    `SELECT
+        COALESCE(SUM(actual_distance), 0) AS distance_km,
+        COALESCE(SUM(actual_duration_seconds), 0) AS duration_seconds,
+        SUM(actual_steps) AS steps,
+        COUNT(*) AS segments
+     FROM Run
+     WHERE workout_id = ?
+       AND COALESCE(is_pause, 0) = 0
+       AND done = 1;`,
+    [workoutId]
+  );
+}
+
+/**
+ * Writes what the walk has covered into its segment, making the segment when
+ * there is none. `done` is only ever raised here by finishing the walk.
+ */
+export async function saveWalkSegment(
+  db,
+  {
+    workoutId,
+    distanceKm,
+    durationSeconds,
+    paceMinutes,
+    steps,
+    done = false,
+  }
+) {
+  const existing = await getWalkSegment(db, workoutId);
+
+  if (!existing) {
+    await db.runAsync(
+      `INSERT INTO Run (
+        workout_id,
+        type,
+        set_number,
+        is_pause,
+        actual_distance,
+        actual_duration_seconds,
+        actual_pace,
+        actual_steps,
+        done
+      ) VALUES (?, 'WORKING_SET', 1, 0, ?, ?, ?, ?, ?);`,
+      [
+        workoutId,
+        distanceKm ?? null,
+        durationSeconds ?? null,
+        paceMinutes ?? null,
+        steps ?? null,
+        done ? 1 : 0,
+      ]
+    );
+    return;
+  }
+
+  await db.runAsync(
+    `UPDATE Run
+     SET actual_distance = ?,
+         actual_duration_seconds = ?,
+         actual_pace = ?,
+         actual_steps = ?,
+         done = CASE WHEN ? = 1 THEN 1 ELSE done END
+     WHERE Run_id = ?;`,
+    [
+      distanceKm ?? null,
+      durationSeconds ?? null,
+      paceMinutes ?? null,
+      steps ?? null,
+      done ? 1 : 0,
+      existing.Run_id,
+    ]
+  );
+}
+
+/**
+ * What the finished walks of each day covered, for the Steps page: steps and
+ * kilometres per day ("YYYY-MM-DD"), between two days inclusive.
+ */
+export async function getWalkTotalsByDay(db, { fromIso, toIso }) {
+  return db.getAllAsync(
+    `SELECT
+        ${DAY_ISO_SQL} AS date,
+        COALESCE(SUM(r.actual_steps), 0) AS steps,
+        COALESCE(SUM(r.actual_distance), 0) AS distance_km
+     FROM Run r
+     JOIN Workout_Type_Instance w ON w.workout_id = r.workout_id
+     JOIN Day d ON d.day_id = w.day_id
+     WHERE w.workout_type = 'Walk'
+       AND w.done = 1
+       AND r.done = 1
+       AND COALESCE(r.is_pause, 0) = 0
+       AND COALESCE(w.deleted_at, '') = ''
+       AND COALESCE(d.deleted_at, '') = ''
+       AND ${DAY_ISO_SQL} BETWEEN ? AND ?
+     GROUP BY ${DAY_ISO_SQL}
+     ORDER BY ${DAY_ISO_SQL} ASC;`,
+    [fromIso, toIso]
+  );
+}
+
+/** A restart: the segment goes back to nothing covered, and open again. */
+export async function resetWalkSegments(db, workoutId) {
+  await db.runAsync(
+    `UPDATE Run
+     SET actual_distance = NULL,
+         actual_duration_seconds = NULL,
+         actual_pace = NULL,
+         actual_steps = NULL,
+         done = 0
      WHERE workout_id = ?;`,
     [workoutId]
   );

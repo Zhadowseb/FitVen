@@ -44,7 +44,7 @@ function pushDirtyWorkoutHierarchyInBackground(db) {
 async function createCompletedWorkoutPost(
   db,
   workoutId,
-  { source = "automatic", note = null } = {}
+  { source = "automatic", note = null, shareRoute = null } = {}
 ) {
   return enqueueSync(async () => {
     const socialPostServiceModule = await import("./socialPostService");
@@ -53,7 +53,7 @@ async function createCompletedWorkoutPost(
     let result =
       await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
         db,
-        { workoutId, source, note }
+        { workoutId, source, note, shareRoute }
       );
 
     if (result?.skipped && result.reason === "missing_cloud_workout_id") {
@@ -62,7 +62,7 @@ async function createCompletedWorkoutPost(
       result =
         await socialPostServiceModule.createWorkoutSummaryPostForCompletedWorkout(
           db,
-          { workoutId, source, note }
+          { workoutId, source, note, shareRoute }
         );
     }
 
@@ -378,8 +378,10 @@ const WORKOUT_SUMMARY_REPOST_SKIP_MESSAGES = {
   not_completed: "Finish the workout before reposting its summary.",
   no_sets_logged:
     "There is nothing to post yet - this workout has no completed sets.",
+  nothing_recorded:
+    "There is nothing to post: this phone has no record of this walk.",
   unsupported_workout_type:
-    "Workout summaries can only be posted for Resistance workouts right now.",
+    "Workout summaries can only be posted for Resistance and Walk workouts right now.",
   missing_cloud_workout_id:
     "This workout has not synced to Supabase yet. Try again in a moment.",
   error: "Could not repost the workout summary.",
@@ -392,10 +394,14 @@ function getWorkoutSummaryRepostErrorMessage(result) {
   );
 }
 
-export async function repostWorkoutSummaryPost(db, { workoutId, note = null }) {
+export async function repostWorkoutSummaryPost(
+  db,
+  { workoutId, note = null, shareRoute = null }
+) {
   const result = await createCompletedWorkoutPost(db, workoutId, {
     source: "manual",
     note,
+    shareRoute,
   });
 
   if (result?.skipped) {
@@ -422,14 +428,26 @@ let backgroundPostCounter = 0;
  *
  * Returns the id the status is kept under.
  */
-export function postWorkoutSummaryInBackground(db, { workoutId, note = null }) {
+export function postWorkoutSummaryInBackground(
+  db,
+  { workoutId, note = null, shareRoute = null }
+) {
   const id = ++backgroundPostCounter;
 
-  setWorkoutPostStatus({ id, workoutId, note, state: "posting", error: null });
+  // The route choice is kept with the status, so a retry sends what the person
+  // chose and not whatever the default is by then.
+  setWorkoutPostStatus({
+    id,
+    workoutId,
+    note,
+    shareRoute,
+    state: "posting",
+    error: null,
+  });
 
   void (async () => {
     try {
-      await repostWorkoutSummaryPost(db, { workoutId, note });
+      await repostWorkoutSummaryPost(db, { workoutId, note, shareRoute });
       updateWorkoutPostStatus(id, { state: "posted" });
       setTimeout(() => clearWorkoutPostStatus(id), POSTED_STATUS_MS);
     } catch (error) {
@@ -455,6 +473,7 @@ export function retryBackgroundWorkoutPost(db) {
   return postWorkoutSummaryInBackground(db, {
     workoutId: status.workoutId,
     note: status.note,
+    shareRoute: status.shareRoute ?? null,
   });
 }
 

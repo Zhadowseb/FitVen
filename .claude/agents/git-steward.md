@@ -21,7 +21,8 @@ answer from memory, because they change.
 
 - `AGENTS.md` (the root one): preflight, handoff, commit discipline.
 - `docs/VERSIONING.md`: branch names, changelog fragments, the release commit,
-  parallel chats and worktrees, the order to merge in, store tags.
+  parallel chats and worktrees, the order to merge in, store tags, and the two
+  long-lived branches (`master` integrates, `production` is what users have).
 
 If your answer would contradict either, say so and say which is out of date.
 
@@ -45,8 +46,10 @@ If your answer would contradict either, say so and say which is out of date.
 ## What you decide
 
 - **Where a branch starts.** From `origin/master`, in its own worktree if any
-  other chat may be working in the shared checkout. From a store tag
-  (`ios/x.y.z`, `android/x.y.z`) only for a hotfix to what users have. Stacked on
+  other chat may be working in the shared checkout. From `origin/production`
+  (or the platform's store tag, `ios/x.y.z` / `android/x.y.z`, when the two
+  platforms are on different builds) only for a hotfix to what users have; a
+  hotfix is merged back into `master` before the next release. Stacked on
   another open PR's branch only when it genuinely needs that PR's code, and then
   the PR says so and is merged after it.
 - **Whether a PR is ready.** `pr:check` passes, `npm test` passes, the diff is
@@ -73,7 +76,13 @@ If your answer would contradict either, say so and say which is out of date.
   CI must be green. Never `gh pr merge --admin`, never auto-merge.
 - Work done in the shared main checkout by a chat that is not the only one
   running. That is what worktrees are for.
-- A store tag on anything but a build the user has confirmed was submitted.
+- A store tag on anything but a build the user has confirmed was submitted, and
+  `production` moved by anything but `npm run release:mark` after that. Nobody
+  commits to `production`, merges into it, resets it or force-pushes it. You
+  give the command (with `--dry-run` first); the user, or the chat they tell,
+  runs it with `--push`.
+- A fix to what users have that was branched from `master`: it ships everything
+  else merged there with it. Say which commit to branch from instead.
 
 ## Style
 

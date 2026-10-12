@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Nothing is declared here. ACTIVITY_RECOGNITION, which the step counter
+       needs from Android 10, is in the app's own permissions (app.json) and is
+       asked for by the app, when the person allows their steps. WorkManager
+       brings what it needs itself, and no foreground service is used. -->
+</manifest>

@@ -122,6 +122,26 @@ export const Colors = {
         scrimSoft: "rgba(0, 0, 0, 0.04)",
         sheetScrim: "rgba(0, 0, 0, 0.62)",
 
+        // The box that says an article was written by AI (Knowledge). A fixed
+        // purple, not an accent colour: it means the same in every theme.
+        aiBox: {
+            surface: "rgba(180, 156, 255, 0.10)",
+            border: "rgba(180, 156, 255, 0.28)",
+            icon: "#B49CFF",
+            text: "#C9BCFF",
+            strong: "#E2DAFF",
+        },
+
+        // The five step zones (Utils/stepZones.js). Fixed colours, not accent
+        // colours: a zone is the same colour on every screen and in every theme.
+        stepZones: {
+            inactive: "#E0584F",
+            moving: "#D9A441",
+            active: "#A8C256",
+            sweetSpot: "#4ED39A",
+            bonus: "#22B8A0",
+        },
+
         iconColor: "#868C99",
         iconColorFocused: "#F7742E",
     },
@@ -215,6 +235,26 @@ export const Colors = {
         onDanger: "#FFFFFF",
         scrim: "rgba(0, 0, 0, 0.5)",
         sheetScrim: "rgba(0, 0, 0, 0.62)",
+
+        // The box that says an article was written by AI (Knowledge); the same
+        // purple, darkened so its text reads on a white page.
+        aiBox: {
+            surface: "rgba(107, 79, 216, 0.08)",
+            border: "rgba(107, 79, 216, 0.28)",
+            icon: "#6B4FD8",
+            text: "#4B3A9E",
+            strong: "#33227A",
+        },
+
+        // The five step zones (Utils/stepZones.js). The same hues as in dark,
+        // darkened so the zone name reads on a white card.
+        stepZones: {
+            inactive: "#C23F36",
+            moving: "#8F6610",
+            active: "#5F7A12",
+            sweetSpot: "#16825A",
+            bonus: "#0F7F6E",
+        },
 
         iconColor: "#676B76",
         iconColorFocused: "#F7742E",

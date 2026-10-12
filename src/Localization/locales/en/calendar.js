@@ -218,5 +218,6 @@ export default {
     mobility: "Mobility",
     lowerbody: "Lower",
     run: "Run",
+    walk: "Walk",
   },
 };

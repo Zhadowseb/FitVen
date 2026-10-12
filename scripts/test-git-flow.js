@@ -203,6 +203,16 @@ try {
   repo.write("changelog.d/fix-left.md", "### Fixed\n- x\n");
   repo.commit();
   assert.ok(/1 changelog fragments are still in the branch/.test(repo.check().out));
+
+  // ... except for a version that is already in a store: it is only putting master right about
+  // a build made elsewhere, and the fragments of what was merged since stay for the next release.
+  repo.git("tag", "android/2.17.6");
+  result = repo.check();
+  assert.strictEqual(result.code, 0, result.out);
+  assert.ok(/warn\s+2\.17\.6 is already in a store \(android\/2\.17\.6\), so 1 fragments stay for the next release/.test(result.out), result.out);
+  repo.git("tag", "-d", "android/2.17.6");
+  assert.ok(/1 changelog fragments are still in the branch/.test(repo.check().out), "and without the tag it is still not ready");
+
   repo.git("rm", "-q", "changelog.d/fix-left.md");
   repo.commit();
 

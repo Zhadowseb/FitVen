@@ -20,6 +20,7 @@ import BackgroundPostBar from "./Components/BackgroundPostBar/BackgroundPostBar"
 import DaysSinceCard from "./Components/DaysSinceCard/DaysSinceCard";
 import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
 import SplitCards from "./Components/SplitCards/SplitCards";
+import StepsCard from "./Components/StepsCard/StepsCard";
 import ExploreCarousel from "./Components/ExploreCarousel/ExploreCarousel";
 import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivity";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
@@ -35,6 +36,7 @@ import {
   workoutService,
 } from "@services";
 import { getTodaysDate } from "@utils/dateUtils";
+import { requestOpenQuickWorkoutMenu } from "@utils/quickWorkoutMenuEvents";
 import { STARTED_FROM } from "@utils/startedFrom";
 import { subscribeWorkoutSetChanges } from "@utils/workoutSetEvents";
 import { useAuth } from "../../Contexts/AuthContext";
@@ -53,10 +55,6 @@ import { useAuth } from "../../Contexts/AuthContext";
  * the app this morning gets her first workout to press, the week her split
  * waits for, and Explore - not a row of zeroes.
  */
-
-// An empty workout has to be some type, and Resistance is the only strength
-// type the app offers today.
-const EMPTY_WORKOUT_TYPE = "Resistance";
 
 export default function HomePage() {
   const { t } = useTranslation();
@@ -391,16 +389,12 @@ export default function HomePage() {
     [db, startWorkout, user?.id]
   );
 
+  // An empty workout is whichever type is chosen, and there are two now, so
+  // this opens the same start sheet as the centre button (which makes the
+  // workout, as an empty one) instead of making a Resistance workout itself.
   const openEmptyWorkout = useCallback(() => {
-    startWorkout(() =>
-      programService.createQuickWorkout(db, {
-        date: getTodaysDate(),
-        workoutType: EMPTY_WORKOUT_TYPE,
-        label: null,
-        startedFrom: STARTED_FROM.EMPTY,
-      })
-    );
-  }, [db, startWorkout]);
+    requestOpenQuickWorkoutMenu();
+  }, []);
 
   // Nothing is created here - the workout is already there, so this only
   // navigates. startWorkout is for the two buttons that make one.
@@ -508,6 +502,9 @@ export default function HomePage() {
                 hasTrained={daysSinceLastWorkout !== null || firstWorkoutAt !== null}
               />
             </View>
+
+            {/* Today's steps: the phone's count, with training added in orange. */}
+            <StepsCard refreshKey={exploreRefreshKey} />
 
             <SplitCards
               groups={splitGroups}
