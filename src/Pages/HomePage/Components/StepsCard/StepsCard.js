@@ -110,6 +110,17 @@ export default function StepsCard({ refreshKey = 0 }) {
             </ThemedText>
           </TouchableOpacity>
         </View>
+        {missing ? (
+          <TouchableOpacity
+            accessibilityRole="link"
+            onPress={() => navigation.navigate("KnowledgeArticlePage", { articleId: "health-connect" })}
+            style={styles.guideLink}
+          >
+            <ThemedText style={styles.guideLinkText} setColor={theme.primaryText}>
+              {t("steps.access.whyHealthConnect")}
+            </ThemedText>
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   }
