@@ -35,6 +35,7 @@ import {
 } from "../../Utils/stepsFormat";
 import { STEP_ZONES, TARGET_ZONE_IDS, getZoneById } from "../../Utils/stepZones";
 import { workoutDisplayName } from "@utils/workoutTypeLabel";
+import WatchWalksCard from "./WatchWalksCard";
 import styles from "./StepsPageStyle";
 
 // The Steps page (design: StepsDetail.dc.html): the day's, week's or month's
@@ -284,6 +285,9 @@ export default function StepsPage() {
             </TouchableOpacity>
           </View>
         ) : null}
+
+        {/* walks started on a watch (Android, where Health Connect is) */}
+        <WatchWalksCard />
 
         {view ? (
           <>

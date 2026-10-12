@@ -20,7 +20,7 @@ import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import { ThemedConfirmModal, ThemedText } from "../../../../Resources/ThemedComponents";
 import ChevronLeft from "../../../../Resources/Icons/UI-icons/ChevronLeft";
 import ThreeDots from "../../../../Resources/Icons/UI-icons/ThreeDots";
-import { walkTrackerService } from "../../../../Services";
+import { walkTrackerService, watchWalkService } from "../../../../Services";
 import {
   formatClockTime,
   getCurrentStoredTimestampSeconds,
@@ -201,6 +201,9 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
   const [finishConfirmVisible, setFinishConfirmVisible] = useState(false);
   const [finishedSummary, setFinishedSummary] = useState(null);
   const [reduceMotionSetting, setReduceMotionSetting] = useState(null);
+  // A walk that came from a watch can fetch its route from Health Connect.
+  const [watchOrigin, setWatchOrigin] = useState(null);
+  const [watchRouteTried, setWatchRouteTried] = useState(false);
   const handledRestartRef = useRef(restartRequestKey);
 
   // Until the system has said what it prefers, nothing moves.
@@ -234,6 +237,19 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
     });
 
     return unsubscribe;
+  }, [db, workout_id]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    watchWalkService
+      .getWatchWalkOrigin(db, workout_id)
+      .then((origin) => isActive && setWatchOrigin(origin))
+      .catch(() => isActive && setWatchOrigin(null));
+
+    return () => {
+      isActive = false;
+    };
   }, [db, workout_id]);
 
   const status = snap?.status ?? "loading";
@@ -359,6 +375,18 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
     }
 
     return walkTrackerService.pauseWalk();
+  };
+
+  // Health Connect asks the person whether FitVen may see this route.
+  const loadWatchRoute = async () => {
+    const points = await watchWalkService.loadWatchWalkRoute(db, workout_id);
+
+    if (points > 0) {
+      setWatchOrigin((current) => (current ? { ...current, routeLoaded: true } : current));
+      await walkTrackerService.reloadFinishedWalkRoute(db, workout_id);
+    } else {
+      setWatchRouteTried(true);
+    }
   };
 
   const finish = async () => {
@@ -504,6 +532,8 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
           }
           mode={mapMode}
           onAllowLocation={press(() => walkTrackerService.requestLocationAccess())}
+          onLoadWatchRoute={isDone && !hasRoute && watchOrigin ? press(loadWatchRoute) : undefined}
+          watchRouteTried={watchRouteTried}
           reduceMotion={reduceMotion}
         />
 

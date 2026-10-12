@@ -91,6 +91,7 @@ import WorkoutMusicSync from "./src/Sync/WorkoutMusicSync";
 import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
 import DailyStepsSync from "./src/Sync/DailyStepsSync";
+import WatchWalkPrompt from "./src/Resources/Components/WatchWalkPrompt/WatchWalkPrompt";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
@@ -524,6 +525,8 @@ function UserScopedDatabaseApp() {
         {/* Keyed on the language too: a screen's header options and anything
             else the navigator captured at mount are rebuilt in the new one. */}
         <RootNavigator key={`accent-${accentTheme}-${language}`} />
+        {/* A walk found on the phone: add it to FitVen? After the policy is accepted. */}
+        <WatchWalkPrompt />
       </PrivacyConsentGate>
     </SQLiteProvider>
   );

@@ -18,6 +18,14 @@ export default {
     sweetSpot: "Sweet spot",
     bonus: "Bonus",
   },
+  watchWalks: {
+    title: "Gåture fra dit ur",
+    subtitle: "Når en gåtur, du har startet på dit ur eller i en sundhedsapp, bliver fundet, spørger FitVen, om du vil oprette den.",
+    switch: "Læs gåture fra Health Connect",
+    found: "Gåture fundet: {count}.",
+    none: "Ingen nye gåture lige nu. FitVen kigger, når du åbner appen.",
+    denied: "Health Connect gav ikke FitVen adgang til gåture. Du kan ændre det i Health Connect.",
+  },
   access: {
     ask: "Se dine daglige skridt ved siden af dine træninger.",
     askButton: "Tillad",

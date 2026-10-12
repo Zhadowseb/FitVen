@@ -92,7 +92,16 @@ function PulsingDot({ color, ringColor, animate }) {
 
 // `mode` is what the card has to say: "map" draws the route, the rest are the
 // four reasons there is none.
-function WalkMap({ route, fix, startLabel, mode, onAllowLocation, reduceMotion }) {
+function WalkMap({
+  route,
+  fix,
+  startLabel,
+  mode,
+  onAllowLocation,
+  onLoadWatchRoute,
+  watchRouteTried,
+  reduceMotion,
+}) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -159,14 +168,20 @@ function WalkMap({ route, fix, startLabel, mode, onAllowLocation, reduceMotion }
           : mode === "waiting"
             ? t("walk.map.waitingForFix")
             : mode === "noRoute"
-              ? t("walk.map.noRoute")
+              ? onLoadWatchRoute
+                ? watchRouteTried
+                  ? t("walk.map.watchRouteTried")
+                  : t("walk.map.noRouteWatch")
+                : t("walk.map.noRoute")
               : t("walk.map.notStarted");
     const action =
       mode === "denied"
         ? { title: t("walk.map.allow"), onPress: onAllowLocation }
         : mode === "blocked"
           ? { title: t("walk.map.openSettings"), onPress: () => Linking.openSettings() }
-          : null;
+          : mode === "noRoute" && onLoadWatchRoute
+            ? { title: t("walk.map.loadWatchRoute"), onPress: onLoadWatchRoute }
+            : null;
 
     return (
       <View style={cardStyle}>

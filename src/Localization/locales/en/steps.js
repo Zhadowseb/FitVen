@@ -18,6 +18,14 @@ export default {
     sweetSpot: "Sweet spot",
     bonus: "Bonus",
   },
+  watchWalks: {
+    title: "Walks from your watch",
+    subtitle: "When a walk you started on your watch or in a health app is found, FitVen asks if you want to add it.",
+    switch: "Read walks from Health Connect",
+    found: "Walks found: {count}.",
+    none: "No new walks right now. FitVen looks when you open the app.",
+    denied: "Health Connect did not give FitVen access to walks. You can change that in Health Connect.",
+  },
   access: {
     ask: "See your daily steps next to your workouts.",
     askButton: "Allow",

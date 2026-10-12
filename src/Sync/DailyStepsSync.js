@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { useSQLiteContext } from "expo-sqlite";
 
 import { useAuth } from "@contexts/AuthContext";
-import { dailyStepsService } from "@services";
+import { dailyStepsService, watchWalkService } from "@services";
 import { PRIVACY_POLICY_VERSION } from "@resources/Legal/privacyPolicy";
 
 // The one number a day keeps. On launch and on every return to the foreground
@@ -42,6 +42,10 @@ export default function DailyStepsSync() {
 
       try {
         await dailyStepsService.refreshRecentDailySteps(db);
+        // Walks the watch recorded, once the person has switched that on: they
+        // are found and offered (the prompt asks), never made into walks here.
+        // It never throws.
+        await watchWalkService.refreshPendingWatchWalks(db);
         await dailyStepsService.syncDailyStepsWithCloud(db, {
           userId,
           policyVersion: PRIVACY_POLICY_VERSION,

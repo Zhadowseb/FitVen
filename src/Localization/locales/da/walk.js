@@ -33,10 +33,28 @@ export default {
   units: {
     km: "km",
   },
+  // "Der er registreret en gåtur på din telefon. Vil du oprette den i FitVen?"
+  watchPrompt: {
+    titleOne: "Der er registreret en gåtur på din telefon",
+    titleMany: "Der er registreret {count} gåture på din telefon",
+    subtitleOne: "Den blev optaget med dit ur eller en sundhedsapp. Vil du oprette den i FitVen?",
+    subtitleMany: "De blev optaget med dit ur eller en sundhedsapp. Vil du oprette dem i FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} skridt",
+    add: "Opret i FitVen",
+    skip: "Spring over",
+    skipHint: "FitVen spørger ikke om denne gåtur igen",
+    addAll: "Opret alle",
+    later: "Ikke nu",
+  },
   map: {
     label: "Kort over din rute indtil nu",
     waitingForFix: "Finder din position…",
     noRoute: "Der blev ikke optaget en rute for denne gåtur.",
+    noRouteWatch: "Denne gåtur kom fra dit ur. Dens rute er ikke på telefonen endnu.",
+    watchRouteTried: "Der kom ingen rute. Health Connect spørger hver gang, og uret har måske ikke optaget en.",
+    loadWatchRoute: "Vis ruten fra dit ur",
     notStarted: "Ruten tegnes her, når turen er startet.",
     denied: "FitVen skal bruge din placering for at tegne ruten og måle distancen.",
     blocked:
