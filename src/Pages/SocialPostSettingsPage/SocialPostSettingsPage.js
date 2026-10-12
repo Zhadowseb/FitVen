@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
+  Switch,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -148,6 +149,7 @@ export default function SocialPostSettingsPage() {
   const [loadingMode, setLoadingMode] = useState(true);
   const [savingMode, setSavingMode] = useState(null);
   const [savingVisibility, setSavingVisibility] = useState(null);
+  const [shareWalkRoute, setShareWalkRoute] = useState(true);
   const [modeError, setModeError] = useState("");
   const [visibilityError, setVisibilityError] = useState("");
   const titleColor = theme.title ?? theme.text;
@@ -173,18 +175,20 @@ export default function SocialPostSettingsPage() {
           setLoadingMode(true);
           setModeError("");
           setVisibilityError("");
-          const [mode, visibility] = await Promise.all([
+          const [mode, visibility, shareRoute] = await Promise.all([
             socialPostService.getWorkoutSummaryPostMode({
               user,
             }),
             socialPostService.getWorkoutSummaryPostVisibility({
               user,
             }),
+            socialPostService.getWalkPostShareRoute({ user }),
           ]);
 
           if (!isCancelled) {
             setSelectedMode(mode);
             setSelectedVisibility(visibility);
+            setShareWalkRoute(shareRoute);
           }
         } catch (error) {
           if (!isCancelled) {
@@ -238,6 +242,28 @@ export default function SocialPostSettingsPage() {
       }
     },
     [savingMode, selectedMode, t, user]
+  );
+
+  // The default of the "Share route" switch after a walk. The route that is
+  // shared is always the trimmed one (the start and the end are left out).
+  const changeShareWalkRoute = useCallback(
+    async (next) => {
+      const previous = shareWalkRoute;
+
+      setShareWalkRoute(next);
+
+      try {
+        await socialPostService.setWalkPostShareRoute({ user, shareRoute: next });
+      } catch (error) {
+        setShareWalkRoute(previous);
+        setVisibilityError(
+          error instanceof Error
+            ? error.message
+            : t("settings.socialPosts.errors.save")
+        );
+      }
+    },
+    [shareWalkRoute, t, user]
   );
 
   const selectPostVisibility = useCallback(
@@ -501,6 +527,45 @@ export default function SocialPostSettingsPage() {
               {visibilityError}
             </ThemedText>
           ) : null}
+        </ThemedCard>
+
+        <ThemedCard
+          style={[
+            styles.card,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <ThemedText
+            size={12}
+            style={styles.cardEyebrow}
+            setColor={quietText}
+          >
+            {t("settings.socialPosts.walksEyebrow")}
+          </ThemedText>
+
+          <View style={styles.walkRouteRow}>
+            <View style={styles.walkRouteCopy}>
+              <ThemedText style={styles.choiceTitle} setColor={titleColor}>
+                {t("settings.socialPosts.shareWalkRoute")}
+              </ThemedText>
+              <ThemedText style={styles.groupNote} setColor={quietText}>
+                {t("settings.socialPosts.shareWalkRouteNote")}
+              </ThemedText>
+            </View>
+            <Switch
+              accessibilityLabel={t("settings.socialPosts.shareWalkRoute")}
+              value={shareWalkRoute}
+              onValueChange={changeShareWalkRoute}
+              trackColor={{
+                true: theme.secondary ?? theme.primary,
+                false: withAlpha(quietText, 0.35),
+              }}
+              thumbColor={theme.onDanger}
+            />
+          </View>
         </ThemedCard>
 
         <ThemedCard
