@@ -311,6 +311,12 @@ export default StyleSheet.create({
     fontWeight: "800",
     fontVariant: ["tabular-nums"],
   },
+  trainingScience: {
+    paddingTop: 4,
+    paddingBottom: 12,
+    marginTop: 6,
+    borderTopWidth: 1,
+  },
   trainingEmpty: {
     paddingVertical: 10,
     fontSize: 12.5,

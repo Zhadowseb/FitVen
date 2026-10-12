@@ -112,6 +112,8 @@ const EXPLORE_ROUTES = new Set([
   "ExploreSearchPage",
   "ProgramsBrowsePage",
   "CustomExercisesPage",
+  // Knowledge is a way in from Explore.
+  "KnowledgePage",
   "CenterPostsPage",
   "GymsPage",
   "GymLeaderboardPage",
@@ -159,6 +161,8 @@ const INHERIT_TAB_ROUTES = new Set([
   "CustomExerciseDetailPage",
   // The steps: from Home's card and from Statistics.
   "StepsPage",
+  // An article is opened from Knowledge, from the Steps page and from Statistics.
+  "KnowledgeArticlePage",
 ]);
 
 function ThemedBottomNavigation({ currentRouteName, navigationRef }) {

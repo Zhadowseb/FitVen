@@ -23,6 +23,7 @@ export default {
     blocked: "FitVen needs to read your steps in {app}.",
     openApp: "Open {app}",
     unavailable: "Install {app} to see your steps next to your workouts.",
+    whyHealthConnect: "Why Health Connect, and how to set it up →",
     getApp: "Get {app}",
   },
   card: {
