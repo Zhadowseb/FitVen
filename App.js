@@ -75,13 +75,13 @@ import {
   migrateLegacySharedDatabaseToUserDatabase,
   setActiveDatabaseName,
 } from "./src/Database/localDatabase";
-import { locationService, notificationService } from "./src/Services";
+import { cheerService, locationService, notificationService } from "./src/Services";
 import { AuthProvider, useAuth } from './src/Contexts/AuthContext';
 import { ThemeModeProvider, useThemeMode } from './src/Contexts/ThemeContext';
-import { LocalizationProvider, useTranslation } from './src/Localization';
+import { LocalizationProvider, t, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
-import ToastHost from "./src/Resources/Components/Toast/Toast";
+import ToastHost, { showToast } from "./src/Resources/Components/Toast/Toast";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -92,6 +92,7 @@ import GymMatchSync from "./src/Sync/GymMatchSync";
 import AppOpenSync from "./src/Sync/AppOpenSync";
 import DailyStepsSync from "./src/Sync/DailyStepsSync";
 import WatchWalkPrompt from "./src/Resources/Components/WatchWalkPrompt/WatchWalkPrompt";
+import { isCheerAction } from "./src/Utils/cheers";
 import { parseLiveWorkoutFinishUrl } from "./src/Utils/liveWorkout";
 import { pushNotificationTarget } from "./src/Utils/notificationHistory";
 import LiveWorkoutSync from "./src/Sync/LiveWorkoutSync";
@@ -194,6 +195,20 @@ function RootNavigator() {
 
   const openNotificationHistoryFromResponse = useCallback((response) => {
     if (!response) {
+      return;
+    }
+
+    // A reply button on a workout-started push ("💪 Good workout!") sends a
+    // cheer and nothing else: it must not open the notification history or
+    // count as reading it. cheerService says whether it sent, ignored it or
+    // failed.
+    if (isCheerAction(response?.actionIdentifier)) {
+      void cheerService.handleCheerResponse(response).then((result) => {
+        if (result === cheerService.CHEER_RESULT.SENT) {
+          showToast(t("cheers.sent"));
+        }
+      });
+      notificationService.clearLastNotificationResponse();
       return;
     }
 

@@ -4,6 +4,9 @@ const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const EXPO_BATCH_SIZE = 100;
 const WEBHOOK_SECRET_HEADER = "x-fitven-webhook-secret";
 const ACTIVITY_CHANNEL_ID = "activity";
+// The reply buttons ("💪 Good workout!") the app registers under this name.
+// See supabase/migrations/20261012090000_cheers-from-a-notification.sql.
+const CHEER_CATEGORY_ID = "workout_started";
 // A workout label reaches every follower's lock screen, so it is capped short
 // enough that it cannot carry a sentence and a link, and stripped to a charset
 // that cannot form a URL.
@@ -529,6 +532,27 @@ function getEventPayload(payload: DatabaseWebhookPayload): JsonRecord {
   } as JsonRecord;
 }
 
+// The athlete's "When someone cheers you on" switch: true unless they turned
+// it off. Anything but a clear answer is false, so a workout is never pushed
+// with reply buttons that cannot work.
+async function readCheersSwitch(
+  supabase: ReturnType<typeof createClient>,
+  athleteId: string
+) {
+  const { data, error } = await supabase
+    .from("notification_preferences")
+    .select("cheer_notifications")
+    .eq("user_id", athleteId)
+    .maybeSingle<{ cheer_notifications: boolean | null }>();
+
+  if (error) {
+    console.warn("Cheers switch lookup failed:", error);
+    return false;
+  }
+
+  return data?.cheer_notifications !== false;
+}
+
 async function sendExpoPushes(tokens: PushTokenRow[], message: JsonRecord) {
   const expoAccessToken = Deno.env.get("EXPO_ACCESS_TOKEN");
   const responses: ExpoPushResponse[] = [];
@@ -781,6 +805,10 @@ Deno.serve(async (req) => {
 
     const actorName = getDisplayName(actorProfile);
     const workoutLabel = getWorkoutLabel(workout);
+    // Reply buttons only if the athlete can receive the cheers: one decision
+    // per workout, because it is their setting. Not knowing - the column is
+    // not there yet, the lookup failed - means no buttons.
+    const athleteTakesCheers = await readCheersSwitch(supabase, actorId);
     const message = {
       title: getWorkoutNotificationTitle(workoutLabel),
       body: getWorkoutNotificationBody(actorName, workoutLabel),
@@ -788,9 +816,12 @@ Deno.serve(async (req) => {
       priority: "high",
       ttl: 3600,
       channelId: ACTIVITY_CHANNEL_ID,
+      ...(athleteTakesCheers ? { categoryId: CHEER_CATEGORY_ID } : {}),
       data: {
         type: "workout_started",
         actorId,
+        // The workout's notification event: what a cheer is sent against.
+        eventId: event.id,
         workoutId: String(workoutId),
         workoutSyncId: workout.sync_id ?? null,
         localWorkoutId: workout.local_workout_type_instance_id ?? null,

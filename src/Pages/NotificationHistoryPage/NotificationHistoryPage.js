@@ -10,7 +10,8 @@ import { useTranslation } from "@localization";
 
 import styles from "./NotificationHistoryPageStyle";
 import { useAuth } from "../../Contexts/AuthContext";
-import { notificationService } from "../../Services";
+import { cheerService, notificationService } from "../../Services";
+import { showToast } from "../../Resources/Components/Toast/Toast";
 import { Colors } from "../../Resources/GlobalStyling/colors";
 import { formatTimeAgo } from "../../Utils/dateUtils";
 import {
@@ -18,8 +19,10 @@ import {
   notificationHintKey,
   notificationTarget,
 } from "@utils/notificationHistory";
+import { WORKOUT_STARTED_EVENT_TYPE, isCheerableRow } from "@utils/cheers";
 import Bell from "../../Resources/Icons/UI-icons/Bell";
 import Cogwheel from "../../Resources/Icons/UI-icons/Cogwheel";
+import CheerReplies from "./CheerReplies";
 import {
   ThemedHeader,
   ThemedStateBlock,
@@ -41,6 +44,10 @@ export default function NotificationHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  // The cheers this person has sent, by workout event id, and the one being
+  // sent now.
+  const [sentCheers, setSentCheers] = useState({});
+  const [sendingCheerFor, setSendingCheerFor] = useState(null);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.quietText ?? theme.iconColor ?? theme.text;
   const primaryColor = theme.primary;
@@ -52,6 +59,21 @@ export default function NotificationHistoryPage() {
     route.params?.markNotificationsRead === true
       ? route.params?.notificationHistoryOpenId ?? "bell"
       : null;
+
+  const loadSentCheers = useCallback(
+    (history) => {
+      cheerService
+        .getSentCheers({
+          user,
+          eventIds: history
+            .filter((item) => item.eventType === WORKOUT_STARTED_EVENT_TYPE)
+            .map((item) => item.eventId),
+        })
+        .then((sent) => setSentCheers((current) => ({ ...current, ...sent })))
+        .catch((error) => console.warn("Could not read the cheers sent:", error));
+    },
+    [user]
+  );
 
   const loadNotifications = useCallback(
     async ({ showLoader = false } = {}) => {
@@ -74,6 +96,7 @@ export default function NotificationHistoryPage() {
         });
 
         setNotifications(history);
+        loadSentCheers(history);
 
         if (
           markReadRequestId &&
@@ -109,7 +132,7 @@ export default function NotificationHistoryPage() {
         setRefreshing(false);
       }
     },
-    [markReadRequestId, t, user]
+    [loadSentCheers, markReadRequestId, t, user]
   );
 
   useFocusEffect(
@@ -132,10 +155,47 @@ export default function NotificationHistoryPage() {
     navigation.navigate(routeName, params);
   };
 
+  // The same insert as the buttons on the notification. A second cheer on
+  // the same workout is ignored by the database, and the row then shows what
+  // was sent the first time.
+  const sendCheerFromRow = async (item, { preset, message }) => {
+    if (sendingCheerFor) {
+      return;
+    }
+
+    setSendingCheerFor(item.eventId);
+
+    try {
+      const result = await cheerService.sendCheer({
+        eventId: item.eventId,
+        preset,
+        message,
+      });
+
+      if (result === cheerService.CHEER_RESULT.SENT) {
+        setSentCheers((current) => ({
+          ...current,
+          [item.eventId]: { preset, message },
+        }));
+        showToast(t("cheers.sent"));
+      } else if (result === cheerService.CHEER_RESULT.ALREADY_SENT) {
+        loadSentCheers([item]);
+      } else {
+        showToast(t("cheers.sendFailed"), { tone: "info" });
+      }
+    } finally {
+      setSendingCheerFor(null);
+    }
+  };
+
   const renderNotification = ({ item }) => {
     const { title, body } = describeNotification(item, t);
+    const sentCheer =
+      item.eventType === WORKOUT_STARTED_EVENT_TYPE
+        ? sentCheers[item.eventId] ?? null
+        : null;
 
-    return (
+    const card = (
       <TouchableOpacity
         activeOpacity={0.85}
         accessibilityRole="button"
@@ -199,6 +259,24 @@ export default function NotificationHistoryPage() {
           </ThemedText>
         </View>
       </TouchableOpacity>
+    );
+
+    if (!sentCheer && !isCheerableRow(item)) {
+      return card;
+    }
+
+    // Beside the card's touchable, not inside it: a reply must not also open
+    // the row.
+    return (
+      <View>
+        {card}
+        <CheerReplies
+          theme={theme}
+          sent={sentCheer}
+          sending={sendingCheerFor === item.eventId}
+          onSend={(cheer) => sendCheerFromRow(item, cheer)}
+        />
+      </View>
     );
   };
 
@@ -276,6 +354,7 @@ export default function NotificationHistoryPage() {
             styles.listContent,
             notifications.length === 0 && styles.emptyListContent,
           ]}
+          keyboardShouldPersistTaps="handled"
           refreshing={refreshing}
           onRefresh={refreshNotifications}
           showsVerticalScrollIndicator={false}

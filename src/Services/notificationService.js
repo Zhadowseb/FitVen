@@ -1,10 +1,15 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { t } from "@localization";
+import { subscribeToLanguage, t } from "@localization";
 
 import { supabase } from "../Database/supaBaseClient";
 import { attachAvatarUrls } from "./avatarUrls";
+import {
+  CHEER_CUSTOM_ACTION_ID,
+  CHEER_PRESETS,
+  WORKOUT_STARTED_CATEGORY_ID,
+} from "../Utils/cheers";
 
 const PUSH_TOKENS_TABLE = "push_tokens";
 const NOTIFICATION_PREFERENCES_TABLE = "notification_preferences";
@@ -12,6 +17,7 @@ const WORKOUT_START_NOTIFICATION_SOURCES_TABLE =
   "workout_start_notification_sources";
 const NOTIFICATION_INBOX_TABLE = "notification_inbox";
 const POST_LIKE_NOTIFICATIONS_COLUMN = "post_like_notifications";
+const CHEER_NOTIFICATIONS_COLUMN = "cheer_notifications";
 const ACTIVITY_NOTIFICATION_CHANNEL_ID = "activity";
 const MANAGE_PUSH_TOKEN_FUNCTION = "manage-push-token";
 const SEND_WORKOUT_STARTED_NOTIFICATION_FUNCTION =
@@ -22,6 +28,7 @@ const NOTIFICATION_HISTORY_SETUP_MESSAGE =
   "Notification history is not set up in Supabase yet. Run supabase/migrations/20260610205948_notification-history.sql in the Supabase SQL editor first.";
 const NOTIFICATION_HISTORY_SELECT_FIELDS = `
   id,
+  event_id,
   event_type,
   title,
   body,
@@ -81,6 +88,55 @@ Notifications.setNotificationHandler({
       shouldShowList: true,
     };
   },
+});
+
+// The reply buttons under a workout-started push: three ready-made cheers and
+// one to write. The push names this category (categoryId, set by
+// send-workout-started-notification when the athlete takes cheers); the
+// buttons' words are fixed when the category is registered, so it is
+// registered again when the language changes.
+//
+// Whether a button may run without opening the app is the one thing the
+// installed expo-notifications cannot promise: with opensAppToForeground
+// false and the app killed, the response listener is never called
+// (Notifications.types.d.ts). So the buttons open the app, which then sends
+// the cheer and says so (App.js, cheerService.handleCheerResponse). Flip this
+// to false once a real iPhone and Android phone have shown a cheer sent from a
+// killed app without it.
+const CHEER_ACTIONS_OPEN_APP = true;
+
+export async function registerWorkoutStartedCategory() {
+  if (typeof Notifications.setNotificationCategoryAsync !== "function") {
+    return;
+  }
+
+  const options = { opensAppToForeground: CHEER_ACTIONS_OPEN_APP };
+
+  try {
+    await Notifications.setNotificationCategoryAsync(WORKOUT_STARTED_CATEGORY_ID, [
+      ...CHEER_PRESETS.map((preset) => ({
+        identifier: preset.actionId,
+        buttonTitle: t(preset.labelKey),
+        options,
+      })),
+      {
+        identifier: CHEER_CUSTOM_ACTION_ID,
+        buttonTitle: t("cheers.writeMessage"),
+        textInput: {
+          submitButtonTitle: t("cheers.send"),
+          placeholder: t("cheers.placeholder"),
+        },
+        options,
+      },
+    ]);
+  } catch (error) {
+    console.warn("Could not register the cheer buttons:", error);
+  }
+}
+
+void registerWorkoutStartedCategory();
+subscribeToLanguage(() => {
+  void registerWorkoutStartedCategory();
 });
 
 function getProjectId() {
@@ -187,6 +243,7 @@ function mapNotificationHistoryRow(row) {
 
   return {
     id: row.id,
+    eventId: row.event_id ?? null,
     eventType: row.event_type,
     title: row.title,
     body: row.body,
@@ -756,13 +813,21 @@ const MISSING_COLUMN_CODES = new Set(["42703", "PGRST204"]);
 // must not read as "the migration has not run". A word match, the way
 // isMissingRestCountedColumnError and isMissingSplitEntriesColumnError read
 // theirs.
-function isMissingPostLikeColumn(error) {
+function isMissingNotificationColumn(error, column) {
   const message = `${error?.message ?? ""} ${error?.details ?? ""} ${error?.hint ?? ""}`;
 
   return (
     MISSING_COLUMN_CODES.has(String(error?.code ?? "")) &&
-    new RegExp(`\\b${POST_LIKE_NOTIFICATIONS_COLUMN}\\b`).test(message)
+    new RegExp(`\\b${column}\\b`).test(message)
   );
+}
+
+function isMissingPostLikeColumn(error) {
+  return isMissingNotificationColumn(error, POST_LIKE_NOTIFICATIONS_COLUMN);
+}
+
+function isMissingCheerColumn(error) {
+  return isMissingNotificationColumn(error, CHEER_NOTIFICATIONS_COLUMN);
 }
 
 /**
@@ -821,6 +886,62 @@ export async function setPostLikeNotificationsEnabled({ user, enabled } = {}) {
   }
 
   return getPostLikeNotificationSetting({ user });
+}
+
+/**
+ * Whether a friend cheering you on tells you, in the history and as a push -
+ * and whether your workout notifications carry the reply buttons at all. On
+ * unless you switch it off. Read on its own for the reason
+ * getPostLikeNotificationSetting is: before
+ * supabase/migrations/20261012090000_cheers-from-a-notification.sql has run the
+ * column does not exist, and a select that names it would take the whole
+ * settings screen down.
+ */
+export async function getCheerNotificationSetting({ user } = {}) {
+  if (!user?.id) {
+    return { enabled: true, available: false };
+  }
+
+  const { data, error } = await supabase
+    .from(NOTIFICATION_PREFERENCES_TABLE)
+    .select(CHEER_NOTIFICATIONS_COLUMN)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    if (isMissingCheerColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return { enabled: data?.[CHEER_NOTIFICATIONS_COLUMN] !== false, available: true };
+}
+
+export async function setCheerNotificationsEnabled({ user, enabled } = {}) {
+  if (!user?.id) {
+    throw new Error(t("notifications.errors.signInToUpdateSettings"));
+  }
+
+  const { error } = await supabase.from(NOTIFICATION_PREFERENCES_TABLE).upsert(
+    {
+      user_id: user.id,
+      [CHEER_NOTIFICATIONS_COLUMN]: enabled === true,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) {
+    if (isMissingCheerColumn(error)) {
+      return { enabled: true, available: false };
+    }
+
+    throw normalizeNotificationError(error);
+  }
+
+  return getCheerNotificationSetting({ user });
 }
 
 export async function setWorkoutStartNotificationSources({

@@ -87,6 +87,7 @@ behind by accident.
 | `20261009090000_a-like-notifies-the-poster.sql` | yes |
 | `20261010090000_more-catalog-exercises.sql` | yes |
 | `20261011090000_daily-steps.sql` | yes |
+| `20261012090000_cheers-from-a-notification.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
 centre match, per-centre lift leaderboards with video verification, and what
