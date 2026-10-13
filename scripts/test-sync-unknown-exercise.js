@@ -6,7 +6,7 @@
 // used to throw out of the upload loop. Nothing after it went up: not the
 // other exercises of the workout, not one set, not the exercises of any later
 // workout. The cloud then held workouts with nothing in them (for one account
-// nothing after 17 June), and a post waited behind the same pass.
+// nothing after 17 June).
 //
 // Now the exercise the catalogue refuses stays on the phone, marked for the
 // next pass, once per name per pass, and everything else is uploaded. Any
