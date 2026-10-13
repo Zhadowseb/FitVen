@@ -111,9 +111,18 @@ export function cheerText(preset, message, t) {
   return known ? t(known.labelKey) : null;
 }
 
-/** Can this row still be answered with a cheer? */
+/**
+ * Can this row still be answered with a cheer? Only while the workout is
+ * fresh, and only if the push said the athlete takes cheers (data.cheers,
+ * written by send-workout-started-notification): with them off, or a row from
+ * before cheers existed, a reply would be saved and reach nobody.
+ */
 export function isCheerableRow(item, { now = Date.now() } = {}) {
   if (item?.eventType !== WORKOUT_STARTED_EVENT_TYPE || !item?.eventId) {
+    return false;
+  }
+
+  if (item?.data?.cheers !== true) {
     return false;
   }
 

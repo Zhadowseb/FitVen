@@ -108,7 +108,7 @@ The workout posts you publish are shown to the audience you choose for each of t
 
 When you like a post, its author is told that you liked it, with your name and photo, in their notifications, and as a push notification if they have notifications on.
 
-When a friend you follow starts a workout, you can cheer them on from the notification or from your notifications in the app, with a ready-made reply or a message of up to 140 characters. The cheer, and the message if you wrote one, is stored with your account and shown to the friend, with your name and photo, in their notifications and as a push notification if they have notifications on. You can only cheer a workout once, and it is kept until you delete it or delete your account. A friend can switch cheers off; then they are not told, and your replies are not offered on their workouts.
+When a friend you follow starts a workout, you can cheer them on from the notification or from your notifications in the app, with a ready-made reply or a message of up to 140 characters. The cheer, and the message if you wrote one, is stored with your account and shown to the friend, with your name and photo, in their notifications and as a push notification if they have notifications on. You can only cheer a workout once. The cheer is removed if you delete it or delete your account, but the friend's notification about it, with your name and the message, stays in their notifications until they delete it. A friend can switch cheers off; then they are not told, and your replies are not offered on their workouts.
 
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 

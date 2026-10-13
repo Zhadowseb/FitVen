@@ -822,6 +822,9 @@ Deno.serve(async (req) => {
         actorId,
         // The workout's notification event: what a cheer is sent against.
         eventId: event.id,
+        // Whether the athlete takes cheers. The inbox row keeps it, so the
+        // history page offers its replies only where a cheer would arrive.
+        cheers: athleteTakesCheers,
         workoutId: String(workoutId),
         workoutSyncId: workout.sync_id ?? null,
         localWorkoutId: workout.local_workout_type_instance_id ?? null,

@@ -84,6 +84,7 @@ const startedRow = (minutesAgo, extra = {}) => ({
   id: "row-1",
   eventId: WORKOUT_EVENT,
   eventType: "workout_started",
+  data: { cheers: true },
   createdAt: new Date(now - minutesAgo * 60 * 1000).toISOString(),
   ...extra,
 });
@@ -92,6 +93,9 @@ assert.strictEqual(cheers.isCheerableRow(startedRow(359), { now }), true);
 assert.strictEqual(cheers.isCheerableRow(startedRow(361), { now }), false, "more than six hours: the server refuses it");
 assert.strictEqual(cheers.isCheerableRow(startedRow(5, { eventType: "social_post_liked" }), { now }), false, "only workout-started rows");
 assert.strictEqual(cheers.isCheerableRow(startedRow(5, { eventId: null }), { now }), false);
+assert.strictEqual(cheers.isCheerableRow(startedRow(5, { data: { cheers: false } }), { now }), false, "the athlete has cheers off: a reply would reach nobody");
+assert.strictEqual(cheers.isCheerableRow(startedRow(5, { data: {} }), { now }), false, "a row from before cheers existed has no buttons");
+assert.strictEqual(cheers.isCheerableRow(startedRow(5, { data: undefined }), { now }), false);
 assert.strictEqual(cheers.isCheerableRow(startedRow(-30), { now }), false, "a clock in the future is not fresh");
 assert.strictEqual(cheers.isCheerableRow(startedRow(5, { createdAt: "soon" }), { now }), false);
 
@@ -226,6 +230,7 @@ assert.ok(
 );
 assert.ok(/athleteTakesCheers \? \{ categoryId: CHEER_CATEGORY_ID \} : \{\}/.test(workoutFunction), "no buttons when the athlete has cheers off");
 assert.ok(/eventId: event\.id/.test(workoutFunction), "the push says which workout a cheer is for");
+assert.ok(/cheers: athleteTakesCheers/.test(workoutFunction), "and, in the data the inbox row keeps, whether the athlete takes cheers");
 assert.ok(/error\) \{[\s\S]{0,120}return false;/.test(workoutFunction.match(/async function readCheersSwitch[\s\S]*?\n}\n/)[0]), "not knowing means no buttons");
 assert.ok(
   /\.eq\("actor_id", actorId\)\s*\.eq\("event_type", "workout_started"\)/.test(workoutFunction),
@@ -619,7 +624,8 @@ assert.ok(/pushLimitReached\(pushedCount\)/.test(pushFunction) && /payload->>wor
   assert.ok(settingsPage.indexOf("cheers.settingTitle") > settingsPage.indexOf("postLikesTitle"), "the cheers switch comes after the likes one");
 
   const policy = read("src/Resources/Legal/privacyPolicy.js");
-  assert.ok(/cheers you send/.test(policy) && /cheer them on/.test(policy) && /stored with your account and shown to the friend/.test(policy), "the policy says cheers and their messages are stored and shown");
+  assert.ok(/stays in their notifications until they delete it/.test(policy), "the policy does not promise more than deleting a cheer does");
+assert.ok(/cheers you send/.test(policy) && /cheer them on/.test(policy) && /stored with your account and shown to the friend/.test(policy), "the policy says cheers and their messages are stored and shown");
   const policyPage = read("web/privacy/index.html");
   assert.ok(/shown to the friend/.test(policyPage), "and so does the public page");
 

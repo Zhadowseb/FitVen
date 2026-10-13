@@ -167,14 +167,15 @@ Deno.serve(async (req) => {
     return jsonResponse({ skipped: true, reason: "incomplete_event", eventKey });
   }
 
-  async function skip(reason: string) {
+  const eventId = event.id;
+  const skip = async (reason: string) => {
     await supabase
       .from("notification_events")
       .update({ expo_response: { skipped: reason } })
-      .eq("id", event.id);
+      .eq("id", eventId);
 
     return jsonResponse({ sent: false, reason, eventKey });
-  }
+  };
 
   try {
     const recipientId = message.data.recipientId;
