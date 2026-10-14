@@ -573,7 +573,7 @@ function createCloud() {
   assert.ok(/if \(activeRef\.current\) \{[\s\S]*Vibration\.vibrate/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
   assert.ok(/onPanResponderRelease[\s\S]*settledReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count is handed over when the strip has settled");
   assert.ok(/onPanResponderTerminate[\s\S]*onPreviewRef\.current\?\.\(dragRef\.current\.startReps\)/.test(carouselSource), "a drag that is taken away puts the cell back");
-  assert.ok(/const SPREAD = 9;/.test(carouselSource) && /const RECENTRE = 4;/.test(carouselSource) && /visibleRepsWindow\(windowCentre, SPREAD\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to - and drawn again only every few numbers, not on every one");
+  assert.ok(/const SPREAD = 9;/.test(carouselSource) && /const RECENTRE = 4;/.test(carouselSource) && /visibleRepsWindow\(windowCentre, spread\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to - and drawn again only every few numbers, not on every one");
   assert.ok(/dragRef\.current\.startScroll = positionRef\.current/.test(carouselSource), "a finger that lands on a gliding strip takes it from where it is");
   assert.ok(
     /onPanResponderGrant[\s\S]*setEditorBar\.setDragging\(true\)/.test(carouselSource) &&

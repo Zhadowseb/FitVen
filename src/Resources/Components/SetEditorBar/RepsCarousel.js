@@ -37,6 +37,12 @@ export const REPS_ITEM_SPACING_PX = 44;
 // scroll laggy.
 const SPREAD = 9;
 const RECENTRE = 4;
+// A flick that goes far draws everything it passes, up to this many numbers
+// on each side, so it never runs over blank space waiting for a render.
+const MAX_SPREAD = 40;
+// Pixels per millisecond the strip goes on at after a flick: the further a
+// finger was going the further it carries.
+const GLIDE_PX_PER_MS = 2.2;
 const BOX_WIDTH = 232;
 const BOX_HEIGHT = 34;
 const ITEM_WIDTH = 40;
@@ -44,6 +50,7 @@ const ITEM_WIDTH = 40;
 // than this, or a fast flick buzzes instead of ticking.
 const TICK_MS = 8;
 const MIN_TICK_GAP_MS = 35;
+const MIN_PREVIEW_GAP_MS = 30;
 
 export default function RepsCarousel({
   value,
@@ -62,7 +69,12 @@ export default function RepsCarousel({
   // Where the drawn window is centred. It follows the strip in jumps, not number
   // by number; the strip itself, the emphasis and the ticks never wait for it.
   const [windowCentre, setWindowCentre] = useState(current);
+  const [spread, setSpread] = useState(SPREAD);
   const windowCentreRef = useRef(current);
+  // True while the strip glides after a flick: the drawn window has been made
+  // wide for it and stays as it is until it has settled.
+  const glidingRef = useRef(false);
+  const lastPreviewRef = useRef(0);
   // The number in the middle now.
   const middleRef = useRef(current);
   // The count the suffix (an AMRAP target) belongs to: the saved one.
@@ -123,7 +135,7 @@ export default function RepsCarousel({
       middleRef.current = reps;
 
       // Only a render when the middle has come near the edge of what is drawn.
-      if (Math.abs(reps - windowCentreRef.current) >= RECENTRE) {
+      if (!glidingRef.current && Math.abs(reps - windowCentreRef.current) >= RECENTRE) {
         windowCentreRef.current = reps;
         setWindowCentre(reps);
       }
@@ -136,7 +148,12 @@ export default function RepsCarousel({
           Vibration.vibrate(TICK_MS);
         }
 
-        onPreviewRef.current?.(reps);
+        // The cell keeps up with a flick without being asked for every
+        // number: the last one is always shown when the strip has settled.
+        if (now - lastPreviewRef.current >= MIN_PREVIEW_GAP_MS) {
+          lastPreviewRef.current = now;
+          onPreviewRef.current?.(reps);
+        }
       }
     });
 
@@ -172,28 +189,44 @@ export default function RepsCarousel({
     []
   );
 
-  const settleOn = (reps, { commit }) => {
+  // Takes the strip from `position` (where the finger let go - known here, so
+  // there is no asking the UI thread first) to `reps`. A far target gets a
+  // wider drawn window for the glide, and a speed that starts about where the
+  // finger left off and slows quickly, not a long tail.
+  const settleOn = (reps, position, { commit }) => {
     const target = reps * REPS_ITEM_SPACING_PX;
+    const distance = Math.abs(target - position) / REPS_ITEM_SPACING_PX;
 
-    scroll.stopAnimation((position) => {
-      const distance = Math.abs(target - position) / REPS_ITEM_SPACING_PX;
+    if (distance > RECENTRE) {
+      const from = repsAtScroll(position, REPS_ITEM_SPACING_PX);
+      const centre = Math.round((from + reps) / 2);
 
-      Animated.timing(scroll, {
-        toValue: target,
-        duration: 140 + Math.min(distance, 12) * 28,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }).start(({ finished }) => {
-        if (!finished) {
-          return;
-        }
+      glidingRef.current = true;
+      windowCentreRef.current = centre;
+      setWindowCentre(centre);
+      setSpread(Math.min(MAX_SPREAD, Math.ceil(Math.abs(reps - from) / 2) + SPREAD));
+    }
 
-        activeRef.current = false;
+    Animated.timing(scroll, {
+      toValue: target,
+      duration: Math.round(120 + (distance * REPS_ITEM_SPACING_PX) / GLIDE_PX_PER_MS),
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (!finished) {
+        return;
+      }
 
-        if (commit && reps !== dragRef.current.startReps) {
-          onChangeRef.current?.(reps);
-        }
-      });
+      glidingRef.current = false;
+      activeRef.current = false;
+      windowCentreRef.current = reps;
+      setWindowCentre(reps);
+      setSpread(SPREAD);
+      onPreviewRef.current?.(reps);
+
+      if (commit && reps !== dragRef.current.startReps) {
+        onChangeRef.current?.(reps);
+      }
     });
   };
 
@@ -209,6 +242,7 @@ export default function RepsCarousel({
           // The finger may land on a strip that is still gliding: the drag
           // takes it from where it is.
           scroll.stopAnimation();
+          glidingRef.current = false;
           dragRef.current.startReps = valueRef.current;
           dragRef.current.startScroll = positionRef.current;
         },
@@ -224,13 +258,13 @@ export default function RepsCarousel({
 
           const position = scrollPositionFor(dragRef.current.startScroll, gesture.dx, REPS_ITEM_SPACING_PX);
 
-          settleOn(settledReps(position, gesture.vx, REPS_ITEM_SPACING_PX), { commit: true });
+          settleOn(settledReps(position, gesture.vx, REPS_ITEM_SPACING_PX), position, { commit: true });
         },
         // Taken away: back to the count it had, and the cell with it.
         onPanResponderTerminate: () => {
           setEditorBar.setDragging(false);
           onPreviewRef.current?.(dragRef.current.startReps);
-          settleOn(dragRef.current.startReps, { commit: false });
+          settleOn(dragRef.current.startReps, positionRef.current, { commit: false });
         },
       }),
     []
@@ -262,7 +296,7 @@ export default function RepsCarousel({
       }}
     >
       <View style={[styles.box, { borderColor }]} pointerEvents="none">
-        {visibleRepsWindow(windowCentre, SPREAD).map((reps) => (
+        {visibleRepsWindow(windowCentre, spread).map((reps) => (
           <Animated.View key={reps} style={[styles.item, styleFor(reps)]}>
             <ThemedText style={styles.number} setColor={textColor}>
               {reps}

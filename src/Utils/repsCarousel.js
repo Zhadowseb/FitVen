@@ -41,7 +41,7 @@ export function repsAtScroll(scroll, stepPx) {
  * further than a slow drag.
  */
 export function settledReps(scroll, vx, stepPx) {
-  return repsAtScroll(Number(scroll) - (Number(vx) || 0) * 120, stepPx);
+  return repsAtScroll(Number(scroll) - (Number(vx) || 0) * 160, stepPx);
 }
 
 /**
