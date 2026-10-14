@@ -164,13 +164,13 @@ export default StyleSheet.create({
         elevation: 6,
         overflow: "visible",
     },
-    // Holds the reps cell and, over it, the carousel while it is edited.
+    // Holds the reps cell and, over it, the carousel while it is edited. No
+    // percentage height: on a phone it made the cell - and with it the row and
+    // the whole exercise card - several screens tall.
     repsCarouselHost: {
         width: "100%",
-        height: "100%",
         alignItems: "center",
         justifyContent: "center",
-        overflow: "visible",
     },
     dropConnector: {
         position: "absolute",

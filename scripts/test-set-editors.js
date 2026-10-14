@@ -535,6 +535,9 @@ function createCloud() {
   assert.ok(/isSteppableSet\(set\) && isPersistedSet\(set\.sets_id\)/.test(setList), "no bar on a finished, failed or unsaved set");
   assert.ok(/showsWeightStepper\(resolvedVisibleColumns/.test(setList), "the columns rule and bodyweight mode still apply");
   assert.ok(/setEditorBar\.close\(barOwnerId, weightBarSetId\)/.test(setList), "ticking the set off closes the bar");
+  const hostStyle = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetListStyle.js").match(/repsCarouselHost: {[^}]*}/)[0];
+
+  assert.ok(!/height/.test(hostStyle), "the reps holder has no percentage height: it made the card several screens tall on a phone");
   assert.ok(!/weightWithStepper/.test(read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetListStyle.js")));
 
   const cell = read("src/Resources/ThemedComponents/ThemedEditableCell.js");
