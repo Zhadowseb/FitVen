@@ -73,7 +73,6 @@ function RepsBarContent({ bar }) {
         suffixColor={theme.amrap}
         borderColor={theme.primary}
         textColor={toolbarColors.primary}
-        quietColor={toolbarColors.primary}
         accessibilityLabel={t("workout.setList.repsCarouselLabel", { label: bar.label })}
         onActivate={bar.onActivate}
       />

@@ -83,20 +83,51 @@ assert.strictEqual(carousel.repsAsNumber(""), 0);
 assert.strictEqual(carousel.repsAsNumber(null), 0);
 assert.strictEqual(carousel.repsAsNumber("abc"), 0);
 assert.strictEqual(carousel.repsAsNumber(-3), 0);
-assert.deepStrictEqual(carousel.repsCarouselNumbers(8), { before: 7, current: 8, after: 9 });
-assert.deepStrictEqual(carousel.repsCarouselNumbers("12"), { before: 11, current: 12, after: 13 }, "typed 12: 11 - 12 - 13");
-assert.deepStrictEqual(carousel.repsCarouselNumbers(0), { before: null, current: 0, after: 1 }, "nothing under 0");
-assert.deepStrictEqual(carousel.repsCarouselNumbers(""), { before: null, current: 0, after: 1 });
+// The strip: three numbers on each side of the one now, two of them showing.
+assert.deepStrictEqual(
+  carousel.repsCarouselItems(8).map((item) => item.value),
+  [5, 6, 7, 8, 9, 10, 11],
+  "two each side show (6 7 8 9 10); the outer ones are there so the strip slides in without a gap"
+);
+assert.deepStrictEqual(carousel.repsCarouselItems(8).map((item) => item.offset), [-3, -2, -1, 0, 1, 2, 3]);
+assert.deepStrictEqual(
+  carousel.repsCarouselItems("12").map((item) => item.value),
+  [9, 10, 11, 12, 13, 14, 15],
+  "typed 12: 10 11 12 13 14"
+);
+assert.deepStrictEqual(
+  carousel.repsCarouselItems(1).map((item) => item.value),
+  [null, null, 0, 1, 2, 3, 4],
+  "nothing under 0"
+);
+assert.deepStrictEqual(carousel.repsCarouselItems("").map((item) => item.value), [null, null, null, 0, 1, 2, 3]);
 
-// A swipe: left is more, right is fewer, one rep for each 28 px, never below 0.
-assert.strictEqual(carousel.repsFromSwipe(8, -84, 28).reps, 11, "three numbers to the left is +3");
-assert.strictEqual(carousel.repsFromSwipe(8, 84, 28).reps, 5);
-assert.strictEqual(carousel.repsFromSwipe(8, -27, 28).reps, 8, "not yet a whole number");
-assert.strictEqual(carousel.repsFromSwipe(8, -28, 28).reps, 9);
-assert.strictEqual(carousel.repsFromSwipe(1, 300, 28).reps, 0, "stops at 0");
-assert.deepStrictEqual(carousel.repsFromSwipe(0, 40, 28), { reps: 0, offset: 0 }, "at 0 a swipe right does not slide");
-assert.deepStrictEqual(carousel.repsFromSwipe(8, -60, 28), { reps: 10, offset: -4 }, "the numbers slide with the finger and snap as one is passed");
-assert.ok(Math.abs(carousel.repsFromSwipe(8, -500, 28).offset) <= 28, "the slide never goes past one number");
+// While the finger is down the strip follows it freely, to the left as far as
+// it goes and to the right only as far as 0 (with a little give).
+assert.strictEqual(carousel.clampRepsDrag(8, -500, 44), -500, "towards more: free");
+assert.strictEqual(carousel.clampRepsDrag(8, 100, 44), 100, "towards fewer: as far as there are numbers");
+assert.strictEqual(carousel.clampRepsDrag(2, 400, 44), 2 * 44 + 44 * 0.3, "no further than 0 and a little give");
+assert.strictEqual(carousel.clampRepsDrag(0, 90, 44), 44 * 0.3);
+
+// Letting go: the nearest number - a drag of 70 px at 44 px a number is 1.6
+// numbers: it settles on 2, not on a number it has not reached.
+assert.strictEqual(carousel.settleReps(8, -70, 0, 44).reps, 10, "left is more; 1.6 rounds to 2");
+assert.strictEqual(carousel.settleReps(8, -60, 0, 44).reps, 9, "1.36 rounds to 1");
+assert.strictEqual(carousel.settleReps(8, -21, 0, 44).reps, 8, "under half a number: back where it was");
+assert.strictEqual(carousel.settleReps(8, 70, 0, 44).reps, 6, "right is fewer");
+assert.strictEqual(carousel.settleReps(1, 300, 0, 44).reps, 0, "never below 0");
+assert.strictEqual(carousel.settleReps(0, 90, 0, 44).reps, 0);
+// A flick carries it further than the same slow drag.
+assert.ok(carousel.settleReps(8, -60, -1.5, 44).reps > carousel.settleReps(8, -60, 0, 44).reps, "a fast flick goes further");
+assert.strictEqual(carousel.settleReps(8, -60, 0.4, 44).reps, 8, "released while moving back: it carries that way");
+// Where the strip is drawn once the new count is in the middle: the place it
+// was let go at, so it can glide the rest of the way.
+assert.strictEqual(carousel.settleReps(8, -70, 0, 44).offset, -70 + 2 * 44, "1.6 numbers dragged, 2 settled: 18 px to glide");
+assert.strictEqual(carousel.settleReps(8, -21, 0, 44).offset, -21, "settling where it was: the drag to glide back from");
+assert.ok(
+  Math.abs(carousel.settleReps(8, -400, -0.9, 44).offset) <= 44 / 2 + 120 * 0.9,
+  "the glide to go is at most half a number plus the push of the flick"
+);
 
 {
   const columns = (keys) =>
@@ -524,11 +555,18 @@ function createCloud() {
     "it claims a gesture only when it is sideways, so the table still scrolls"
   );
   assert.ok(
-    /accessibilityRole="adjustable"/.test(carouselSource) && /accessibilityValue=\{\{ now: numbers\.current \}\}/.test(carouselSource),
+    /accessibilityRole="adjustable"/.test(carouselSource) && /accessibilityValue=\{\{ now: current \}\}/.test(carouselSource),
     "adjustable for a screen reader"
   );
   assert.ok(/name: "increment"/.test(carouselSource) && /name: "decrement"/.test(carouselSource) && /name: "activate"/.test(carouselSource));
   assert.ok(!/expo-blur|react-native-community\/blur/.test(carouselSource), "no blur dependency");
+  const moveHandler = carouselSource.match(/onPanResponderMove: \([^)]*\) => \{[\s\S]*?\n        \},/)[0];
+
+  assert.ok(!/onChangeRef|Vibration|settleReps/.test(moveHandler), "while the finger is down the strip only follows it: nothing is changed, saved or tapped");
+  assert.ok(/clampRepsDrag\(/.test(moveHandler), "and it cannot be dragged past 0");
+  assert.ok(/onPanResponderRelease[\s\S]*settleReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count changes when the finger lets go");
+  assert.ok(/pendingRef\.current && |pending && pending\.reps === current/.test(carouselSource) || /pending\.reps === current/.test(carouselSource), "the strip waits for the new count before it glides home");
+  assert.ok(/const SPREAD = 3;/.test(carouselSource), "two numbers each side show, and one more is there to slide in");
   assert.ok(/setEditorBar\.close\(barOwnerId\)/.test(setList), "the set list's own bar is closed when it goes away");
   assert.ok(/cellControlsRef\.current\.get\(`\$\{setId\}:weight`\)\?\.commit/.test(setList), "a press saves what is typed before it steps");
   assert.ok(
