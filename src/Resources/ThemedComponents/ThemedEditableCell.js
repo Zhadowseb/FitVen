@@ -24,6 +24,10 @@ const ThemedEditableCell = ({
   placeholderTextColor,
   onFocus,
   onBlur,
+  // Called with { commit } while the cell is mounted, and with null when it is
+  // not: the bar over the keyboard saves what is typed here before a press of
+  // plus or minus steps from it.
+  registerControl = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -67,6 +71,16 @@ const ThemedEditableCell = ({
   // removed - still saves what was typed in it. commit is a no-op when
   // nothing changed.
   useEffect(() => () => commitRef.current?.(), []);
+
+  useEffect(() => {
+    if (!registerControl) {
+      return undefined;
+    }
+
+    registerControl({ commit: () => commitRef.current?.() });
+
+    return () => registerControl(null);
+  }, []);
 
   // Android's hide-keyboard button puts the keyboard away without moving
   // focus, so onBlur never fired and what had just been typed was dropped.

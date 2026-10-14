@@ -77,8 +77,8 @@ export const LIVE_WEIGHT_STEP_DEFAULT = DEFAULT_WEIGHT_STEP;
  * for machines and cables and for squats and deadlifts on the bar, and 2.5
  * for everything else - the bench press among them (getWeightStep).
  */
-export function liveWeightStepFor({ name = "", equipment = null } = {}) {
-  return getWeightStep({ name, equipment });
+export function liveWeightStepFor({ name = "", equipment = null, weightStep = null } = {}) {
+  return getWeightStep({ name, equipment, weightStep });
 }
 
 /** To the nearest quarter kilo, so 0.1 + 0.2 never shows as 102.49999. */
@@ -242,6 +242,8 @@ export function groupLiveWorkoutRows(rows = []) {
         exerciseId,
         name: String(row.exercise_name ?? "").trim(),
         equipment: row.exercise_equipment ?? null,
+        // The step the person chose in the weight bar, when they did.
+        weightStep: row.exercise_weight_step ?? null,
         rows: [],
       };
       byId.set(exerciseId, exercise);
@@ -257,6 +259,7 @@ export function groupLiveWorkoutRows(rows = []) {
     exerciseId: exercise.exerciseId,
     name: exercise.name,
     equipment: exercise.equipment,
+    weightStep: exercise.weightStep,
     position,
     sets: orderSetsForDisplay(exercise.rows).map((row) => ({
       row,

@@ -640,6 +640,7 @@ export async function getExerciseColumnPreference(
         exercise_name,
         visible_columns,
         weight_mode,
+        weight_step,
         needs_sync,
         updated_at
      FROM Exercise_Column_Preference
@@ -659,6 +660,7 @@ export async function getExerciseColumnPreferencesForUser(db, userId) {
         exercise_name,
         visible_columns,
         weight_mode,
+        weight_step,
         needs_sync,
         updated_at
      FROM Exercise_Column_Preference
@@ -677,6 +679,7 @@ export async function getDirtyExerciseColumnPreferences(db, userId) {
         p.exercise_name,
         p.visible_columns,
         p.weight_mode,
+        p.weight_step,
         p.updated_at
      FROM Exercise_Column_Preference p
      LEFT JOIN Exercise e
@@ -689,9 +692,10 @@ export async function getDirtyExerciseColumnPreferences(db, userId) {
 }
 
 /**
- * `weightMode` (4d) is optional: left out or null, the stored one stays - a
- * column change says nothing about it, and a cloud row from an older app
- * does not know it.
+ * `weightMode` (4d) and `weightStep` are optional: left out or null, the
+ * stored one stays - a column change says nothing about them, and a cloud row
+ * from an older app does not know them. A weightStep of 0 is a value:
+ * automatic.
  */
 export async function upsertExerciseColumnPreference(
   db,
@@ -701,6 +705,7 @@ export async function upsertExerciseColumnPreference(
     exerciseName,
     visibleColumns,
     weightMode = null,
+    weightStep = null,
     needsSync = 1,
     updatedAt = new Date().toISOString(),
   }
@@ -712,9 +717,10 @@ export async function upsertExerciseColumnPreference(
         exercise_name,
         visible_columns,
         weight_mode,
+        weight_step,
         needs_sync,
         updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(user_id, exercise_name)
       DO UPDATE SET
         cloud_exercise_id = excluded.cloud_exercise_id,
@@ -722,6 +728,10 @@ export async function upsertExerciseColumnPreference(
         weight_mode = COALESCE(
           excluded.weight_mode,
           Exercise_Column_Preference.weight_mode
+        ),
+        weight_step = COALESCE(
+          excluded.weight_step,
+          Exercise_Column_Preference.weight_step
         ),
         needs_sync = excluded.needs_sync,
         updated_at = excluded.updated_at;`,
@@ -731,7 +741,56 @@ export async function upsertExerciseColumnPreference(
       exerciseName,
       visibleColumns,
       weightMode,
+      weightStep,
       needsSync ? 1 : 0,
+      updatedAt,
+    ])
+  );
+}
+
+/**
+ * The step the weight bar moves an exercise's weight by, marked for upload.
+ * `weightStep` is the step in kg, or 0 for automatic: never null, which the
+ * cloud takes for "not known" and which would bring the old step back. The
+ * columns stay as they are; `visibleColumns` is only what a new row starts
+ * with, since the column is required.
+ */
+export async function upsertExerciseWeightStepPreference(
+  db,
+  {
+    userId,
+    cloudExerciseId = null,
+    exerciseName,
+    weightStep,
+    visibleColumns,
+    updatedAt = new Date().toISOString(),
+  }
+) {
+  await db.runAsync(
+    `INSERT INTO Exercise_Column_Preference (
+        user_id,
+        cloud_exercise_id,
+        exercise_name,
+        visible_columns,
+        weight_step,
+        needs_sync,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, 1, ?)
+      ON CONFLICT(user_id, exercise_name)
+      DO UPDATE SET
+        cloud_exercise_id = COALESCE(
+          excluded.cloud_exercise_id,
+          Exercise_Column_Preference.cloud_exercise_id
+        ),
+        weight_step = excluded.weight_step,
+        needs_sync = 1,
+        updated_at = excluded.updated_at;`,
+    sqliteParams([
+      userId,
+      cloudExerciseId,
+      exerciseName,
+      visibleColumns,
+      weightStep,
       updatedAt,
     ])
   );
@@ -1341,7 +1400,18 @@ export async function getLiveWorkoutSets(db, workoutId) {
           WHERE catalog.name = e.exercise_name COLLATE NOCASE
           ORDER BY catalog.exercise_id ASC
           LIMIT 1
-        ) AS exercise_equipment
+        ) AS exercise_equipment,
+        -- The step the person chose for the exercise in the weight bar. The
+        -- database is this user's own, so no user is asked for; 0 is
+        -- "automatic" and is left out.
+        (
+          SELECT p.weight_step
+          FROM Exercise_Column_Preference p
+          WHERE p.exercise_name = e.exercise_name COLLATE NOCASE
+            AND p.weight_step > 0
+          ORDER BY p.updated_at DESC
+          LIMIT 1
+        ) AS exercise_weight_step
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id
      WHERE e.workout_type_instance_id = ?

@@ -10,7 +10,7 @@ import { SQLiteProvider } from 'expo-sqlite';
 import { initializeDatabase } from './src/Database/db';
 import { Linking, View, useColorScheme } from "react-native"
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { KeyboardProvider, KeyboardToolbar } from "react-native-keyboard-controller";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import * as ScreenOrientation from "expo-screen-orientation";
 
 
@@ -82,6 +82,7 @@ import { LocalizationProvider, useTranslation } from './src/Localization';
 import { ExerciseViewSettingsProvider } from './src/Contexts/ExerciseViewSettingsContext';
 import PrivacyConsentGate from "./src/Resources/Components/PrivacyConsentGate/PrivacyConsentGate";
 import ToastHost from "./src/Resources/Components/Toast/Toast";
+import SetEditorKeyboardToolbar from "./src/Resources/Components/SetEditorBar/SetEditorBar";
 import ExerciseLibrarySync from "./src/Sync/ExerciseLibrarySync";
 import PushNotificationRegistrationSync from "./src/Sync/PushNotificationRegistrationSync";
 import SetSync from "./src/Sync/SetSync";
@@ -470,8 +471,9 @@ function RootNavigator() {
         {isAuthenticated ? <ToastHost /> : null}
       </View>
 
-      {/* Gives every field - numeric ones included - a Done button. */}
-      <KeyboardToolbar />
+      {/* Gives every field - numeric ones included - a Done button, and the
+          weight bar of a set being edited in its middle. */}
+      <SetEditorKeyboardToolbar />
     </KeyboardProvider>
   );
 }

@@ -193,8 +193,9 @@ export default {
     // + og − på vægten (1e). {step} er trinnet i kg.
     weightMinus: "Træk {step} kg fra sæt {label}",
     weightPlus: "Læg {step} kg til sæt {label}",
-    weightMinusAll: "Træk {step} kg fra alle ufærdige sæt",
-    weightPlusAll: "Læg {step} kg til alle ufærdige sæt",
+    // Linjen over tastaturet, mens en vægt redigeres. {label} er sættet.
+    weightBarLabel: "Rediger vægt for sæt {label}",
+    weightStepField: "Trin for denne øvelse i kg. Huskes til næste gang",
     // Når en vægt ikke kunne gemmes.
     weightSaveFailedTitle: "Vægten blev ikke gemt",
     weightStepsKept:

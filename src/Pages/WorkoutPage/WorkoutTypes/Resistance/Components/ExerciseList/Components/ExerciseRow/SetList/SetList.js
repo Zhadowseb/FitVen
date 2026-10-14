@@ -26,7 +26,6 @@ import Note from "@resources/Icons/UI-icons/Note";
 import Amrap from "@resources/Icons/UI-icons/Amrap";
 import Expand from "@resources/Icons/UI-icons/Expand";
 import Plus from "@resources/Icons/UI-icons/Plus";
-import Minus from "@resources/Icons/UI-icons/Minus";
 import Cogwheel from "@resources/Icons/UI-icons/Cogwheel";
 import Star from "@resources/Icons/UI-icons/Star";
 import { restCountUpService, weightliftingService } from "@services";
@@ -57,13 +56,15 @@ import {
   orderSetsForDisplay,
   resolveSetType,
 } from "@utils/setTypes";
+import { newSetEditorOwnerId, setEditorBar } from "@utils/setEditorBar";
 import {
   DEFAULT_WEIGHT_STEP,
   createWeightDrafts,
   isSteppableSet,
+  parseWeightStepInput,
   showsWeightStepper,
-  stepAllWeights,
   stepWeight,
+  weightStepToStore,
 } from "@utils/weightStep";
 import SetTypeSheet from "./SetTypeSheet";
 import UndoToast from "./UndoToast";
@@ -100,14 +101,14 @@ const WARMUP_FOLD_EASING = Easing.bezier(0.2, 0.8, 0.2, 1);
 // How long a deleted set can still be brought back.
 const UNDO_DELETE_MS = 4000;
 
-// The weight steppers (1e): a press is saved this long after the last one, so
+// The weight steppers (1e), now in the bar over the keyboard (Resources/
+// Components/SetEditorBar): a press is saved this long after the last one, so
 // five quick taps are one write. Held, a button repeats after the first
 // delay at the second, and the write waits for the release.
 const WEIGHT_STEP_SAVE_DELAY_MS = 400;
 const WEIGHT_STEP_REPEAT_DELAY_MS = 500;
 const WEIGHT_STEP_REPEAT_INTERVAL_MS = 150;
 const WEIGHT_STEP_HAPTIC_MS = 8;
-const WEIGHT_STEP_HIT_SLOP = { top: 9, bottom: 9, left: 6, right: 6 };
 
 // What the person last did by hand to an exercise's warm-ups, "open" or
 // "folded", kept for the session. Opened by hand, they no longer fold by
@@ -209,6 +210,10 @@ const SetList = ({
   // the history panel when it has been read - where + starts on an empty set
   // with nothing above it.
   weightStep = DEFAULT_WEIGHT_STEP,
+  // The step when the person has chosen none, and what changes the one they
+  // chose: called with the step to keep for the exercise, 0 for "automatic".
+  automaticWeightStep = DEFAULT_WEIGHT_STEP,
+  onWeightStepChange = null,
   exerciseWeightMode = null,
   historyWeight = null,
 }) => {
@@ -281,6 +286,21 @@ const SetList = ({
   storedSetsRef.current = sets;
   const weightSaveTimerRef = useRef(null);
   const weightRepeatTimerRef = useRef(null);
+  // The bar over the keyboard is told apart from other set lists' by this, and
+  // calls back through barApiRef, which is rebuilt every render and so never
+  // holds a stale step or set list.
+  const barOwnerIdRef = useRef(null);
+
+  if (barOwnerIdRef.current === null) {
+    barOwnerIdRef.current = newSetEditorOwnerId();
+  }
+
+  const barOwnerId = barOwnerIdRef.current;
+  const barApiRef = useRef(null);
+  // The editable cells' own handles, by cell key, so a press on the bar can
+  // save what is typed in the weight field before it steps from it.
+  const cellControlsRef = useRef(new Map());
+  const [weightBarSetId, setWeightBarSetId] = useState(null);
   const flushWeightStepsRef = useRef(null);
   const localSetsRef = useRef(sets);
   const mountedRef = useRef(true);
@@ -588,11 +608,7 @@ const SetList = ({
     { key: "reps", style: styles.reps, flexValue: 13 },
     { key: "rpe", style: styles.rpe, flexValue: 9 },
     { key: "rm_percentage", style: styles.rm_percentage, flexValue: 14 },
-    // Wider with the steppers, and the header and the add-set row with it,
-    // so the columns still line up.
-    showWeightStepper
-      ? { key: "weight", style: styles.weightWithStepper, flexValue: 30 }
-      : { key: "weight", style: styles.weight, flexValue: 20 },
+    { key: "weight", style: styles.weight, flexValue: 20 },
     { key: "done", style: styles.done, flexValue: 14 },
   ];
 
@@ -1052,9 +1068,6 @@ const SetList = ({
       )
       .map((set) => ({ ...set, weight: weightOf(set) }));
 
-  const stepAllSetWeights = (direction) =>
-    applyWeightSteps(stepAllWeights(steppableSets(), direction, weightStep));
-
   const stopWeightRepeat = () => {
     clearInterval(weightRepeatTimerRef.current);
     weightRepeatTimerRef.current = null;
@@ -1146,63 +1159,92 @@ const SetList = ({
       mountedRef.current = false;
       stopWeightRepeat();
       flushWeightStepsRef.current?.();
+      setEditorBar.close(barOwnerId);
     },
     []
   );
 
-  const renderWeightStepButton = ({
-    direction,
-    onStep,
-    disabled,
-    accessibilityLabel,
-    color,
-    iconSize,
-  }) => {
-    const Icon = direction > 0 ? Plus : Minus;
+  /* ------------------------------------------- the bar over the keyboard -- */
 
-    return (
-      <TouchableOpacity
-        activeOpacity={0.6}
-        accessibilityRole="button"
-        accessibilityLabel={accessibilityLabel}
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        hitSlop={WEIGHT_STEP_HIT_SLOP}
-        delayLongPress={WEIGHT_STEP_REPEAT_DELAY_MS}
-        onPress={() => onStep()}
-        onLongPress={() => startWeightRepeat(onStep)}
-        onPressOut={stopWeightRepeat}
-        style={[styles.weightStepButton, disabled && styles.weightStepButtonDimmed]}
-      >
-        <Icon width={iconSize} height={iconSize} color={color} thickness={2.6} />
-      </TouchableOpacity>
-    );
-  };
+  // The bar shows this set list's step, and a minus only where there is a
+  // weight to take from. It is closed when its set can no longer be changed.
+  const barSet =
+    weightBarSetId === null
+      ? null
+      : (localSets ?? []).find((candidate) => candidate.sets_id === weightBarSetId) ?? null;
+  const barWeight = barSet ? weightOf(barSet) : null;
+  const barSteppable = Boolean(barSet) && isSteppableSet(barSet);
+
+  useEffect(() => {
+    if (weightBarSetId === null) {
+      return;
+    }
+
+    if (!barSteppable) {
+      setEditorBar.close(barOwnerId, weightBarSetId);
+      setWeightBarSetId(null);
+      return;
+    }
+
+    setEditorBar.update(barOwnerId, weightBarSetId, {
+      step: weightStep,
+      canDecrease: (barWeight ?? 0) > 0,
+    });
+  }, [weightBarSetId, weightStep, barWeight, barSteppable]);
 
   const weightStepLabel = formatNumber(weightStep, { maximumFractionDigits: 2 });
-  const headerSteppable = showWeightStepper
-    ? steppableSets().filter((set) => isSteppableSet(set) && set.weight !== null)
-    : [];
-  // In the header: every unfinished set at once. Dimmed with nothing to move.
-  const weightStepper = showWeightStepper
-    ? {
-        renderButton: (direction, { color, iconSize }) =>
-          renderWeightStepButton({
-            direction,
-            onStep: () => stepAllSetWeights(direction),
-            disabled:
-              direction > 0
-                ? headerSteppable.length === 0
-                : !headerSteppable.some((set) => set.weight > 0),
-            accessibilityLabel: t(
-              direction > 0 ? "workout.setList.weightPlusAll" : "workout.setList.weightMinusAll",
-              { step: weightStepLabel }
-            ),
-            color,
-            iconSize,
-          }),
-      }
-    : null;
+
+  // A press on the bar: what is typed in the field is saved first, so the step
+  // starts from it - the cell's text is not in the drafts until it is committed.
+  const stepFromBar = (setId, direction) => {
+    cellControlsRef.current.get(`${setId}:weight`)?.commit?.();
+
+    return stepSetWeight(setId, direction);
+  };
+
+  // The step typed in the bar's field. Empty means automatic again; a number
+  // is kept for the exercise; anything else leaves the step as it was. The
+  // answer is the step now in use, so the field can show it at once.
+  const saveWeightStepFromBar = (text) => {
+    const parsed = parseWeightStepInput(text);
+
+    if (parsed.action === "keep") {
+      return { step: weightStep };
+    }
+
+    onWeightStepChange?.(weightStepToStore(parsed));
+
+    return { step: parsed.action === "set" ? parsed.step : automaticWeightStep };
+  };
+
+  barApiRef.current = {
+    step: (setId, direction) => stepFromBar(setId, direction),
+    repeat: (setId, direction) => startWeightRepeat(() => stepFromBar(setId, direction)),
+    stop: stopWeightRepeat,
+    saveStep: saveWeightStepFromBar,
+  };
+
+  const barLabelFor = (set) =>
+    labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? "");
+
+  // The weight of this set got focus: its bar replaces any other.
+  const openWeightBar = (set) => {
+    const setId = set.sets_id;
+
+    setWeightBarSetId(setId);
+    setEditorBar.open({
+      ownerId: barOwnerId,
+      setId,
+      label: barLabelFor(set),
+      step: weightStep,
+      canDecrease: (weightOf(set) ?? 0) > 0,
+      repeatDelayMs: WEIGHT_STEP_REPEAT_DELAY_MS,
+      onStep: (direction) => barApiRef.current.step(setId, direction),
+      onRepeatStart: (direction) => barApiRef.current.repeat(setId, direction),
+      onRepeatStop: () => barApiRef.current.stop(),
+      onStepSubmit: (text) => barApiRef.current.saveStep(text),
+    });
+  };
 
   const handleOpenSetOptions = (set) => {
     set_selectedSet(set);
@@ -1251,6 +1293,13 @@ const SetList = ({
       >
         <ThemedEditableCell
           {...props}
+          registerControl={(control) => {
+            if (control) {
+              cellControlsRef.current.set(cellKey, control);
+            } else {
+              cellControlsRef.current.delete(cellKey);
+            }
+          }}
           onFocus={(event) => {
             setActiveEditableCell(cellKey);
             onFocus?.(event);
@@ -1369,6 +1418,7 @@ const SetList = ({
 
         return renderEditableValue({
           cellKey: `${set.sets_id}:reps`,
+          onFocus: () => setEditorBar.close(),
           value: set.reps?.toString() ?? "",
           // "9/6+": nine done against a target of six or more.
           suffix: isAmrap ? (target ? `/${target}+` : "AMRAP") : "",
@@ -1383,6 +1433,7 @@ const SetList = ({
       case "rpe":
         return renderEditableValue({
           cellKey: `${set.sets_id}:rpe`,
+          onFocus: () => setEditorBar.close(),
           value: set.rpe?.toString() ?? "",
           onCommit: (value) => updateField("rpe", value, set.sets_id),
         });
@@ -1390,6 +1441,7 @@ const SetList = ({
       case "rm_percentage":
         return renderEditableValue({
           cellKey: `${set.sets_id}:rm_percentage`,
+          onFocus: () => setEditorBar.close(),
           value: set.rm_percentage?.toString() ?? "",
           suffix: "%",
           onCommit: (value) => updateRmPercentage(value, set.sets_id),
@@ -1400,13 +1452,22 @@ const SetList = ({
         const weight = parseWeight(set.weight);
         const drop =
           parentWeight !== null && weight !== null ? parentWeight - weight : null;
-        const hasSteppers =
+        // The bar over the keyboard (minus, plus and the step) belongs to a set
+        // that can still be changed: not ticked off, not failed, and saved.
+        const hasWeightBar =
           showWeightStepper && isSteppableSet(set) && isPersistedSet(set.sets_id);
-        const value = renderEditableValue({
+
+        return renderEditableValue({
           cellKey: `${set.sets_id}:weight`,
-          containerStyle: hasSteppers ? styles.weightStepperValue : undefined,
           value: set.weight?.toString() ?? "",
           suffix: "kg",
+          onFocus: () => {
+            if (hasWeightBar) {
+              openWeightBar(set);
+            } else {
+              setEditorBar.close();
+            }
+          },
           // How far it dropped from the set above: "70 kg -17,5".
           trailing:
             drop > 0 ? (
@@ -1420,44 +1481,6 @@ const SetList = ({
             ) : null,
           onCommit: (value) => updateWeight(value, set.sets_id),
         });
-
-        // Ticked off, the set is what was lifted: no buttons. Untick it and
-        // they are back, without an animation, so the row does not jump.
-        if (!hasSteppers) {
-          return value;
-        }
-
-        const label = labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? "");
-        const stepColor = theme.quietText;
-
-        return (
-          <View style={styles.weightStepperCell}>
-            {renderWeightStepButton({
-              direction: -1,
-              onStep: () => stepSetWeight(set.sets_id, -1),
-              // Nothing to take from an empty weight or from 0.
-              disabled: weight === null || weight <= 0,
-              accessibilityLabel: t("workout.setList.weightMinus", {
-                step: weightStepLabel,
-                label,
-              }),
-              color: stepColor,
-              iconSize: 14,
-            })}
-            {value}
-            {renderWeightStepButton({
-              direction: 1,
-              onStep: () => stepSetWeight(set.sets_id, 1),
-              disabled: false,
-              accessibilityLabel: t("workout.setList.weightPlus", {
-                step: weightStepLabel,
-                label,
-              }),
-              color: stepColor,
-              iconSize: 14,
-            })}
-          </View>
-        );
       }
 
       case "done": {
@@ -1928,10 +1951,7 @@ const SetList = ({
         ]}
       >
         {hasSets && (
-          <Title
-            visibleColumns={renderedVisibleColumns}
-            weightStepper={weightStepper}
-          />
+          <Title visibleColumns={renderedVisibleColumns} />
         )}
 
         {warmupSets.length > 0 ? (

@@ -6,10 +6,11 @@
 // set by the same amount wherever it is made. What is on the bar decides how
 // finely it can move: a pair of dumbbells goes up 2, a machine or a cable
 // stack 5, a squat or a deadlift 5, everything else - the bench press among
-// them - 2.5. A step set on the exercise itself wins over all of it, for the
-// day there is a setting.
+// them - 2.5. A step set on the exercise itself wins over all of it, - the
+// person's own, typed in the bar over the keyboard and kept per exercise.
 //
 // kg only: the app has no lb. Pure, so scripts/test-weight-mode.js loads it.
+import { parseSetNumber } from "./setValueLimits";
 import { roundToStep } from "./weightMode";
 
 export const DEFAULT_WEIGHT_STEP = 2.5;
@@ -98,18 +99,6 @@ export function stepWeight(weight, direction, step, { startFrom = null } = {}) {
 /** Whether a set still has its steppers: not ticked off, not failed. */
 export function isSteppableSet(set) {
   return Number(set?.done) !== 1 && Number(set?.failed) !== 1;
-}
-
-/**
- * The header's press: every unfinished set with a weight moved one step,
- * the finished ones and the empty ones left alone, none below 0. Returns only
- * the sets that change, as [{ setId, weight }].
- */
-export function stepAllWeights(sets = [], direction, step) {
-  return (Array.isArray(sets) ? sets : [])
-    .filter((set) => isSteppableSet(set) && toWeight(set?.weight) !== null)
-    .map((set) => ({ setId: set.sets_id, weight: stepWeight(set.weight, direction, step) }))
-    .filter((change) => change.weight !== null);
 }
 
 // Only these columns leave room for the steppers; with a note, RPE or 1RM %
@@ -213,6 +202,133 @@ export function createWeightDrafts() {
       drafts.delete(key);
 
       return true;
+    },
+  };
+}
+
+/* ------------------------------------------- the step the person chose -- */
+
+// The bar over the keyboard has a small field with the step. What is typed in
+// it is kept for this exercise (Exercise_Column_Preference.weight_step), and
+// is what + and - move by from then on - in the set list and on the lock
+// screen - until it is cleared.
+export const MIN_WEIGHT_STEP = 0.25;
+export const MAX_WEIGHT_STEP = 50;
+// Stored, and sent to the cloud, for "automatic". Not null: in the column
+// preferences null means "not known" and a phone keeps its own value over it,
+// so a cleared step stored as null would come back from the cloud.
+export const AUTOMATIC_WEIGHT_STEP = 0;
+
+/**
+ * What a step typed in the field means:
+ *  - empty: { action: "clear" } - the automatic step applies again;
+ *  - a number: { action: "set", step } - "1,25" and "1.25" alike, rounded to a
+ *    quarter kilo and kept between 0.25 and 50;
+ *  - anything else, and 0 or less: { action: "keep" } - the field goes back to
+ *    the step it had.
+ */
+export function parseWeightStepInput(text) {
+  if (text === null || text === undefined || String(text).trim() === "") {
+    return { action: "clear" };
+  }
+
+  const parsed = parseSetNumber(text);
+
+  if (parsed === null || !(parsed > 0)) {
+    return { action: "keep" };
+  }
+
+  const clamped = Math.min(Math.max(roundWeightToQuarter(parsed), MIN_WEIGHT_STEP), MAX_WEIGHT_STEP);
+
+  return { action: "set", step: clamped };
+}
+
+/** A stored step as the step to use: null for none, 0 and anything unusable. */
+export function storedWeightStep(value) {
+  const own = Number(value);
+
+  if (value === null || value === undefined || value === "" || !Number.isFinite(own) || own <= 0) {
+    return null;
+  }
+
+  return Math.min(Math.max(roundWeightToQuarter(own), MIN_WEIGHT_STEP), MAX_WEIGHT_STEP);
+}
+
+/** The value written for a typed step: the step, or 0 for "automatic". */
+export function weightStepToStore(parsed) {
+  return parsed?.action === "set" ? parsed.step : AUTOMATIC_WEIGHT_STEP;
+}
+
+/* ------------------------------------------------------- the cloud column -- */
+
+const WEIGHT_STEP_CLOUD_COLUMN = "weight_step";
+
+/**
+ * The cloud has no weight_step column on exercise_column_preferences yet: the
+ * migration that adds it (20261014090000_a-step-per-exercise.sql) has not been
+ * run. 42703 on a read, PGRST204 on a write, and a word match so another
+ * missing column - weight_mode - is not mistaken for this one.
+ */
+export function isMissingWeightStepColumnError(error) {
+  const message = `${error?.message ?? ""} ${error?.details ?? ""}`;
+
+  return (error?.code === "42703" || error?.code === "PGRST204") && /\bweight_step\b/.test(message);
+}
+
+/**
+ * The payload as it may be sent: weight_step is left out when the cloud has no
+ * such column, and when it is null ("not known" - a phone that never chose).
+ * 0 is a value - automatic - and is sent, so a cleared step reaches the cloud.
+ */
+export function withSendableWeightStep(payload, { cloudHasColumn = true } = {}) {
+  if (
+    !payload ||
+    !Object.prototype.hasOwnProperty.call(payload, WEIGHT_STEP_CLOUD_COLUMN) ||
+    (cloudHasColumn && payload[WEIGHT_STEP_CLOUD_COLUMN] !== null && payload[WEIGHT_STEP_CLOUD_COLUMN] !== undefined)
+  ) {
+    return payload;
+  }
+
+  const { [WEIGHT_STEP_CLOUD_COLUMN]: _left, ...sendable } = payload;
+
+  return sendable;
+}
+
+/**
+ * The handle on the column for one app session, the pattern of
+ * createWeightModeCloudColumn in ./weightMode.js: named until the cloud says
+ * it is missing, then the request runs once more without it. `request` must
+ * be safe to run twice.
+ */
+export function createWeightStepCloudColumn({ onMissing } = {}) {
+  let missing = false;
+
+  return {
+    isAvailable() {
+      return !missing;
+    },
+
+    selectColumns(baseColumns) {
+      return missing ? baseColumns : `${baseColumns}, ${WEIGHT_STEP_CLOUD_COLUMN}`;
+    },
+
+    sendablePayload(payload) {
+      return withSendableWeightStep(payload, { cloudHasColumn: !missing });
+    },
+
+    async withFallback(request) {
+      try {
+        return await request();
+      } catch (error) {
+        if (missing || !isMissingWeightStepColumnError(error)) {
+          throw error;
+        }
+
+        missing = true;
+        onMissing?.(error);
+
+        return request();
+      }
     },
   };
 }

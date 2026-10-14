@@ -471,11 +471,39 @@ const ExerciseRow = ({
 
   const weightMode = weightModeOf(exercise.weightMode);
   const tabWeight = pickTabWeight(orderSetsForDisplay(exercise.sets ?? []));
-  // The weight steppers' step (1e), the lock screen's rule.
-  const weightStep = getWeightStep({
+  // The step + and - in the weight bar move by (1e), the lock screen's rule:
+  // the one the person chose for this exercise, else the automatic one. A
+  // step just typed is shown at once; the next load carries what was saved.
+  const automaticWeightStep = getWeightStep({
     name: exercise.exercise_name,
     equipment: exercise.exercise_equipment,
   });
+  const [typedWeightStep, setTypedWeightStep] = useState(undefined);
+
+  useEffect(() => {
+    setTypedWeightStep(undefined);
+  }, [exercise.weightStep]);
+
+  const weightStep = getWeightStep({
+    name: exercise.exercise_name,
+    equipment: exercise.exercise_equipment,
+    weightStep: typedWeightStep !== undefined ? typedWeightStep : exercise.weightStep,
+  });
+
+  // The step typed in the bar: 0 for automatic again.
+  const changeWeightStep = async (stored) => {
+    setTypedWeightStep(stored > 0 ? stored : null);
+
+    try {
+      await weightliftingService.setExerciseWeightStep(db, {
+        exerciseId: exercise.exercise_id,
+        step: stored,
+      });
+    } catch (error) {
+      console.error("Error saving the weight step", error);
+      setTypedWeightStep(undefined);
+    }
+  };
   // Last time's last weight, when the history panel has read it - converted
   // into this workout's mode - for + on an empty set with nothing above it.
   // Only what is already loaded: a press never waits for a query.
@@ -1112,6 +1140,8 @@ const ExerciseRow = ({
               recordControlFillColor={exerciseCheckboxFillColor}
               recordControlTextColor={exerciseCheckboxCheckmarkColor}
               weightStep={weightStep}
+              automaticWeightStep={automaticWeightStep}
+              onWeightStepChange={changeWeightStep}
               exerciseWeightMode={exercise.exercise_weight_mode ?? null}
               historyWeight={historyWeight}
             />
