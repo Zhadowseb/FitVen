@@ -73,6 +73,43 @@ assert.deepStrictEqual(steps.withSendableWeightStep({ a: 1, weight_step: 0 }), {
 assert.deepStrictEqual(steps.withSendableWeightStep({ a: 1, weight_step: null }), { a: 1 }, "null is not sent: it would erase another phone's step");
 assert.deepStrictEqual(steps.withSendableWeightStep({ a: 1, weight_step: 2 }, { cloudHasColumn: false }), { a: 1 });
 
+/* ---------------------------------------------------- the reps carousel -- */
+
+const carousel = loadAppModule("src/Utils/repsCarousel.js");
+
+assert.strictEqual(carousel.repsAsNumber("12"), 12);
+assert.strictEqual(carousel.repsAsNumber(8.7), 8);
+assert.strictEqual(carousel.repsAsNumber(""), 0);
+assert.strictEqual(carousel.repsAsNumber(null), 0);
+assert.strictEqual(carousel.repsAsNumber("abc"), 0);
+assert.strictEqual(carousel.repsAsNumber(-3), 0);
+assert.deepStrictEqual(carousel.repsCarouselNumbers(8), { before: 7, current: 8, after: 9 });
+assert.deepStrictEqual(carousel.repsCarouselNumbers("12"), { before: 11, current: 12, after: 13 }, "typed 12: 11 - 12 - 13");
+assert.deepStrictEqual(carousel.repsCarouselNumbers(0), { before: null, current: 0, after: 1 }, "nothing under 0");
+assert.deepStrictEqual(carousel.repsCarouselNumbers(""), { before: null, current: 0, after: 1 });
+
+// A swipe: left is more, right is fewer, one rep for each 28 px, never below 0.
+assert.strictEqual(carousel.repsFromSwipe(8, -84, 28).reps, 11, "three numbers to the left is +3");
+assert.strictEqual(carousel.repsFromSwipe(8, 84, 28).reps, 5);
+assert.strictEqual(carousel.repsFromSwipe(8, -27, 28).reps, 8, "not yet a whole number");
+assert.strictEqual(carousel.repsFromSwipe(8, -28, 28).reps, 9);
+assert.strictEqual(carousel.repsFromSwipe(1, 300, 28).reps, 0, "stops at 0");
+assert.deepStrictEqual(carousel.repsFromSwipe(0, 40, 28), { reps: 0, offset: 0 }, "at 0 a swipe right does not slide");
+assert.deepStrictEqual(carousel.repsFromSwipe(8, -60, 28), { reps: 10, offset: -4 }, "the numbers slide with the finger and snap as one is passed");
+assert.ok(Math.abs(carousel.repsFromSwipe(8, -500, 28).offset) <= 28, "the slide never goes past one number");
+
+{
+  const columns = (keys) =>
+    Object.fromEntries(
+      ["note", "rest", "set", "reps", "rpe", "rm_percentage", "weight", "done"].map((key) => [key, keys.includes(key)])
+    );
+
+  assert.ok(steps.showsSetEditors(columns(["rest", "set", "reps", "weight", "done"])));
+  assert.ok(steps.showsSetEditors(columns(["rest", "set", "reps", "done"])), "a table with no weight still has the carousel");
+  assert.ok(!steps.showsSetEditors(columns(["rest", "set", "reps", "weight", "done", "rpe"])), "with RPE the table is as before");
+  assert.ok(!steps.showsSetEditors(columns(["set", "reps", "weight", "note"])));
+}
+
 /* ----------------------------------------------------- the bar's store -- */
 
 const barStore = loadAppModule("src/Utils/setEditorBar.js");
@@ -453,9 +490,38 @@ function createCloud() {
   assert.ok(!/weightStepperCell|renderWeightStepButton|stepAllSetWeights|weightStepper=/.test(setList), "no steppers beside the cell or in the header");
   assert.ok(/setEditorBar\.open\(\{/.test(setList) && /openWeightBar\(set\)/.test(setList), "a weight cell with focus opens the bar");
   assert.ok(
-    (setList.match(/onFocus: \(\) => setEditorBar\.close\(\)/g) ?? []).length === 3,
+    (setList.match(/setEditorBar\.close\(\);/g) ?? []).length >= 2 &&
+      (setList.match(/onFocus: \(\) => setEditorBar\.close\(\)/g) ?? []).length === 2,
     "reps, RPE and 1RM % close it"
   );
+
+  // The reps carousel.
+  assert.ok(/<RepsCarousel/.test(setList) && /showsSetEditors\(resolvedVisibleColumns\)/.test(setList), "the carousel is for the tables that leave room");
+  assert.ok(
+    /activeEditableCell === repsKey/.test(setList) && /isSteppableSet\(set\)\s*&&\s*isPersistedSet\(set\.sets_id\)/.test(setList),
+    "while the reps are edited, and not on a finished or failed set"
+  );
+  assert.ok(
+    /\{cell\}\s*\{showCarousel \? \(/.test(setList),
+    "the cell stays in one holder, carousel or not, so the field is not remounted and keeps its focus"
+  );
+  assert.ok(/REPS_SWIPE_SAVE_DELAY_MS/.test(setList) && /flushRepsRef\.current\?\.\(\)/.test(setList), "saved once after the swipe, and on the way out");
+  assert.ok(/discardRepsDraft\(set\.sets_id\);\s*return updateField\("reps"/.test(setList), "what is typed wins over a swipe still waiting");
+  assert.ok(/onLiveChange: \(text\) => setTypedReps/.test(setList), "the carousel shows what is being typed");
+  assert.ok(/suffix=\{repsSuffix\}/.test(setList), "an AMRAP set keeps its suffix");
+
+  const carouselSource = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/RepsCarousel.js");
+
+  assert.ok(
+    /Math\.abs\(gesture\.dx\) > 6 && Math\.abs\(gesture\.dx\) > Math\.abs\(gesture\.dy\)/.test(carouselSource),
+    "it claims a gesture only when it is sideways, so the table still scrolls"
+  );
+  assert.ok(
+    /accessibilityRole="adjustable"/.test(carouselSource) && /accessibilityValue=\{\{ now: numbers\.current \}\}/.test(carouselSource),
+    "adjustable for a screen reader"
+  );
+  assert.ok(/name: "increment"/.test(carouselSource) && /name: "decrement"/.test(carouselSource) && /name: "activate"/.test(carouselSource));
+  assert.ok(!/expo-blur|react-native-community\/blur/.test(carouselSource), "no blur dependency");
   assert.ok(/setEditorBar\.close\(barOwnerId\)/.test(setList), "the set list's own bar is closed when it goes away");
   assert.ok(/cellControlsRef\.current\.get\(`\$\{setId\}:weight`\)\?\.commit/.test(setList), "a press saves what is typed before it steps");
   assert.ok(
@@ -496,7 +562,7 @@ function createCloud() {
   // The strings, in both languages.
   const i18n = loadAppModule("src/Localization/i18n.js");
 
-  for (const key of ["weightBarLabel", "weightStepField", "weightMinus", "weightPlus"]) {
+  for (const key of ["weightBarLabel", "weightStepField", "weightMinus", "weightPlus", "repsCarouselLabel"]) {
     for (const language of ["en", "da"]) {
       const text = i18n.translate(`workout.setList.${key}`, { label: "3", step: "2" }, language);
 
@@ -505,9 +571,10 @@ function createCloud() {
   }
 
   assert.strictEqual(i18n.translate("workout.setList.weightBarLabel", { label: "3" }, "en"), "Edit weight for set 3");
+  assert.strictEqual(i18n.translate("workout.setList.repsCarouselLabel", { label: "3" }, "en"), "Reps for set 3");
 
   console.log(
-    "Set editors: the step field's rules, the bar's lifecycle, the step kept per exercise and synced (also 0 for automatic, a null from the cloud, a cloud without the column), the lock screen's step, and the wiring passed."
+    "Set editors: the step field's rules, the reps carousel's numbers and swipe, the bar's lifecycle, the step kept per exercise and synced (also 0 for automatic, a null from the cloud, a cloud without the column), the lock screen's step, and the wiring passed."
   );
 })().catch((error) => {
   console.error(error);

@@ -28,6 +28,9 @@ const ThemedEditableCell = ({
   // not: the bar over the keyboard saves what is typed here before a press of
   // plus or minus steps from it.
   registerControl = null,
+  // Called with the text as it is typed, before it is committed: the reps
+  // carousel shows what is being typed under it.
+  onLiveChange = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -77,7 +80,10 @@ const ThemedEditableCell = ({
       return undefined;
     }
 
-    registerControl({ commit: () => commitRef.current?.() });
+    registerControl({
+      commit: () => commitRef.current?.(),
+      focus: () => inputRef.current?.focus(),
+    });
 
     return () => registerControl(null);
   }, []);
@@ -137,7 +143,10 @@ const ThemedEditableCell = ({
         // well, and the commit above is then a no-op, but on a numeric keypad
         // it does not always.
         onSubmitEditing={() => commitRef.current?.()}
-        onChangeText={setLocalValue}
+        onChangeText={(text) => {
+          setLocalValue(text);
+          onLiveChange?.(text);
+        }}
         keyboardType={keyboardType}
         style={[
           styles.input,

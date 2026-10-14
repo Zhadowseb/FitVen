@@ -56,16 +56,19 @@ import {
   orderSetsForDisplay,
   resolveSetType,
 } from "@utils/setTypes";
+import { repsAsNumber } from "@utils/repsCarousel";
 import { newSetEditorOwnerId, setEditorBar } from "@utils/setEditorBar";
 import {
   DEFAULT_WEIGHT_STEP,
   createWeightDrafts,
   isSteppableSet,
   parseWeightStepInput,
+  showsSetEditors,
   showsWeightStepper,
   stepWeight,
   weightStepToStore,
 } from "@utils/weightStep";
+import RepsCarousel from "./RepsCarousel";
 import SetTypeSheet from "./SetTypeSheet";
 import UndoToast from "./UndoToast";
 import { isToneRow, setTypeColor } from "./setTypeColors";
@@ -109,6 +112,9 @@ const WEIGHT_STEP_SAVE_DELAY_MS = 400;
 const WEIGHT_STEP_REPEAT_DELAY_MS = 500;
 const WEIGHT_STEP_REPEAT_INTERVAL_MS = 150;
 const WEIGHT_STEP_HAPTIC_MS = 8;
+// Reps swiped on the carousel are saved this long after the last number
+// passed, so a swipe over five reps is one write.
+const REPS_SWIPE_SAVE_DELAY_MS = 400;
 
 // What the person last did by hand to an exercise's warm-ups, "open" or
 // "folded", kept for the session. Opened by hand, they no longer fold by
@@ -301,6 +307,15 @@ const SetList = ({
   // save what is typed in the weight field before it steps from it.
   const cellControlsRef = useRef(new Map());
   const [weightBarSetId, setWeightBarSetId] = useState(null);
+  // The reps carousel: the count a swipe has put on screen before it is saved,
+  // by set, and the text being typed in the reps field under it.
+  const [repsDrafts, setRepsDrafts] = useState({});
+  const [typedReps, setTypedReps] = useState(null);
+  const repsSaveTimerRef = useRef(null);
+  const repsDraftsRef = useRef({});
+  const flushRepsRef = useRef(null);
+
+  repsDraftsRef.current = repsDrafts;
   const flushWeightStepsRef = useRef(null);
   const localSetsRef = useRef(sets);
   const mountedRef = useRef(true);
@@ -1159,10 +1174,72 @@ const SetList = ({
       mountedRef.current = false;
       stopWeightRepeat();
       flushWeightStepsRef.current?.();
+      flushRepsRef.current?.();
       setEditorBar.close(barOwnerId);
     },
     []
   );
+
+  /* ------------------------------------------------ the reps carousel -- */
+
+  const discardRepsDraft = (setId) => {
+    clearTimeout(repsSaveTimerRef.current);
+    repsSaveTimerRef.current = null;
+    setRepsDrafts((current) => {
+      if (!(setId in current)) {
+        return current;
+      }
+
+      const { [setId]: _gone, ...rest } = current;
+
+      return rest;
+    });
+  };
+
+  // Leaving with a swipe not saved yet saves it now.
+  flushRepsRef.current = () => {
+    clearTimeout(repsSaveTimerRef.current);
+    repsSaveTimerRef.current = null;
+
+    for (const [setId, reps] of Object.entries(repsDraftsRef.current)) {
+      void updateField("reps", String(reps), Number(setId));
+    }
+  };
+
+  // A number passed on the carousel: on screen at once with a light tap, and
+  // saved once the swiping has stopped.
+  const swipeReps = (setId, next) => {
+    const reps = repsAsNumber(next);
+
+    Vibration.vibrate(WEIGHT_STEP_HAPTIC_MS);
+    setTypedReps(null);
+    setRepsDrafts((current) => ({ ...current, [setId]: reps }));
+    clearTimeout(repsSaveTimerRef.current);
+    repsSaveTimerRef.current = setTimeout(async () => {
+      repsSaveTimerRef.current = null;
+      const pending = repsDraftsRef.current[setId];
+
+      if (pending === undefined) {
+        return;
+      }
+
+      try {
+        await updateField("reps", String(pending), setId);
+      } finally {
+        if (mountedRef.current) {
+          setRepsDrafts((current) => {
+            if (current[setId] !== pending) {
+              return current;
+            }
+
+            const { [setId]: _gone, ...rest } = current;
+
+            return rest;
+          });
+        }
+      }
+    }, REPS_SWIPE_SAVE_DELAY_MS);
+  };
 
   /* ------------------------------------------- the bar over the keyboard -- */
 
@@ -1415,19 +1492,63 @@ const SetList = ({
         const isAmrap = setType === "amrap";
         const target =
           Number(set.amrap_target) > 0 ? Number(set.amrap_target) : null;
-
-        return renderEditableValue({
-          cellKey: `${set.sets_id}:reps`,
-          onFocus: () => setEditorBar.close(),
-          value: set.reps?.toString() ?? "",
-          // "9/6+": nine done against a target of six or more.
-          suffix: isAmrap ? (target ? `/${target}+` : "AMRAP") : "",
+        const repsKey = `${set.sets_id}:reps`;
+        // "9/6+": nine done against a target of six or more.
+        const repsSuffix = isAmrap ? (target ? `/${target}+` : "AMRAP") : "";
+        const draft = repsDrafts[set.sets_id];
+        const cell = renderEditableValue({
+          cellKey: repsKey,
+          value: (draft ?? set.reps)?.toString() ?? "",
+          suffix: repsSuffix,
           suffixStyle: isAmrap
             ? [styles.typeNote, { color: theme.amrap }]
             : undefined,
           showSuffixWhenEmpty: isAmrap,
-          onCommit: (value) => updateField("reps", value, set.sets_id),
+          onFocus: () => {
+            setEditorBar.close();
+            setTypedReps(null);
+          },
+          onBlur: () => setTypedReps(null),
+          onLiveChange: (text) => setTypedReps({ key: repsKey, text }),
+          onCommit: (value) => {
+            // What is typed wins over a swipe still waiting to be saved.
+            discardRepsDraft(set.sets_id);
+            return updateField("reps", value, set.sets_id);
+          },
         });
+        const showCarousel =
+          activeEditableCell === repsKey &&
+          showsSetEditors(resolvedVisibleColumns) &&
+          isSteppableSet(set) &&
+          isPersistedSet(set.sets_id);
+
+        const shownReps =
+          typedReps?.key === repsKey ? typedReps.text : draft ?? set.reps;
+
+        // The cell always sits in the same holder, carousel or not: moving it
+        // under a new parent when the carousel appears would remount the field
+        // and take the focus - and the keyboard - away.
+        return (
+          <View style={styles.repsCarouselHost}>
+            {cell}
+            {showCarousel ? (
+            <RepsCarousel
+              value={shownReps}
+              onChange={(next) => swipeReps(set.sets_id, next)}
+              suffix={repsSuffix}
+              suffixColor={isAmrap ? theme.amrap : undefined}
+              surface={cellSurface}
+              borderColor={primaryColor}
+              textColor={theme.title ?? theme.text}
+              quietColor={theme.text}
+              accessibilityLabel={t("workout.setList.repsCarouselLabel", {
+                label: labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? ""),
+              })}
+              onActivate={() => cellControlsRef.current.get(repsKey)?.focus?.()}
+            />
+            ) : null}
+          </View>
+        );
       }
 
       case "rpe":

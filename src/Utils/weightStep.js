@@ -105,15 +105,24 @@ export function isSteppableSet(set) {
 // the table is as it was.
 export const WEIGHT_STEPPER_COLUMNS = Object.freeze(["rest", "set", "reps", "weight", "done"]);
 
+/**
+ * Whether the set editors - the weight bar and the reps carousel - are for
+ * this table: only with the columns that leave room for them, so a table with
+ * a note, RPE or 1RM % is as it was.
+ */
+export function showsSetEditors(visibleColumns) {
+  return Object.keys(visibleColumns ?? {}).every(
+    (key) => !visibleColumns[key] || WEIGHT_STEPPER_COLUMNS.includes(key)
+  );
+}
+
 /** Whether the set list shows the steppers for these visible columns. */
 export function showsWeightStepper(visibleColumns, { weightMode = null } = {}) {
   if (!visibleColumns?.weight || weightMode === "bodyweight") {
     return false;
   }
 
-  return Object.keys(visibleColumns).every(
-    (key) => !visibleColumns[key] || WEIGHT_STEPPER_COLUMNS.includes(key)
-  );
+  return showsSetEditors(visibleColumns);
 }
 
 /**

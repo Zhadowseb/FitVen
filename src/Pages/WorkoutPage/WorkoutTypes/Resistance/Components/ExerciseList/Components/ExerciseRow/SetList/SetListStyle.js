@@ -158,6 +158,14 @@ export default StyleSheet.create({
         marginLeft: 3,
     },
     // Joins a drop set to the set above it, through the rest column.
+    // Holds the reps cell and, over it, the carousel while it is edited.
+    repsCarouselHost: {
+        width: "100%",
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "visible",
+    },
     dropConnector: {
         position: "absolute",
         top: "-50%",

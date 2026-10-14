@@ -3,6 +3,7 @@
 - **A weight you have typed is saved before minus or plus steps from it,** so 102,5 + one step is 105, not the old weight plus one step.
 
 ### Added
+- **A small carousel over the reps while you edit them:** the number before, the number now and the number after (7 · **8** · 9). Swipe it sideways and each number passed is one rep, with a light tap; it saves once when you stop, and never goes below 0. Typing in the field still works, and the carousel shows what you type. An AMRAP set keeps its target (`9/6+`) in the box. It is not there for a finished or failed set, or in a table with note, RPE or 1RM % columns. A screen reader adjusts it with swipe up and down and double-tap types.
 - **The step is yours to set, per exercise.** Type it in the bar's field (`1,25` or `1.25`; 0.25 to 50, rounded to a quarter kilo) and every workout and the lock-screen card use it for that exercise from then on. Empty the field and the automatic step (2 for dumbbells, 5 for machines, cables, squats and deadlifts, 2.5 otherwise) is back.
 - **The step follows you to a new phone** for catalogue exercises: `exercise_column_preferences.weight_step`, synced like the weight mode. A custom exercise's stays on the phone.
 
