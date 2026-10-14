@@ -13,7 +13,11 @@ import { clampRepsDrag, repsCarouselItems, settleReps } from "@utils/repsCarouse
 // saves it a moment later. Typing in the field above still works, and the
 // carousel shows what is typed.
 //
-// It claims a gesture only when it is more sideways than up and down.
+// It takes hold of the finger the moment it touches, anywhere in the middle of
+// the toolbar and not only on the box: waiting for a sideways move of a few
+// pixels, and for it to be clearly more sideways than up, let a thumb's slightly
+// curved start slip past it. Nothing else in the toolbar's middle needs the
+// touch.
 
 // How far apart the numbers are, and so how far a finger goes for one rep.
 export const REPS_ITEM_SPACING_PX = 44;
@@ -83,8 +87,8 @@ export default function RepsCarousel({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_event, gesture) =>
-          Math.abs(gesture.dx) > 6 && Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5,
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           slide.stopAnimation();
@@ -133,6 +137,7 @@ export default function RepsCarousel({
   return (
     <View
       {...panResponder.panHandlers}
+      style={styles.touchArea}
       accessible
       accessibilityRole="adjustable"
       accessibilityLabel={accessibilityLabel}
@@ -153,8 +158,8 @@ export default function RepsCarousel({
           onActivate?.();
         }
       }}
-      style={[styles.box, { borderColor }]}
     >
+      <View style={[styles.box, { borderColor }]} pointerEvents="none">
       <Animated.View style={[styles.strip, { transform: [{ translateX: slide }] }]}>
         {items.map((item) => {
           const { opacity, scale } = emphasis(slide, item.offset);
@@ -184,11 +189,19 @@ export default function RepsCarousel({
           );
         })}
       </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // The whole middle of the toolbar, so a thumb does not have to find the box.
+  touchArea: {
+    flex: 1,
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   box: {
     width: BOX_WIDTH,
     height: BOX_HEIGHT,

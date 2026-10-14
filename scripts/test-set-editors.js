@@ -551,8 +551,8 @@ function createCloud() {
   const carouselSource = read("src/Resources/Components/SetEditorBar/RepsCarousel.js");
 
   assert.ok(
-    /Math\.abs\(gesture\.dx\) > 6 && Math\.abs\(gesture\.dx\) > Math\.abs\(gesture\.dy\)/.test(carouselSource),
-    "it claims a gesture only when it is sideways, so the table still scrolls"
+    /onStartShouldSetPanResponder: \(\) => true/.test(carouselSource) && /touchArea: \{\s*flex: 1,/.test(carouselSource),
+    "it takes hold of the finger at once, anywhere in the middle of the toolbar - a thumb does not have to find the box, and a curved start does not slip past"
   );
   assert.ok(
     /accessibilityRole="adjustable"/.test(carouselSource) && /accessibilityValue=\{\{ now: current \}\}/.test(carouselSource),
