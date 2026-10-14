@@ -1211,7 +1211,6 @@ const SetList = ({
   const swipeReps = (setId, next) => {
     const reps = repsAsNumber(next);
 
-    Vibration.vibrate(WEIGHT_STEP_HAPTIC_MS);
     setEditorBar.update(barOwnerId, setId, { reps });
     setRepsDrafts((current) => ({ ...current, [setId]: reps }));
     clearTimeout(repsSaveTimerRef.current);
@@ -1364,6 +1363,9 @@ const SetList = ({
       reps: repsDrafts[setId] ?? set.reps,
       suffix,
       onChangeReps: (next) => barApiRef.current.swipe(setId, next),
+      // The number the carousel is passing, in the cell, before it is saved.
+      onPreviewReps: (next) =>
+        cellControlsRef.current.get(`${setId}:reps`)?.preview?.(String(next)),
       onActivate: () => cellControlsRef.current.get(`${setId}:reps`)?.focus?.(),
     });
   };

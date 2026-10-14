@@ -69,6 +69,7 @@ function RepsBarContent({ bar }) {
       <RepsCarousel
         value={bar.reps}
         onChange={bar.onChangeReps}
+        onPreview={bar.onPreviewReps}
         suffix={bar.suffix}
         suffixColor={theme.amrap}
         borderColor={theme.primary}

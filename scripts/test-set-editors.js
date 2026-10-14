@@ -83,51 +83,36 @@ assert.strictEqual(carousel.repsAsNumber(""), 0);
 assert.strictEqual(carousel.repsAsNumber(null), 0);
 assert.strictEqual(carousel.repsAsNumber("abc"), 0);
 assert.strictEqual(carousel.repsAsNumber(-3), 0);
-// The strip: three numbers on each side of the one now, two of them showing.
-assert.deepStrictEqual(
-  carousel.repsCarouselItems(8).map((item) => item.value),
-  [5, 6, 7, 8, 9, 10, 11],
-  "two each side show (6 7 8 9 10); the outer ones are there so the strip slides in without a gap"
-);
-assert.deepStrictEqual(carousel.repsCarouselItems(8).map((item) => item.offset), [-3, -2, -1, 0, 1, 2, 3]);
-assert.deepStrictEqual(
-  carousel.repsCarouselItems("12").map((item) => item.value),
-  [9, 10, 11, 12, 13, 14, 15],
-  "typed 12: 10 11 12 13 14"
-);
-assert.deepStrictEqual(
-  carousel.repsCarouselItems(1).map((item) => item.value),
-  [null, null, 0, 1, 2, 3, 4],
-  "nothing under 0"
-);
-assert.deepStrictEqual(carousel.repsCarouselItems("").map((item) => item.value), [null, null, null, 0, 1, 2, 3]);
+// The strip goes on as far as a finger does: the numbers to draw around the one
+// in the middle, none under 0. Two show on each side; the rest are the buffer.
+assert.deepStrictEqual(carousel.visibleRepsWindow(8, 6), [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+assert.deepStrictEqual(carousel.visibleRepsWindow("12", 2), [10, 11, 12, 13, 14], "typed 12");
+assert.deepStrictEqual(carousel.visibleRepsWindow(1, 3), [0, 1, 2, 3, 4], "nothing under 0");
+assert.deepStrictEqual(carousel.visibleRepsWindow("", 2), [0, 1, 2], "nothing typed is 0");
 
-// While the finger is down the strip follows it freely, to the left as far as
-// it goes and to the right only as far as 0 (with a little give).
-assert.strictEqual(carousel.clampRepsDrag(8, -500, 44), -500, "towards more: free");
-assert.strictEqual(carousel.clampRepsDrag(8, 100, 44), 100, "towards fewer: as far as there are numbers");
-assert.strictEqual(carousel.clampRepsDrag(2, 400, 44), 2 * 44 + 44 * 0.3, "no further than 0 and a little give");
-assert.strictEqual(carousel.clampRepsDrag(0, 90, 44), 44 * 0.3);
+// Where the strip is while a finger drags it: freely to the left, to the right
+// only as far as 0 and a little give. It starts from where the strip was, which
+// is not a whole number when a finger lands on a strip that is still gliding.
+assert.strictEqual(carousel.scrollPositionFor(8 * 44, -500, 44), 8 * 44 + 500, "towards more: free, as far as the finger goes");
+assert.strictEqual(carousel.scrollPositionFor(8 * 44, 100, 44), 8 * 44 - 100, "towards fewer: with the finger");
+assert.strictEqual(carousel.scrollPositionFor(2 * 44, 400, 44), -44 * 0.3, "no further than 0 and a little give");
+assert.strictEqual(carousel.scrollPositionFor(0, 90, 44), -44 * 0.3);
+assert.strictEqual(carousel.scrollPositionFor(8.4 * 44, -10, 44), 8.4 * 44 + 10, "from a strip that was between two numbers");
 
-// Letting go: the nearest number - a drag of 70 px at 44 px a number is 1.6
-// numbers: it settles on 2, not on a number it has not reached.
-assert.strictEqual(carousel.settleReps(8, -70, 0, 44).reps, 10, "left is more; 1.6 rounds to 2");
-assert.strictEqual(carousel.settleReps(8, -60, 0, 44).reps, 9, "1.36 rounds to 1");
-assert.strictEqual(carousel.settleReps(8, -21, 0, 44).reps, 8, "under half a number: back where it was");
-assert.strictEqual(carousel.settleReps(8, 70, 0, 44).reps, 6, "right is fewer");
-assert.strictEqual(carousel.settleReps(1, 300, 0, 44).reps, 0, "never below 0");
-assert.strictEqual(carousel.settleReps(0, 90, 0, 44).reps, 0);
-// A flick carries it further than the same slow drag.
-assert.ok(carousel.settleReps(8, -60, -1.5, 44).reps > carousel.settleReps(8, -60, 0, 44).reps, "a fast flick goes further");
-assert.strictEqual(carousel.settleReps(8, -60, 0.4, 44).reps, 8, "released while moving back: it carries that way");
-// Where the strip is drawn once the new count is in the middle: the place it
-// was let go at, so it can glide the rest of the way.
-assert.strictEqual(carousel.settleReps(8, -70, 0, 44).offset, -70 + 2 * 44, "1.6 numbers dragged, 2 settled: 18 px to glide");
-assert.strictEqual(carousel.settleReps(8, -21, 0, 44).offset, -21, "settling where it was: the drag to glide back from");
-assert.ok(
-  Math.abs(carousel.settleReps(8, -400, -0.9, 44).offset) <= 44 / 2 + 120 * 0.9,
-  "the glide to go is at most half a number plus the push of the flick"
-);
+// The count at a position, for as long as a number is in the middle.
+assert.strictEqual(carousel.repsAtScroll(8 * 44, 44), 8);
+assert.strictEqual(carousel.repsAtScroll(8.49 * 44, 44), 8);
+assert.strictEqual(carousel.repsAtScroll(8.51 * 44, 44), 9, "the number passes the middle half way between two");
+assert.strictEqual(carousel.repsAtScroll(-0.3 * 44, 44), 0, "never below 0");
+assert.strictEqual(carousel.repsAtScroll(400 * 44, 44), 400, "as far as a finger goes");
+
+// Letting go: the nearest number, pushed on by how fast it was going.
+assert.strictEqual(carousel.settledReps(10 * 44, 0, 44), 10);
+assert.strictEqual(carousel.settledReps(9.6 * 44, 0, 44), 10, "9.6 rounds to 10");
+assert.strictEqual(carousel.settledReps(9.4 * 44, 0, 44), 9);
+assert.ok(carousel.settledReps(9.4 * 44, -1.5, 44) > carousel.settledReps(9.4 * 44, 0, 44), "a fast flick left goes further");
+assert.ok(carousel.settledReps(9.4 * 44, 1.5, 44) < carousel.settledReps(9.4 * 44, 0, 44), "released while moving right: it carries that way");
+assert.strictEqual(carousel.settledReps(0.5 * 44, 2, 44), 0, "never below 0, however hard");
 
 {
   const columns = (keys) =>
@@ -566,6 +551,7 @@ function createCloud() {
     "the carousel shows what is being typed"
   );
   assert.ok(/setEditorBar\.close\(barOwnerId, repsBarSetId\)/.test(setList), "ticking the set off closes the carousel");
+  assert.ok(/onPreviewReps: \(next\) =>\s*cellControlsRef\.current\.get\(`\$\{setId\}:reps`\)\?\.preview\?\.\(String\(next\)\)/.test(setList) && /preview: \(text\) => setLocalValue\(text\)/.test(read("src/Resources/ThemedComponents/ThemedEditableCell.js")), "the number the carousel is passing shows in the cell without a render of the set list");
 
   const carouselSource = read("src/Resources/Components/SetEditorBar/RepsCarousel.js");
 
@@ -581,11 +567,14 @@ function createCloud() {
   assert.ok(!/expo-blur|react-native-community\/blur/.test(carouselSource), "no blur dependency");
   const moveHandler = carouselSource.match(/onPanResponderMove: \([^)]*\) => \{[\s\S]*?\n        \},/)[0];
 
-  assert.ok(!/onChangeRef|Vibration|settleReps/.test(moveHandler), "while the finger is down the strip only follows it: nothing is changed, saved or tapped");
-  assert.ok(/clampRepsDrag\(/.test(moveHandler), "and it cannot be dragged past 0");
-  assert.ok(/onPanResponderRelease[\s\S]*settleReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count changes when the finger lets go");
-  assert.ok(/pendingRef\.current && |pending && pending\.reps === current/.test(carouselSource) || /pending\.reps === current/.test(carouselSource), "the strip waits for the new count before it glides home");
-  assert.ok(/const SPREAD = 3;/.test(carouselSource), "two numbers each side show, and one more is there to slide in");
+  assert.ok(!/onChangeRef|Vibration|onPreview|setMiddle/.test(moveHandler), "while the finger is down the move handler only moves the strip: ticks, the cell and the window follow it from a listener, and nothing is saved");
+  assert.ok(/scroll\.setValue\(\s*scrollPositionFor\(/.test(moveHandler), "the strip is its own value, set straight from the finger, and cannot be dragged past 0");
+  assert.ok(/scroll\.addListener\(/.test(carouselSource) && /Vibration\.vibrate\(TICK_MS\)/.test(carouselSource) && /onPreviewRef\.current\?\.\(reps\)/.test(carouselSource), "every number that passes the middle ticks and shows in the cell");
+  assert.ok(/activeRef\.current\)\s*\{\s*Vibration/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
+  assert.ok(/onPanResponderRelease[\s\S]*settledReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count is handed over when the strip has settled");
+  assert.ok(/onPanResponderTerminate[\s\S]*onPreviewRef\.current\?\.\(dragRef\.current\.startReps\)/.test(carouselSource), "a drag that is taken away puts the cell back");
+  assert.ok(/const SPREAD = 6;/.test(carouselSource) && /visibleRepsWindow\(middle, SPREAD\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to");
+  assert.ok(/dragRef\.current\.startScroll = positionRef\.current/.test(carouselSource), "a finger that lands on a gliding strip takes it from where it is");
   assert.ok(
     /onPanResponderGrant[\s\S]*setEditorBar\.setDragging\(true\)/.test(carouselSource) &&
       /onPanResponderRelease[\s\S]*setEditorBar\.setDragging\(false\)/.test(carouselSource) &&

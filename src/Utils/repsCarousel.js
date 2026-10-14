@@ -1,9 +1,11 @@
-// What the reps carousel shows and what a swipe does to the count. Pure, so
+// What the reps carousel shows and what a drag does to the count. Pure, so
 // scripts/test-set-editors.js loads it.
 //
-// The carousel is a strip of numbers that follows the finger while it is down,
-// like scrolling a page, and settles on one number when it lets go - only
-// then does the count change.
+// The carousel is a strip of numbers laid out side by side - the reps n at
+// n * step pixels - and a scroll position that says which part of it is in
+// the middle. A finger moves the position freely, like scrolling a page, and
+// every number that passes the middle is the count for as long as it is there;
+// letting go settles on the nearest one.
 
 /** The reps as a whole number: typed text, a stored number or nothing (0). */
 export function repsAsNumber(value) {
@@ -17,53 +19,43 @@ export function repsAsNumber(value) {
 }
 
 /**
- * The numbers of the strip around the one now: `spread` on each side (the two
- * beside it show, the next one is only there so the strip slides in without a
- * gap). Under 0 there is nothing - `value` is null, drawn as a blank.
- * [{ offset: -3, value: null }, ..., { offset: 0, value: 8 }, ...]
+ * Where the strip is when a finger that landed with it at `startScroll` has
+ * moved `dx` pixels (negative to the left): left shows more reps, right fewer,
+ * and not further right than 0 and a little give, so the end of the strip is
+ * felt. The finger may have landed on a strip that was still gliding, so this
+ * starts from where it was and not from a count.
  */
-export function repsCarouselItems(value, spread = 3) {
-  const current = repsAsNumber(value);
-  const items = [];
-
-  for (let offset = -spread; offset <= spread; offset += 1) {
-    const reps = current + offset;
-
-    items.push({ offset, value: reps >= 0 ? reps : null });
-  }
-
-  return items;
+export function scrollPositionFor(startScroll, dx, stepPx) {
+  return Math.max(-stepPx * 0.3, Number(startScroll) - dx);
 }
 
-/**
- * How far the strip may follow a finger that has moved `dx` pixels, `stepPx`
- * to a number: freely towards more reps, and towards fewer only as far as 0
- * (with a little give, so the end of the strip is felt).
- */
-export function clampRepsDrag(startReps, dx, stepPx) {
-  const start = repsAsNumber(startReps);
-  const farthestRight = start * stepPx + stepPx * 0.3;
-
-  return Math.min(dx, farthestRight);
+/** The count at a scroll position: the number nearest to the middle, never below 0. */
+export function repsAtScroll(scroll, stepPx) {
+  return Math.max(0, Math.round(Number(scroll) / stepPx));
 }
 
 /**
  * Where a drag settles when the finger lets go: the number nearest to where
- * the strip is, pushed on a little by how fast it was moving (`vx`, pixels
- * per millisecond, negative to the left) - so a flick goes further than a
- * slow drag. Left is more, right is fewer, never below 0, whole reps.
- *
- * `offset` is where the strip is drawn from the middle once the new count is
- * in the middle: the same place on screen it was let go at, so it can glide the
- * rest of the way.
+ * the strip is, pushed on a little by how fast it was going (`vx`, pixels per
+ * millisecond, negative to the left - towards more reps) so a flick goes
+ * further than a slow drag.
  */
-export function settleReps(startReps, dx, vx, stepPx) {
-  const start = repsAsNumber(startReps);
-  const dragged = clampRepsDrag(start, dx, stepPx);
-  const projected = dragged + (Number(vx) || 0) * 120;
-  const passed = Math.round(-projected / stepPx);
-  const reps = Math.max(0, start + passed);
-  const settledPassed = reps - start;
+export function settledReps(scroll, vx, stepPx) {
+  return repsAtScroll(Number(scroll) - (Number(vx) || 0) * 120, stepPx);
+}
 
-  return { reps, offset: dragged + settledPassed * stepPx };
+/**
+ * The numbers to draw around `centre`: `spread` on each side, none under 0. Two
+ * of them show on each side; the rest are the buffer that lets a fast drag
+ * run ahead of the next render without ever showing a gap.
+ */
+export function visibleRepsWindow(centre, spread) {
+  const middle = repsAsNumber(centre);
+  const numbers = [];
+
+  for (let reps = Math.max(0, middle - spread); reps <= middle + spread; reps += 1) {
+    numbers.push(reps);
+  }
+
+  return numbers;
 }

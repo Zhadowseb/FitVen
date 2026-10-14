@@ -1,49 +1,48 @@
-import { useEffect, useMemo, useRef } from "react";
-import { Animated, PanResponder, StyleSheet, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Easing, PanResponder, StyleSheet, Vibration, View } from "react-native";
 
 import ThemedText from "../../ThemedComponents/ThemedText";
-import { clampRepsDrag, repsCarouselItems, settleReps } from "@utils/repsCarousel";
+import {
+  repsAsNumber,
+  repsAtScroll,
+  scrollPositionFor,
+  settledReps,
+  visibleRepsWindow,
+} from "@utils/repsCarousel";
 import { setEditorBar } from "@utils/setEditorBar";
 
 // The carousel in the bar over the keyboard while the reps of a set are
 // edited: the number now in the middle and two on each side - 6 · 7 · 8 · 9 ·
-// 10. While a finger is down the numbers follow it, smoothly, like scrolling a
-// page; nothing snaps and nothing is saved. When the finger lets go the strip
-// settles on the nearest number (a flick carries it a little further), and only
-// then is onChange called with the new count. The set list shows it at once and
-// saves it a moment later. Typing in the field above still works, and the
-// carousel shows what is typed.
+// 10 - on a strip that goes on as far as a finger does.
+//
+// While a finger is down the strip follows it freely, like scrolling a page.
+// Every number that passes the middle is the count for as long as it is there:
+// the cell shows it at once (onPreview) and the phone ticks once - nothing is
+// saved yet, and none of it holds up the scroll: the numbers move on their own
+// values, and what is handed to the screen is one small cell. Letting go
+// settles the strip on the nearest number (a flick carries it further), and
+// only then is onChange called with the count, to be saved. Typing in the field
+// above still works, and the carousel follows what is typed.
 //
 // It takes hold of the finger the moment it touches, anywhere in the middle of
-// the toolbar and not only on the box: waiting for a sideways move of a few
-// pixels, and for it to be clearly more sideways than up, let a thumb's slightly
-// curved start slip past it. Nothing else in the toolbar's middle needs the
-// touch.
+// the toolbar and not only on the box, and the page behind it does not scroll
+// while a finger is on it (ThemedKeyboardProtection): only the sideways part of
+// a drag moves the strip, so the finger can wander up and down the screen.
 
 // How far apart the numbers are, and so how far a finger goes for one rep.
 export const REPS_ITEM_SPACING_PX = 44;
-const SPREAD = 3;
+// Numbers drawn on each side of the middle. Two show; the others are the buffer.
+const SPREAD = 6;
 const BOX_WIDTH = 232;
 const BOX_HEIGHT = 34;
 const ITEM_WIDTH = 40;
-
-// The emphasis of a number follows how near the middle it is, as the strip
-// moves: the one in the middle is biggest and brightest, the next two smaller
-// and fainter. No blur on text in React Native: size and opacity stand in.
-function emphasis(slide, offset) {
-  const centre = -offset * REPS_ITEM_SPACING_PX;
-  const step = REPS_ITEM_SPACING_PX;
-  const inputRange = [centre - 2 * step, centre - step, centre, centre + step, centre + 2 * step];
-
-  return {
-    opacity: slide.interpolate({ inputRange, outputRange: [0.25, 0.5, 1, 0.5, 0.25], extrapolate: "clamp" }),
-    scale: slide.interpolate({ inputRange, outputRange: [0.8, 0.9, 1.25, 0.9, 0.8], extrapolate: "clamp" }),
-  };
-}
+// One short tick for every number that becomes the count.
+const TICK_MS = 8;
 
 export default function RepsCarousel({
   value,
   onChange,
+  onPreview,
   suffix = "",
   suffixColor,
   borderColor,
@@ -51,45 +50,118 @@ export default function RepsCarousel({
   accessibilityLabel,
   onActivate,
 }) {
-  const items = repsCarouselItems(value, SPREAD);
-  const current = items[SPREAD].value;
+  const current = repsAsNumber(value);
+  // The strip's position, in pixels: the reps n are in the middle at n * step.
+  const scroll = useRef(new Animated.Value(current * REPS_ITEM_SPACING_PX)).current;
+  // The number in the middle now, which is also where the drawn window is
+  // centred. Changes while a finger drags; the strip itself does not wait for it.
+  const [middle, setMiddle] = useState(current);
+  const middleRef = useRef(current);
   const valueRef = useRef(current);
   const onChangeRef = useRef(onChange);
-  const slide = useRef(new Animated.Value(0)).current;
-  const dragRef = useRef({ startValue: 0 });
-  // A settle waiting for the new count to arrive: the strip stays where the
-  // finger left it until the numbers are re-centred on it, then glides home.
-  const pendingRef = useRef(null);
+  const onPreviewRef = useRef(onPreview);
+  const dragRef = useRef({ startReps: current, startScroll: current * REPS_ITEM_SPACING_PX });
+  // Where the strip is, whoever moves it.
+  const positionRef = useRef(current * REPS_ITEM_SPACING_PX);
+  // True from the finger landing until the strip has settled and the count has
+  // been handed over: ticks and previews belong to it, and the strip is not put
+  // back to the saved count in the meantime.
+  const activeRef = useRef(false);
+  const itemStyleCache = useRef(new Map());
 
   valueRef.current = current;
   onChangeRef.current = onChange;
+  onPreviewRef.current = onPreview;
 
-  const glideHome = () =>
-    Animated.spring(slide, {
-      toValue: 0,
-      useNativeDriver: true,
-      bounciness: 3,
-      speed: 14,
-    }).start();
+  // Each number's own look: where it is, and how bright and big - biggest in the
+  // middle, fainter towards the edges (no blur on text in React Native).
+  const styleFor = (reps) => {
+    const cached = itemStyleCache.current.get(reps);
 
+    if (cached) {
+      return cached;
+    }
+
+    const step = REPS_ITEM_SPACING_PX;
+    const here = reps * step;
+    const base = BOX_WIDTH / 2 - ITEM_WIDTH / 2 + here;
+    const inputRange = [here - 2 * step, here - step, here, here + step, here + 2 * step];
+    const made = {
+      opacity: scroll.interpolate({ inputRange, outputRange: [0.25, 0.5, 1, 0.5, 0.25], extrapolate: "clamp" }),
+      transform: [
+        { translateX: scroll.interpolate({ inputRange: [0, 1], outputRange: [base, base - 1] }) },
+        { scale: scroll.interpolate({ inputRange, outputRange: [0.8, 0.9, 1.25, 0.9, 0.8], extrapolate: "clamp" }) },
+      ],
+    };
+
+    itemStyleCache.current.set(reps, made);
+
+    return made;
+  };
+
+  // The number in the middle follows the strip, whoever moves it.
   useEffect(() => {
-    const pending = pendingRef.current;
+    const id = scroll.addListener(({ value: position }) => {
+      positionRef.current = position;
 
-    if (pending && pending.reps === current) {
-      pendingRef.current = null;
-      clearTimeout(pending.timer);
-      slide.setValue(pending.offset);
-      glideHome();
+      const reps = repsAtScroll(position, REPS_ITEM_SPACING_PX);
+
+      if (reps === middleRef.current) {
+        return;
+      }
+
+      middleRef.current = reps;
+      setMiddle(reps);
+
+      if (activeRef.current) {
+        Vibration.vibrate(TICK_MS);
+        onPreviewRef.current?.(reps);
+      }
+    });
+
+    return () => scroll.removeListener(id);
+  }, []);
+
+  // The count changed from outside - typed, saved - while no finger is on the
+  // strip: it goes there.
+  useEffect(() => {
+    if (!activeRef.current) {
+      scroll.setValue(current * REPS_ITEM_SPACING_PX);
     }
   }, [current]);
 
   useEffect(
     () => () => {
-      clearTimeout(pendingRef.current?.timer);
+      scroll.stopAnimation();
       setEditorBar.setDragging(false);
     },
     []
   );
+
+  const settleOn = (reps, { commit }) => {
+    const target = reps * REPS_ITEM_SPACING_PX;
+
+    scroll.stopAnimation((position) => {
+      const distance = Math.abs(target - position) / REPS_ITEM_SPACING_PX;
+
+      Animated.timing(scroll, {
+        toValue: target,
+        duration: 140 + Math.min(distance, 12) * 28,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }).start(({ finished }) => {
+        if (!finished) {
+          return;
+        }
+
+        activeRef.current = false;
+
+        if (commit && reps !== dragRef.current.startReps) {
+          onChangeRef.current?.(reps);
+        }
+      });
+    });
+  };
 
   const panResponder = useMemo(
     () =>
@@ -98,48 +170,33 @@ export default function RepsCarousel({
         onMoveShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
-          slide.stopAnimation();
           setEditorBar.setDragging(true);
-          clearTimeout(pendingRef.current?.timer);
-          pendingRef.current = null;
-          dragRef.current.startValue = valueRef.current;
+          activeRef.current = true;
+          // The finger may land on a strip that is still gliding: the drag
+          // takes it from where it is.
+          scroll.stopAnimation();
+          dragRef.current.startReps = valueRef.current;
+          dragRef.current.startScroll = positionRef.current;
         },
-        // The strip follows the finger, and that is all: no snapping, no tap,
-        // no change of the count until the finger lets go.
+        // The strip follows the finger and nothing else happens here: no render
+        // of the page, no write.
         onPanResponderMove: (_event, gesture) => {
-          slide.setValue(clampRepsDrag(dragRef.current.startValue, gesture.dx, REPS_ITEM_SPACING_PX));
+          scroll.setValue(
+            scrollPositionFor(dragRef.current.startScroll, gesture.dx, REPS_ITEM_SPACING_PX)
+          );
         },
         onPanResponderRelease: (_event, gesture) => {
           setEditorBar.setDragging(false);
 
-          const { reps, offset } = settleReps(
-            dragRef.current.startValue,
-            gesture.dx,
-            gesture.vx,
-            REPS_ITEM_SPACING_PX
-          );
+          const position = scrollPositionFor(dragRef.current.startScroll, gesture.dx, REPS_ITEM_SPACING_PX);
 
-          if (reps === dragRef.current.startValue) {
-            glideHome();
-            return;
-          }
-
-          // The strip stays where the finger left it until the new count has
-          // come back and the numbers are drawn around it; then it glides the
-          // rest of the way. If the count never comes back it goes home anyway.
-          pendingRef.current = {
-            reps,
-            offset,
-            timer: setTimeout(() => {
-              pendingRef.current = null;
-              glideHome();
-            }, 400),
-          };
-          onChangeRef.current?.(reps);
+          settleOn(settledReps(position, gesture.vx, REPS_ITEM_SPACING_PX), { commit: true });
         },
+        // Taken away: back to the count it had, and the cell with it.
         onPanResponderTerminate: () => {
           setEditorBar.setDragging(false);
-          glideHome();
+          onPreviewRef.current?.(dragRef.current.startReps);
+          settleOn(dragRef.current.startReps, { commit: false });
         },
       }),
     []
@@ -171,35 +228,18 @@ export default function RepsCarousel({
       }}
     >
       <View style={[styles.box, { borderColor }]} pointerEvents="none">
-      <Animated.View style={[styles.strip, { transform: [{ translateX: slide }] }]}>
-        {items.map((item) => {
-          const { opacity, scale } = emphasis(slide, item.offset);
-          const isCurrent = item.offset === 0;
-
-          return (
-            <Animated.View
-              key={item.offset}
-              style={[
-                styles.item,
-                {
-                  left: BOX_WIDTH / 2 - ITEM_WIDTH / 2 + item.offset * REPS_ITEM_SPACING_PX,
-                  opacity,
-                  transform: [{ scale }],
-                },
-              ]}
-            >
-              <ThemedText style={styles.number} setColor={textColor}>
-                {item.value ?? ""}
+        {visibleRepsWindow(middle, SPREAD).map((reps) => (
+          <Animated.View key={reps} style={[styles.item, styleFor(reps)]}>
+            <ThemedText style={styles.number} setColor={textColor}>
+              {reps}
+            </ThemedText>
+            {reps === middle && suffix ? (
+              <ThemedText style={styles.suffix} setColor={suffixColor ?? textColor}>
+                {suffix}
               </ThemedText>
-              {isCurrent && suffix ? (
-                <ThemedText style={styles.suffix} setColor={suffixColor ?? textColor}>
-                  {suffix}
-                </ThemedText>
-              ) : null}
-            </Animated.View>
-          );
-        })}
-      </Animated.View>
+            ) : null}
+          </Animated.View>
+        ))}
       </View>
     </View>
   );
@@ -220,11 +260,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     overflow: "hidden",
   },
-  strip: {
-    ...StyleSheet.absoluteFillObject,
-  },
   item: {
     position: "absolute",
+    left: 0,
     top: 0,
     bottom: 0,
     width: ITEM_WIDTH,

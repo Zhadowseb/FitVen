@@ -83,6 +83,9 @@ const ThemedEditableCell = ({
     registerControl({
       commit: () => commitRef.current?.(),
       focus: () => inputRef.current?.focus(),
+      // Shows a value in the field without committing it: the reps carousel
+      // shows the number it is passing while a finger is on it.
+      preview: (text) => setLocalValue(text),
     });
 
     return () => registerControl(null);
