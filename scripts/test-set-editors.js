@@ -592,6 +592,12 @@ function createCloud() {
       /onPanResponderTerminate[\s\S]*setEditorBar\.setDragging\(false\)/.test(carouselSource),
     "the carousel says when a finger is on it, and when it is not"
   );
+  const protection = read("src/Resources/ThemedComponents/ThemedKeyboardProtection.js");
+
+  assert.ok(
+    /setEditorBar\.subscribe\(apply\)/.test(protection) && /scrollRef\.current\?\.setNativeProps\?\.\(\{\s*scrollEnabled: ownScrollEnabled && !setEditorBar\.isDragging\(\)/.test(protection) && /ref=\{scrollRef\}/.test(protection),
+    "the page's scroll view is locked on the native view the moment a finger lands on the carousel - a render of the page is too slow, and by then the scroll view has taken the touch"
+  );
   const workoutPage = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
 
   assert.ok(
