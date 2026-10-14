@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Keyboard, Pressable, StyleSheet, TextInput, View, useColorScheme } from "react-native";
-import { KeyboardToolbar } from "react-native-keyboard-controller";
+import {
+  DefaultKeyboardToolbarTheme,
+  KeyboardToolbar,
+  useKeyboardState,
+} from "react-native-keyboard-controller";
 
 import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import Minus from "../../Icons/UI-icons/Minus";
@@ -54,6 +58,7 @@ function BarContent({ bar }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
+  const keyboardAppearance = useKeyboardState((state) => state.appearance);
   const stepLabel = formatNumber(bar.step, { maximumFractionDigits: 2 });
   const [text, setText] = useState(stepLabel);
   const [focused, setFocused] = useState(false);
@@ -115,7 +120,12 @@ function BarContent({ bar }) {
 
   const danger = theme.danger ?? "#ef4444";
   const secondary = theme.secondary ?? theme.primary;
-  const quiet = theme.quietText ?? theme.iconColor ?? theme.text;
+  // The toolbar takes its background from the keyboard's own look - light or
+  // dark whatever the app's theme is - so the text on it does too. The app's
+  // theme is only for the red and the green.
+  const toolbarColors = DefaultKeyboardToolbarTheme[keyboardAppearance === "dark" ? "dark" : "light"];
+  const textColor = toolbarColors.primary;
+  const quiet = toolbarColors.disabled;
 
   return (
     <View
@@ -152,7 +162,7 @@ function BarContent({ bar }) {
           selectTextOnFocus
           maxLength={6}
           accessibilityLabel={t("workout.setList.weightStepField")}
-          style={[styles.stepInput, { color: theme.text, borderBottomColor: theme.primary }]}
+          style={[styles.stepInput, { color: textColor, borderBottomColor: theme.primary }]}
           selectionColor={theme.primary}
         />
         <ThemedText style={styles.stepUnit} setColor={quiet}>

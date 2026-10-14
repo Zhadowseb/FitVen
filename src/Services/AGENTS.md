@@ -77,6 +77,10 @@ until the cloud says it is missing, and `workoutTypeInstanceSync.js` routes its
 reads and uploads through it. `weight_mode` on `Exercise_Instance` and on the
 column preferences does the same with `createWeightModeCloudColumn` in
 `src/Utils/weightMode.js`, and a null from the cloud keeps the local value.
+`weight_step` on the column preferences (the step of the weight bar over the keyboard) is the
+same again, nested inside it: `createWeightStepCloudColumn` in `src/Utils/weightStep.js`,
+used by `syncExerciseColumnPreferencesWithCloud`. A null keeps the local step, and `0` is a
+value - "automatic" - that is sent, so a cleared step reaches the cloud.
 `rest_counted` on `Set` (a rest the app counted, not one that was planned)
 does the same through `restCountedColumn` in `cloudSyncShared.js`, built by
 `createRestCountedCloudColumn` in `src/Utils/restCountUp.js`: the set upload,

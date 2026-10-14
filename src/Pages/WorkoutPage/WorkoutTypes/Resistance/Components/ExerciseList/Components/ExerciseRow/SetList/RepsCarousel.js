@@ -16,10 +16,12 @@ import { repsCarouselNumbers, repsFromSwipe } from "@utils/repsCarousel";
 // How far a finger moves for one rep.
 export const REPS_SWIPE_STEP_PX = 28;
 const BOX_WIDTH = 94;
+const MIN_BOX_WIDTH = 66;
 const BOX_HEIGHT = 32;
 
 export default function RepsCarousel({
   value,
+  width = 0,
   onChange,
   suffix = "",
   suffixColor,
@@ -96,7 +98,11 @@ export default function RepsCarousel({
       }}
       style={[
         styles.box,
-        { backgroundColor: surface, borderColor },
+        {
+          width: Math.min(BOX_WIDTH, Math.max(width, MIN_BOX_WIDTH)),
+          backgroundColor: surface,
+          borderColor,
+        },
       ]}
     >
       <Animated.View style={[styles.row, { transform: [{ translateX: slide }] }]}>

@@ -424,6 +424,10 @@ function createCloud() {
   delete cloudRow().weight_step;
   await service.syncExerciseColumnPreferencesWithCloud(db);
   assert.strictEqual(localPreference().weight_step, 1.5, "a null from the cloud keeps the local step");
+  assert.ok(
+    cloud.state.writes.every((payload) => payload.weight_step !== null),
+    "a step that is not known is never sent as null"
+  );
 
   // 6. The migration has not run: syncing goes on without the column, and the
   // step stays on the phone.
@@ -438,8 +442,8 @@ function createCloud() {
     "a write without the column went out after the first one failed"
   );
   assert.ok(
-    cloud.state.reads.every((columns, index) => index === 0 || !/weight_step/.test(columns) || true),
-    "reads"
+    cloud.state.reads.length >= 2 && !/weight_step/.test(cloud.state.reads[cloud.state.reads.length - 1]),
+    "once the cloud said the column is missing, no read names it"
   );
 
   // 7. A custom exercise's step stays on the phone: no cloud row to sync.

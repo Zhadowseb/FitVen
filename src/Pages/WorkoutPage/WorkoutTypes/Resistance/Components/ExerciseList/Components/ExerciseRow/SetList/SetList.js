@@ -311,6 +311,10 @@ const SetList = ({
   // by set, and the text being typed in the reps field under it.
   const [repsDrafts, setRepsDrafts] = useState({});
   const [typedReps, setTypedReps] = useState(null);
+  // How wide a reps cell is: the carousel is that wide, at most 94 and at
+  // least enough for three numbers. Android only delivers touches inside a
+  // parent's own bounds, so the less it overflows, the less is dead.
+  const [repsCellWidth, setRepsCellWidth] = useState(0);
   const repsSaveTimerRef = useRef(null);
   const repsDraftsRef = useRef({});
   const flushRepsRef = useRef(null);
@@ -1529,11 +1533,15 @@ const SetList = ({
         // under a new parent when the carousel appears would remount the field
         // and take the focus - and the keyboard - away.
         return (
-          <View style={styles.repsCarouselHost}>
+          <View
+            style={styles.repsCarouselHost}
+            onLayout={(event) => setRepsCellWidth(Math.round(event.nativeEvent.layout.width))}
+          >
             {cell}
             {showCarousel ? (
             <RepsCarousel
               value={shownReps}
+              width={repsCellWidth}
               onChange={(next) => swipeReps(set.sets_id, next)}
               suffix={repsSuffix}
               suffixColor={isAmrap ? theme.amrap : undefined}
@@ -1896,6 +1904,11 @@ const SetList = ({
                   borderColor: tableBorder,
                 },
                 isLast && { borderRightWidth: 0 },
+                // The carousel is wider than the reps column: this cell is
+                // drawn over the columns after it, not under them.
+                col.key === "reps" &&
+                  activeEditableCell === `${set.sets_id}:reps` &&
+                  styles.raisedCell,
               ]}
             >
               {renderCellContent(col.key, set, rowIndex)}

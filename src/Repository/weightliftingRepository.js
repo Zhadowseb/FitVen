@@ -1402,15 +1402,19 @@ export async function getLiveWorkoutSets(db, workoutId) {
           LIMIT 1
         ) AS exercise_equipment,
         -- The step the person chose for the exercise in the weight bar. The
-        -- database is this user's own, so no user is asked for; 0 is
-        -- "automatic" and is left out.
-        (
-          SELECT p.weight_step
-          FROM Exercise_Column_Preference p
-          WHERE p.exercise_name = e.exercise_name COLLATE NOCASE
-            AND p.weight_step > 0
-          ORDER BY p.updated_at DESC
-          LIMIT 1
+        -- database is this user's own, so no user is asked for. The newest
+        -- row wins, and 0 - "automatic" again - is no step: a reset after an
+        -- older choice must not bring the older one back.
+        NULLIF(
+          (
+            SELECT p.weight_step
+            FROM Exercise_Column_Preference p
+            WHERE p.exercise_name = e.exercise_name COLLATE NOCASE
+              AND p.weight_step IS NOT NULL
+            ORDER BY p.updated_at DESC
+            LIMIT 1
+          ),
+          0
         ) AS exercise_weight_step
      FROM Exercise_Instance e
      LEFT JOIN "Set" s ON s.exercise_instance_id = e.exercise_instance_id

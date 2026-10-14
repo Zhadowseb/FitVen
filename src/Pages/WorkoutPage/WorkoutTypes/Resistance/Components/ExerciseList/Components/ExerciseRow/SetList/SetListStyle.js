@@ -158,6 +158,12 @@ export default StyleSheet.create({
         marginLeft: 3,
     },
     // Joins a drop set to the set above it, through the rest column.
+    // The reps cell while its carousel shows: above the columns after it.
+    raisedCell: {
+        zIndex: 20,
+        elevation: 6,
+        overflow: "visible",
+    },
     // Holds the reps cell and, over it, the carousel while it is edited.
     repsCarouselHost: {
         width: "100%",
