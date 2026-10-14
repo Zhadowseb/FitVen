@@ -102,6 +102,9 @@ export default {
     visibilityNote:
       "Bestemmer, hvem der kan se dine træningsopslag. Kun mig holder dem ude af alle andres feeds.",
     exercisesEyebrow: "Øvelser",
+    walksEyebrow: "Gåture",
+    shareWalkRoute: "Del en gåturs rute",
+    shareWalkRouteNote: "Standarden for kontakten Del ruten, når du deler en gåtur. Start og slut på ruten er altid skjult, og den præcise rute forlader aldrig din telefon.",
     exerciseVisibility: "Synlige øvelser",
     exerciseVisibilityBody: "Vælg, hvilke øvelser der kan vises i topsæt og PR-mærker.",
     errors: {

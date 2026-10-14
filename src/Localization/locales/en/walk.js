@@ -33,10 +33,28 @@ export default {
   units: {
     km: "km",
   },
+  // "A walk was found on your phone. Add it to FitVen?"
+  watchPrompt: {
+    titleOne: "A walk was found on your phone",
+    titleMany: "{count} walks were found on your phone",
+    subtitleOne: "It was recorded with your watch or a health app. Do you want to add it to FitVen?",
+    subtitleMany: "They were recorded with your watch or a health app. Do you want to add them to FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} steps",
+    add: "Add to FitVen",
+    skip: "Skip",
+    skipHint: "FitVen will not ask about this walk again",
+    addAll: "Add all",
+    later: "Not now",
+  },
   map: {
     label: "Route map of your walk so far",
     waitingForFix: "Finding your position…",
     noRoute: "No route was recorded for this walk.",
+    noRouteWatch: "This walk came from your watch. Its route is not on this phone yet.",
+    watchRouteTried: "No route came through. Health Connect asks every time, and the watch may not have recorded one.",
+    loadWatchRoute: "Show the route from your watch",
     notStarted: "The route is drawn here once the walk has started.",
     denied: "FitVen needs your location to draw the route and measure the distance.",
     blocked:
@@ -71,6 +89,15 @@ export default {
       one: "{count} step",
       other: "{count} steps",
     },
+  },
+  // Sharing a finished walk to the feed.
+  post: {
+    message: "{summary}. Post it to your feed so the people who follow you can see it?",
+    confirm: "Post it",
+    keepPrivate: "Keep it private",
+    notePlaceholder: "Add a note (optional)",
+    shareRoute: "Share route",
+    shareRouteHint: "The start and the end of your walk are left out.",
   },
   errors: {
     finishFailedTitle: "Could not finish the walk",

@@ -1,4 +1,5 @@
-// Fills public.store_stats with iOS downloads from App Store Connect.
+// Fills public.store_stats with iOS downloads from App Store Connect and, when
+// its secrets are there, Android installs from Google Play (./android.ts).
 //
 // Called once a day by the cron in
 // supabase/migrations/20260930090000_store-stats-ios-daily.sql, and by hand
@@ -22,6 +23,14 @@ import {
   storeStatsTable,
 } from "./report.ts";
 import type { RunSummary } from "./report.ts";
+import {
+  androidStoredDays,
+  fetchAccessToken,
+  parseServiceAccount,
+  PLAY_PACKAGE_NAME,
+  runAndroidStoreStats,
+} from "./android.ts";
+import type { AndroidRunSummary } from "./android.ts";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -62,6 +71,66 @@ function requireEnv(name: string) {
   }
 
   return value;
+}
+
+// The Android half of a run. Every way it can fail ends in a summary.
+async function runAndroid({
+  supabase,
+  table,
+  playServiceAccount,
+  playBucket,
+  playPackage,
+}: {
+  // deno-lint-ignore no-explicit-any
+  supabase: { from(name: string): any };
+  table: ReturnType<typeof storeStatsTable>;
+  playServiceAccount: string;
+  playBucket: string;
+  playPackage: string;
+}): Promise<AndroidRunSummary | { skipped: string }> {
+  if (!playServiceAccount || !playBucket) {
+    return {
+      skipped:
+        "PLAY_SERVICE_ACCOUNT_JSON and PLAY_REPORTS_BUCKET are not both set, so Android installs are not read.",
+    };
+  }
+
+  const failed = (problem: string): AndroidRunSummary => ({
+    ok: false,
+    window: { oldest: "", newest: "" },
+    alreadyStored: 0,
+    written: [],
+    notInReport: [],
+    noReport: [],
+    stoppedBy: null,
+    problems: [problem],
+  });
+
+  try {
+    const token = await fetchAccessToken({
+      fetch,
+      account: parseServiceAccount(playServiceAccount),
+    });
+
+    if (!token.ok) {
+      return failed(
+        `Google would not give the service account an access token (HTTP ${token.status}: ${token.detail}). ` +
+          "PLAY_SERVICE_ACCOUNT_JSON is wrong, or the key has been deleted."
+      );
+    }
+
+    return await runAndroidStoreStats({
+      fetch,
+      token: token.token,
+      bucket: playBucket,
+      packageName: playPackage,
+      readStoredDays: androidStoredDays(supabase),
+      writeRow: table.writeRow,
+    });
+  } catch (error) {
+    // The key is not repeated: a message names what is wrong with it, not what it says.
+    return failed(`The Android run stopped: ${(error as Error).message}`);
+  }
 }
 
 Deno.serve(async (req) => {
@@ -159,7 +228,36 @@ Deno.serve(async (req) => {
       (summary.stoppedBy ? `; stopped early: ${summary.stoppedBy}` : "")
   );
 
-  // 502 when Apple refused the key or a request, so the failure shows in the
-  // cron's response log and not only in this function's.
-  return jsonResponse(summary as unknown as JsonRecord, summary.ok ? 200 : 502);
+  // Android, if Google Play is set up. Its own summary under `android`; what
+  // goes wrong there never takes the iOS numbers with it, and a project that
+  // has not set Play up just says so.
+  const android = await runAndroid({
+    supabase,
+    table,
+    playServiceAccount: Deno.env.get("PLAY_SERVICE_ACCOUNT_JSON") ?? "",
+    playBucket: Deno.env.get("PLAY_REPORTS_BUCKET") ?? "",
+    playPackage: Deno.env.get("PLAY_PACKAGE_NAME") || PLAY_PACKAGE_NAME,
+  });
+
+  if ("problems" in android) {
+    for (const problem of android.problems) {
+      console.error(`store-stats (android): ${problem}`);
+    }
+
+    console.log(
+      `store-stats (android): ${android.written.length} written, ${android.notInReport.length} not in the report yet, ` +
+        `${android.alreadyStored} already stored`
+    );
+  } else {
+    console.log(`store-stats (android): ${android.skipped}`);
+  }
+
+  const androidOk = !("problems" in android) || android.ok;
+
+  // 502 when Apple or Google refused the key or a request, so the failure shows
+  // in the cron's response log and not only in this function's.
+  return jsonResponse(
+    { ...(summary as unknown as JsonRecord), android },
+    summary.ok && androidOk ? 200 : 502
+  );
 });

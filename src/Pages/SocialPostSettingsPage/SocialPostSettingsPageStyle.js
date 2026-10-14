@@ -1,6 +1,15 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
+  walkRouteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  walkRouteCopy: {
+    flex: 1,
+    gap: 2,
+  },
   container: {
     flex: 1,
   },

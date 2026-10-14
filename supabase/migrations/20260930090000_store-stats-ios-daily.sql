@@ -21,6 +21,15 @@
 --                              Reports
 --     STORE_STATS_CRON_SECRET  a long random string, e.g. openssl rand -hex 32
 --
+--   And, for the Android installs from Google Play - optional, and nothing
+--   here depends on it (the same run reads them when these are set; see
+--   docs/ANDROID-DOWNLOADS-DIN-OPGAVE.md):
+--     PLAY_SERVICE_ACCOUNT_JSON  the whole JSON key file of a service account that
+--                                has "View app information and download bulk
+--                                reports" in the Play Console
+--     PLAY_REPORTS_BUCKET        the Play Console report bucket, pubsite_prod_<number>
+--     PLAY_PACKAGE_NAME          only if it is not com.anonymous.programapp
+--
 --   Vault secrets (the dashboard's Vault page, or
 --   select vault.create_secret('<value>', '<name>');):
 --     project_url              https://<project-ref>.supabase.co
