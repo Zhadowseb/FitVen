@@ -110,6 +110,18 @@ function WeightBarContent({ bar }) {
   // What was typed is sent once per distinct text: on blur, on the keyboard
   // going away and when the bar closes - Android's hide-keyboard button does
   // not blur a field - and a second way out finds it already sent.
+  // The suggested step, taken as the step: it shows in the field and is kept
+  // for the exercise like a typed one.
+  const acceptRecommended = () => {
+    const result = barRef.current.onStepSubmit(String(barRef.current.recommendedStep));
+    const shown = formatNumber(result?.step ?? barRef.current.recommendedStep, {
+      maximumFractionDigits: 2,
+    });
+
+    sentRef.current = shown;
+    setText(shown);
+  };
+
   const submit = () => {
     if (textRef.current === sentRef.current) {
       return;
@@ -154,12 +166,37 @@ function WeightBarContent({ bar }) {
   const textColor = toolbarColors.primary;
   const quiet = toolbarColors.disabled;
 
+  // Offered only when it is not the step already in use.
+  const recommended =
+    Number(bar.recommendedStep) > 0 && Number(bar.recommendedStep) !== Number(bar.step)
+      ? Number(bar.recommendedStep)
+      : null;
+  const recommendedLabel = recommended === null ? "" : formatNumber(recommended, { maximumFractionDigits: 2 });
+
   return (
     <View
       accessible={false}
       accessibilityLabel={t("workout.setList.weightBarLabel", { label: bar.label })}
-      style={styles.bar}
+      style={[styles.bar, recommended !== null && styles.barWithSuggestion]}
     >
+      {recommended !== null ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t("workout.setList.weightStepSuggested", { step: recommendedLabel })}
+          hitSlop={HIT_SLOP}
+          onPress={acceptRecommended}
+          style={({ pressed }) => [
+            styles.suggestion,
+            { borderColor: theme.primary, backgroundColor: withAlpha(theme.primary, 0.12) },
+            pressed && styles.buttonDimmed,
+          ]}
+        >
+          <ThemedText style={styles.suggestionText} setColor={theme.primary}>
+            {recommendedLabel}
+          </ThemedText>
+        </Pressable>
+      ) : null}
+
       <BarButton
         direction={-1}
         bar={bar}
@@ -250,6 +287,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 14,
     paddingHorizontal: 8,
+  },
+  // Room for the suggestion to the left of the minus on a narrow phone.
+  barWithSuggestion: {
+    gap: 8,
+  },
+  suggestion: {
+    minWidth: 40,
+    height: 28,
+    paddingHorizontal: 8,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  suggestionText: {
+    fontSize: 13,
+    fontWeight: "800",
   },
   button: {
     width: 44,

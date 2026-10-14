@@ -196,6 +196,7 @@ export default {
     // The bar over the keyboard while a weight is edited. {label} is the set.
     weightBarLabel: "Edit weight for set {label}",
     weightStepField: "Step for this exercise in kg. Remembered for next time",
+    weightStepSuggested: "Use {step} kg as the step, as you have been lifting",
     // The reps carousel over the set being edited. {label} is the set.
     repsCarouselLabel: "Reps for set {label}",
     // When a weight could not be saved.

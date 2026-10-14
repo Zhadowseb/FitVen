@@ -19,7 +19,11 @@ import {
   weightAtRmPercentage,
   weightModeOf,
 } from "@utils/weightMode";
-import { createWeightStepCloudColumn, storedWeightStep } from "@utils/weightStep";
+import {
+  createWeightStepCloudColumn,
+  recommendWeightStep,
+  storedWeightStep,
+} from "@utils/weightStep";
 import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   programRepository,
@@ -2521,6 +2525,33 @@ export async function getExerciseHistoryTable(
       ...formatHistorySessionDate(session.performedDateSort),
     })),
   };
+}
+
+/**
+ * The step to suggest for an exercise from its history (see
+ * recommendWeightStep), or null when it has no habit yet. Reads the last eight
+ * sessions; never throws - no suggestion is the honest answer to a failure.
+ */
+export async function getRecommendedWeightStep(db, { exerciseId, exerciseName }) {
+  const name = typeof exerciseName === "string" ? exerciseName.trim() : "";
+  const id = normalizeOptionalInteger(exerciseId);
+
+  if (!name || id === null) {
+    return null;
+  }
+
+  try {
+    const rows = await weightliftingRepository.getCompletedExerciseHistorySets(db, {
+      exerciseId: id,
+      exerciseName: name,
+      limit: 8,
+    });
+
+    return recommendWeightStep(rows);
+  } catch (error) {
+    console.warn("Unable to read the history for a suggested step:", error);
+    return null;
+  }
 }
 
 function formatHistorySessionDate(sortDateValue) {

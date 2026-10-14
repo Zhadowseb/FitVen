@@ -10,6 +10,7 @@
 // person's own, typed in the bar over the keyboard and kept per exercise.
 //
 // kg only: the app has no lb. Pure, so scripts/test-weight-mode.js loads it.
+import { buildExerciseHistoryTable } from "./exerciseHistoryTable";
 import { parseSetNumber } from "./setValueLimits";
 import { roundToStep } from "./weightMode";
 
@@ -94,6 +95,69 @@ export function stepWeight(weight, direction, step, { startFrom = null } = {}) {
   const next = roundWeightToQuarter(Math.max(0, current + direction * size));
 
   return next === current ? null : next;
+}
+
+/**
+ * A step to suggest for an exercise, from how its weights have moved before:
+ * the jump between one weight and the next that turns up most often - between
+ * the sets of a session and between one session's top weight and the next -
+ * in the sessions written the way the newest one was (per side or total).
+ * Warm-ups do not count. The smaller jump wins a tie, and one that was seen
+ * only once is not a habit: null. `rows` are what
+ * getCompletedExerciseHistorySets returns.
+ */
+export function recommendWeightStep(rows = [], { minSeen = 2, maxStep = 25 } = {}) {
+  const sessions = buildExerciseHistoryTable(rows).sessions;
+  const mode = sessions[0]?.weightMode;
+  const counts = new Map();
+
+  const note = (difference) => {
+    const quarters = Math.round(Math.abs(difference) / STEP_ROUNDING);
+    const step = quarters * STEP_ROUNDING;
+
+    if (quarters > 0 && step <= maxStep) {
+      counts.set(step, (counts.get(step) ?? 0) + 1);
+    }
+  };
+
+  const tops = [];
+
+  for (const session of sessions.filter((candidate) => candidate.weightMode === mode)) {
+    const weights = [
+      ...new Set(
+        session.sets
+          .map((set) => Number(set.weight))
+          .filter((weight) => Number.isFinite(weight) && weight > 0)
+          .map(roundWeightToQuarter)
+      ),
+    ].sort((a, b) => a - b);
+
+    for (let index = 1; index < weights.length; index += 1) {
+      note(weights[index] - weights[index - 1]);
+    }
+
+    if (weights.length > 0) {
+      tops.push(weights[weights.length - 1]);
+    }
+  }
+
+  for (let index = 1; index < tops.length; index += 1) {
+    note(tops[index] - tops[index - 1]);
+  }
+
+  let best = null;
+
+  for (const [step, seen] of counts) {
+    if (seen < minSeen) {
+      continue;
+    }
+
+    if (best === null || seen > best.seen || (seen === best.seen && step < best.step)) {
+      best = { step, seen };
+    }
+  }
+
+  return best ? best.step : null;
 }
 
 /** Whether a set still has its steppers: not ticked off, not failed. */

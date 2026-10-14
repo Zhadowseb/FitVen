@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Easing, PanResponder, StyleSheet, Vibration, View } from "react-native";
+import { Animated, Easing, PanResponder, StyleSheet, View } from "react-native";
 
 import ThemedText from "../../ThemedComponents/ThemedText";
 import {
@@ -10,6 +10,7 @@ import {
   visibleRepsWindow,
 } from "@utils/repsCarousel";
 import { setEditorBar } from "@utils/setEditorBar";
+import { tick } from "@utils/tick";
 
 // The carousel in the bar over the keyboard while the reps of a set are
 // edited: the number now in the middle and two on each side - 6 · 7 · 8 · 9 ·
@@ -145,7 +146,7 @@ export default function RepsCarousel({
 
         if (now - lastTickRef.current >= MIN_TICK_GAP_MS) {
           lastTickRef.current = now;
-          Vibration.vibrate(TICK_MS);
+          tick(TICK_MS);
         }
 
         // The cell keeps up with a flick without being asked for every

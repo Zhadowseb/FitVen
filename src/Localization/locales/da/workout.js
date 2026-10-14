@@ -196,6 +196,7 @@ export default {
     // Linjen over tastaturet, mens en vægt redigeres. {label} er sættet.
     weightBarLabel: "Rediger vægt for sæt {label}",
     weightStepField: "Trin for denne øvelse i kg. Huskes til næste gang",
+    weightStepSuggested: "Brug {step} kg som trin, som du plejer at løfte",
     // Karrusellen over det sæt, der redigeres. {label} er sættet.
     repsCarouselLabel: "Gentagelser for sæt {label}",
     // Når en vægt ikke kunne gemmes.

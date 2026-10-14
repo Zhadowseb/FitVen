@@ -1,4 +1,4 @@
-import { Alert, TouchableOpacity, Vibration, View } from "react-native";
+import { Alert, TouchableOpacity, View } from "react-native";
 import { useColorScheme } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useSQLiteContext } from "expo-sqlite";
@@ -58,6 +58,7 @@ import {
 } from "@utils/setTypes";
 import { repsAsNumber } from "@utils/repsCarousel";
 import { newSetEditorOwnerId, setEditorBar } from "@utils/setEditorBar";
+import { tick } from "@utils/tick";
 import {
   DEFAULT_WEIGHT_STEP,
   createWeightDrafts,
@@ -219,6 +220,10 @@ const SetList = ({
   // chose: called with the step to keep for the exercise, 0 for "automatic".
   automaticWeightStep = DEFAULT_WEIGHT_STEP,
   onWeightStepChange = null,
+  // A step suggested from the history (null for none), and what is called the
+  // first time the weight bar opens so the card can read it.
+  recommendedWeightStep = null,
+  onWeightBarOpen = null,
   exerciseWeightMode = null,
   historyWeight = null,
 }) => {
@@ -1047,7 +1052,7 @@ const SetList = ({
         nextBySetId.has(set.sets_id) ? { ...set, weight: nextBySetId.get(set.sets_id) } : set
       )
     );
-    Vibration.vibrate(WEIGHT_STEP_HAPTIC_MS);
+    tick(WEIGHT_STEP_HAPTIC_MS);
 
     clearTimeout(weightSaveTimerRef.current);
     weightSaveTimerRef.current = setTimeout(
@@ -1264,9 +1269,10 @@ const SetList = ({
 
     setEditorBar.update(barOwnerId, weightBarSetId, {
       step: weightStep,
+      recommendedStep: recommendedWeightStep,
       canDecrease: (barWeight ?? 0) > 0,
     });
-  }, [weightBarSetId, weightStep, barWeight, barSteppable]);
+  }, [weightBarSetId, weightStep, recommendedWeightStep, barWeight, barSteppable]);
 
   // The reps bar shows the count on screen, and goes when its set can no
   // longer be changed.
@@ -1333,12 +1339,14 @@ const SetList = ({
 
     setWeightBarSetId(setId);
     setRepsBarSetId(null);
+    onWeightBarOpen?.();
     setEditorBar.open({
       kind: "weight",
       ownerId: barOwnerId,
       setId,
       label: barLabelFor(set),
       step: weightStep,
+      recommendedStep: recommendedWeightStep,
       canDecrease: (weightOf(set) ?? 0) > 0,
       repeatDelayMs: WEIGHT_STEP_REPEAT_DELAY_MS,
       onStep: (direction) => barApiRef.current.step(setId, direction),

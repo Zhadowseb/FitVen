@@ -490,6 +490,26 @@ const ExerciseRow = ({
     weightStep: typedWeightStep !== undefined ? typedWeightStep : exercise.weightStep,
   });
 
+  // A step suggested from the history, read the first time the weight bar is
+  // opened and kept for the card: null until then, and when there is no habit.
+  const [recommendedWeightStep, setRecommendedWeightStep] = useState(null);
+  const recommendedReadRef = useRef(false);
+
+  const readRecommendedWeightStep = async () => {
+    if (recommendedReadRef.current) {
+      return;
+    }
+
+    recommendedReadRef.current = true;
+
+    setRecommendedWeightStep(
+      await weightliftingService.getRecommendedWeightStep(db, {
+        exerciseId: exercise.exercise_id,
+        exerciseName: exercise.exercise_name,
+      })
+    );
+  };
+
   // The step typed in the bar: 0 for automatic again.
   const changeWeightStep = async (stored) => {
     setTypedWeightStep(stored > 0 ? stored : null);
@@ -1142,6 +1162,8 @@ const ExerciseRow = ({
               weightStep={weightStep}
               automaticWeightStep={automaticWeightStep}
               onWeightStepChange={changeWeightStep}
+              recommendedWeightStep={recommendedWeightStep}
+              onWeightBarOpen={readRecommendedWeightStep}
               exerciseWeightMode={exercise.exercise_weight_mode ?? null}
               historyWeight={historyWeight}
             />

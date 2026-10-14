@@ -569,8 +569,8 @@ function createCloud() {
 
   assert.ok(!/onChangeRef|Vibration|onPreview|setMiddle/.test(moveHandler), "while the finger is down the move handler only moves the strip: ticks, the cell and the window follow it from a listener, and nothing is saved");
   assert.ok(/scroll\.setValue\(\s*scrollPositionFor\(/.test(moveHandler), "the strip is its own value, set straight from the finger, and cannot be dragged past 0");
-  assert.ok(/scroll\.addListener\(/.test(carouselSource) && /Vibration\.vibrate\(TICK_MS\)/.test(carouselSource) && /MIN_TICK_GAP_MS/.test(carouselSource) && /onPreviewRef\.current\?\.\(reps\)/.test(carouselSource), "every number that passes the middle ticks and shows in the cell");
-  assert.ok(/if \(activeRef\.current\) \{[\s\S]*Vibration\.vibrate/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
+  assert.ok(/scroll\.addListener\(/.test(carouselSource) && /tick\(TICK_MS\)/.test(carouselSource) && /MIN_TICK_GAP_MS/.test(carouselSource) && /onPreviewRef\.current\?\.\(reps\)/.test(carouselSource), "every number that passes the middle ticks and shows in the cell");
+  assert.ok(/if \(activeRef\.current\) \{[\s\S]*tick\(TICK_MS\)/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
   assert.ok(/onPanResponderRelease[\s\S]*settledReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count is handed over when the strip has settled");
   assert.ok(/onPanResponderTerminate[\s\S]*onPreviewRef\.current\?\.\(dragRef\.current\.startReps\)/.test(carouselSource), "a drag that is taken away puts the cell back");
   assert.ok(/const SPREAD = 9;/.test(carouselSource) && /const RECENTRE = 4;/.test(carouselSource) && /visibleRepsWindow\(windowCentre, spread\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to - and drawn again only every few numbers, not on every one");
@@ -647,6 +647,71 @@ function createCloud() {
 
   assert.strictEqual(i18n.translate("workout.setList.weightBarLabel", { label: "3" }, "en"), "Edit weight for set 3");
   assert.strictEqual(i18n.translate("workout.setList.repsCarouselLabel", { label: "3" }, "en"), "Reps for set 3");
+
+  // A step suggested from how the weights have moved before.
+  {
+    const session = (id, date, weights, mode = "total") =>
+      weights.map((weight, index) => ({
+        exercise_instance_id: id,
+        workout_id: id,
+        performed_date: date,
+        performed_date_sort: date,
+        weight_mode: mode,
+        set_number: index + 1,
+        reps: 5,
+        weight,
+        set_type: "normal",
+      }));
+    const rowsOf = (...sessions) => sessions.flat();
+
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(3, "2026-10-10", [60, 62.5, 65]), session(2, "2026-10-03", [57.5, 60, 62.5]))),
+      2.5,
+      "weights that go up by 2.5 suggest 2.5"
+    );
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(3, "2026-10-10", [100, 105, 110]), session(2, "2026-10-03", [95, 100, 105]))),
+      5,
+      "and by 5 suggest 5"
+    );
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(3, "2026-10-10", [62.5]), session(2, "2026-10-03", [60]), session(1, "2026-09-26", [57.5]))),
+      2.5,
+      "one weight a session: the progression between sessions counts"
+    );
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(2, "2026-10-10", [60, 65]))),
+      null,
+      "a jump seen once is not a habit"
+    );
+    assert.strictEqual(steps.recommendWeightStep([]), null, "no history, no suggestion");
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(2, "2026-10-10", [60, 62.5, 65]), session(1, "2026-10-03", [20, 40, 60], "per_side"))),
+      2.5,
+      "sessions written in the other weight mode are left out"
+    );
+    assert.strictEqual(
+      steps.recommendWeightStep(rowsOf(session(2, "2026-10-10", [60, 60, 60, 60]), session(1, "2026-10-03", [60, 60]))),
+      null,
+      "the same weight everywhere has no step"
+    );
+
+    const repository = fs.readFileSync(path.join(root, "src/Services/weightliftingService.js"), "utf8");
+    const barSource = fs.readFileSync(path.join(root, "src/Resources/Components/SetEditorBar/SetEditorBar.js"), "utf8");
+    const setListSource = fs.readFileSync(
+      path.join(root, "src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetList.js"),
+      "utf8"
+    );
+
+    assert.ok(/export async function getRecommendedWeightStep/.test(repository) && /recommendWeightStep\(rows\)/.test(repository), "the service reads the history and suggests");
+    assert.ok(
+      /recommendedStep/.test(barSource) && /acceptRecommended/.test(barSource) && /weightStepSuggested/.test(barSource),
+      "the bar offers the suggested step, left of the minus, and taking it saves it like a typed one"
+    );
+    assert.ok(/onWeightBarOpen\?\.\(\)/.test(setListSource) && /recommendedStep: recommendedWeightStep/.test(setListSource), "the set list hands the suggestion to the bar when it opens");
+    assert.ok(!/Vibration/.test(setListSource) && !/Vibration\.vibrate/.test(fs.readFileSync(path.join(root, "src/Resources/Components/SetEditorBar/RepsCarousel.js"), "utf8")), "no raw Vibration: on an iPhone it is one long buzz");
+    assert.ok(/Platform\.OS === "ios"/.test(fs.readFileSync(path.join(root, "src/Utils/tick.js"), "utf8")), "the tick is silent on an iPhone");
+  }
 
   console.log(
     "Set editors: the step field's rules, the reps carousel's numbers and swipe, the bar's lifecycle, the step kept per exercise and synced (also 0 for automatic, a null from the cloud, a cloud without the column), the lock screen's step, and the wiring passed."
