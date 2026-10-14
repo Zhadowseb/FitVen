@@ -20,6 +20,10 @@
 
 export function createSetEditorBarStore() {
   let bar = null;
+  // A finger is down on the carousel. The page behind it must not scroll with
+  // it: a drag that wanders up or down off the toolbar belongs to the carousel
+  // until the finger lets go.
+  let dragging = false;
   const listeners = new Set();
 
   const emit = () => {
@@ -40,6 +44,19 @@ export function createSetEditorBarStore() {
       return () => {
         listeners.delete(listener);
       };
+    },
+
+    isDragging() {
+      return dragging;
+    },
+
+    setDragging(next) {
+      if (dragging === Boolean(next)) {
+        return;
+      }
+
+      dragging = Boolean(next);
+      emit();
     },
 
     /** A weight field got focus: its set list's bar replaces any other. */
@@ -76,6 +93,7 @@ export function createSetEditorBarStore() {
       }
 
       bar = null;
+      dragging = false;
       emit();
     },
   };

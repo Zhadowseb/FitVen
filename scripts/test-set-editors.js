@@ -198,6 +198,25 @@ const barStore = loadAppModule("src/Utils/setEditorBar.js");
   store.close(OWNER_A);
   assert.strictEqual(store.get(), null);
 
+  // A finger dragging the carousel: the page behind it does not scroll.
+  let dragNotified = 0;
+  const unsubscribeDrag = store.subscribe(() => {
+    dragNotified += 1;
+  });
+
+  assert.strictEqual(store.isDragging(), false);
+  store.setDragging(true);
+  assert.strictEqual(store.isDragging(), true);
+  store.setDragging(true);
+  assert.strictEqual(dragNotified, 1, "the same answer twice tells nobody");
+  store.setDragging(false);
+  assert.strictEqual(store.isDragging(), false);
+  store.open({ ownerId: OWNER_A, setId: 3 });
+  store.setDragging(true);
+  store.close();
+  assert.strictEqual(store.isDragging(), false, "a bar that goes away takes the drag with it: the page must never stay locked");
+  unsubscribeDrag();
+
   unsubscribe();
   store.open({ ownerId: OWNER_A, setId: 1 });
   assert.ok(notified > 0);
@@ -567,6 +586,18 @@ function createCloud() {
   assert.ok(/onPanResponderRelease[\s\S]*settleReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count changes when the finger lets go");
   assert.ok(/pendingRef\.current && |pending && pending\.reps === current/.test(carouselSource) || /pending\.reps === current/.test(carouselSource), "the strip waits for the new count before it glides home");
   assert.ok(/const SPREAD = 3;/.test(carouselSource), "two numbers each side show, and one more is there to slide in");
+  assert.ok(
+    /onPanResponderGrant[\s\S]*setEditorBar\.setDragging\(true\)/.test(carouselSource) &&
+      /onPanResponderRelease[\s\S]*setEditorBar\.setDragging\(false\)/.test(carouselSource) &&
+      /onPanResponderTerminate[\s\S]*setEditorBar\.setDragging\(false\)/.test(carouselSource),
+    "the carousel says when a finger is on it, and when it is not"
+  );
+  const workoutPage = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Resistance.js");
+
+  assert.ok(
+    /const setEditorDragging = useSetEditorDragging\(\);/.test(workoutPage) && /scrollEnabled: !isReorderingExercises && !setEditorDragging/.test(workoutPage),
+    "the workout page does not scroll while a finger drags the carousel, however far up or down it wanders"
+  );
   assert.ok(/setEditorBar\.close\(barOwnerId\)/.test(setList), "the set list's own bar is closed when it goes away");
   assert.ok(/cellControlsRef\.current\.get\(`\$\{setId\}:weight`\)\?\.commit/.test(setList), "a press saves what is typed before it steps");
   assert.ok(

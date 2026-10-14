@@ -3,6 +3,7 @@ import { Animated, PanResponder, StyleSheet, View } from "react-native";
 
 import ThemedText from "../../ThemedComponents/ThemedText";
 import { clampRepsDrag, repsCarouselItems, settleReps } from "@utils/repsCarousel";
+import { setEditorBar } from "@utils/setEditorBar";
 
 // The carousel in the bar over the keyboard while the reps of a set are
 // edited: the number now in the middle and two on each side - 6 · 7 · 8 · 9 ·
@@ -82,7 +83,13 @@ export default function RepsCarousel({
     }
   }, [current]);
 
-  useEffect(() => () => clearTimeout(pendingRef.current?.timer), []);
+  useEffect(
+    () => () => {
+      clearTimeout(pendingRef.current?.timer);
+      setEditorBar.setDragging(false);
+    },
+    []
+  );
 
   const panResponder = useMemo(
     () =>
@@ -92,6 +99,7 @@ export default function RepsCarousel({
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: () => {
           slide.stopAnimation();
+          setEditorBar.setDragging(true);
           clearTimeout(pendingRef.current?.timer);
           pendingRef.current = null;
           dragRef.current.startValue = valueRef.current;
@@ -102,6 +110,8 @@ export default function RepsCarousel({
           slide.setValue(clampRepsDrag(dragRef.current.startValue, gesture.dx, REPS_ITEM_SPACING_PX));
         },
         onPanResponderRelease: (_event, gesture) => {
+          setEditorBar.setDragging(false);
+
           const { reps, offset } = settleReps(
             dragRef.current.startValue,
             gesture.dx,
@@ -128,6 +138,7 @@ export default function RepsCarousel({
           onChangeRef.current?.(reps);
         },
         onPanResponderTerminate: () => {
+          setEditorBar.setDragging(false);
           glideHome();
         },
       }),
