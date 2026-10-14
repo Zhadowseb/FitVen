@@ -10,6 +10,7 @@ import { Colors, withAlpha } from "../../GlobalStyling/colors";
 import Minus from "../../Icons/UI-icons/Minus";
 import Plus from "../../Icons/UI-icons/Plus";
 import ThemedText from "../../ThemedComponents/ThemedText";
+import RepsCarousel from "./RepsCarousel";
 import { formatNumber, useTranslation } from "@localization";
 import { setEditorBar } from "@utils/setEditorBar";
 
@@ -54,7 +55,33 @@ function BarButton({ direction, disabled, bar, color, background, label }) {
   );
 }
 
-function BarContent({ bar }) {
+// The reps of a set: the carousel, over the keyboard. Its text and border
+// follow the keyboard's own look, like the weight bar's.
+function RepsBarContent({ bar }) {
+  const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme] ?? Colors.light;
+  const keyboardAppearance = useKeyboardState((state) => state.appearance);
+  const toolbarColors = DefaultKeyboardToolbarTheme[keyboardAppearance === "dark" ? "dark" : "light"];
+
+  return (
+    <View style={styles.bar}>
+      <RepsCarousel
+        value={bar.reps}
+        onChange={bar.onChangeReps}
+        suffix={bar.suffix}
+        suffixColor={theme.amrap}
+        borderColor={theme.primary}
+        textColor={toolbarColors.primary}
+        quietColor={toolbarColors.primary}
+        accessibilityLabel={t("workout.setList.repsCarouselLabel", { label: bar.label })}
+        onActivate={bar.onActivate}
+      />
+    </View>
+  );
+}
+
+function WeightBarContent({ bar }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -202,7 +229,15 @@ export default function SetEditorKeyboardToolbar() {
   return (
     <KeyboardToolbar
       showArrows={!bar}
-      content={bar ? <BarContent bar={bar} /> : null}
+      content={
+        bar ? (
+          bar.kind === "reps" ? (
+            <RepsBarContent bar={bar} />
+          ) : (
+            <WeightBarContent bar={bar} />
+          )
+        ) : null
+      }
     />
   );
 }

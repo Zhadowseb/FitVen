@@ -499,22 +499,25 @@ function createCloud() {
     "reps, RPE and 1RM % close it"
   );
 
-  // The reps carousel.
-  assert.ok(/<RepsCarousel/.test(setList) && /showsSetEditors\(resolvedVisibleColumns\)/.test(setList), "the carousel is for the tables that leave room");
+  // The reps carousel is in the bar over the keyboard, like the weight.
   assert.ok(
-    /activeEditableCell === repsKey/.test(setList) && /isSteppableSet\(set\)\s*&&\s*isPersistedSet\(set\.sets_id\)/.test(setList),
-    "while the reps are edited, and not on a finished or failed set"
+    /openRepsBar\(set, repsSuffix\)/.test(setList) && /kind: "reps"/.test(setList),
+    "the reps of a set with focus open the bar's carousel"
   );
   assert.ok(
-    /\{cell\}\s*\{showCarousel \? \(/.test(setList),
-    "the cell stays in one holder, carousel or not, so the field is not remounted and keeps its focus"
+    /showsSetEditors\(resolvedVisibleColumns\)\s*&&\s*isSteppableSet\(set\)\s*&&\s*isPersistedSet\(set\.sets_id\)/.test(setList),
+    "in the tables that leave room, and not on a finished, failed or unsaved set"
   );
+  assert.ok(!/<RepsCarousel|repsCarouselHost|raisedCell|typedReps/.test(setList), "no overlay on the cell any more");
   assert.ok(/REPS_SWIPE_SAVE_DELAY_MS/.test(setList) && /flushRepsRef\.current\?\.\(\)/.test(setList), "saved once after the swipe, and on the way out");
   assert.ok(/discardRepsDraft\(set\.sets_id\);\s*return updateField\("reps"/.test(setList), "what is typed wins over a swipe still waiting");
-  assert.ok(/onLiveChange: \(text\) => setTypedReps/.test(setList), "the carousel shows what is being typed");
-  assert.ok(/suffix=\{repsSuffix\}/.test(setList), "an AMRAP set keeps its suffix");
+  assert.ok(
+    /onLiveChange: \(text\) =>\s*setEditorBar\.update\(barOwnerId, set\.sets_id, \{ reps: text \}\)/.test(setList),
+    "the carousel shows what is being typed"
+  );
+  assert.ok(/setEditorBar\.close\(barOwnerId, repsBarSetId\)/.test(setList), "ticking the set off closes the carousel");
 
-  const carouselSource = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/RepsCarousel.js");
+  const carouselSource = read("src/Resources/Components/SetEditorBar/RepsCarousel.js");
 
   assert.ok(
     /Math\.abs\(gesture\.dx\) > 6 && Math\.abs\(gesture\.dx\) > Math\.abs\(gesture\.dy\)/.test(carouselSource),
@@ -535,9 +538,9 @@ function createCloud() {
   assert.ok(/isSteppableSet\(set\) && isPersistedSet\(set\.sets_id\)/.test(setList), "no bar on a finished, failed or unsaved set");
   assert.ok(/showsWeightStepper\(resolvedVisibleColumns/.test(setList), "the columns rule and bodyweight mode still apply");
   assert.ok(/setEditorBar\.close\(barOwnerId, weightBarSetId\)/.test(setList), "ticking the set off closes the bar");
-  const hostStyle = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetListStyle.js").match(/repsCarouselHost: {[^}]*}/)[0];
+  const listStyles = read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetListStyle.js");
 
-  assert.ok(!/height/.test(hostStyle), "the reps holder has no percentage height: it made the card several screens tall on a phone");
+  assert.ok(!/repsCarouselHost|raisedCell/.test(listStyles), "no holder around the reps cell: a percentage height in it made the card several screens tall on a phone");
   assert.ok(!/weightWithStepper/.test(read("src/Pages/WorkoutPage/WorkoutTypes/Resistance/Components/ExerciseList/Components/ExerciseRow/SetList/SetListStyle.js")));
 
   const cell = read("src/Resources/ThemedComponents/ThemedEditableCell.js");
@@ -556,6 +559,7 @@ function createCloud() {
   const bar = read("src/Resources/Components/SetEditorBar/SetEditorBar.js");
 
   assert.ok(/showArrows=\{!bar\}/.test(bar), "the arrows make way while the bar shows");
+  assert.ok(/bar\.kind === "reps"/.test(bar) && /<RepsBarContent bar=\{bar\} \/>/.test(bar), "the bar shows the carousel for reps and minus-plus for weight");
   assert.ok(/keyboardDidHide", \(\) => setEditorBar\.close\(\)/.test(bar), "the keyboard going away closes it");
   assert.ok(/keyboardType="numeric"/.test(bar), "the weight cell's keyboard");
   assert.ok(/delayLongPress=\{bar\.repeatDelayMs\}/.test(bar) && /onPressOut=\{\(\) => bar\.onRepeatStop\(\)\}/.test(bar), "hold to repeat");

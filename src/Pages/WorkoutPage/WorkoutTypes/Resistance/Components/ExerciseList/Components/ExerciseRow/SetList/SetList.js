@@ -68,7 +68,6 @@ import {
   stepWeight,
   weightStepToStore,
 } from "@utils/weightStep";
-import RepsCarousel from "./RepsCarousel";
 import SetTypeSheet from "./SetTypeSheet";
 import UndoToast from "./UndoToast";
 import { isToneRow, setTypeColor } from "./setTypeColors";
@@ -307,14 +306,11 @@ const SetList = ({
   // save what is typed in the weight field before it steps from it.
   const cellControlsRef = useRef(new Map());
   const [weightBarSetId, setWeightBarSetId] = useState(null);
-  // The reps carousel: the count a swipe has put on screen before it is saved,
-  // by set, and the text being typed in the reps field under it.
+  // The reps carousel is in the bar over the keyboard too, while the reps are
+  // edited: the count a swipe has put on screen before it is saved, by set, and
+  // which set's reps the bar is for.
   const [repsDrafts, setRepsDrafts] = useState({});
-  const [typedReps, setTypedReps] = useState(null);
-  // How wide a reps cell is: the carousel is that wide, at most 94 and at
-  // least enough for three numbers. Android only delivers touches inside a
-  // parent's own bounds, so the less it overflows, the less is dead.
-  const [repsCellWidth, setRepsCellWidth] = useState(0);
+  const [repsBarSetId, setRepsBarSetId] = useState(null);
   const repsSaveTimerRef = useRef(null);
   const repsDraftsRef = useRef({});
   const flushRepsRef = useRef(null);
@@ -1216,7 +1212,7 @@ const SetList = ({
     const reps = repsAsNumber(next);
 
     Vibration.vibrate(WEIGHT_STEP_HAPTIC_MS);
-    setTypedReps(null);
+    setEditorBar.update(barOwnerId, setId, { reps });
     setRepsDrafts((current) => ({ ...current, [setId]: reps }));
     clearTimeout(repsSaveTimerRef.current);
     repsSaveTimerRef.current = setTimeout(async () => {
@@ -1273,6 +1269,29 @@ const SetList = ({
     });
   }, [weightBarSetId, weightStep, barWeight, barSteppable]);
 
+  // The reps bar shows the count on screen, and goes when its set can no
+  // longer be changed.
+  const repsBarSet =
+    repsBarSetId === null
+      ? null
+      : (localSets ?? []).find((candidate) => candidate.sets_id === repsBarSetId) ?? null;
+  const repsBarSteppable = Boolean(repsBarSet) && isSteppableSet(repsBarSet);
+  const repsBarShown = repsBarSet ? repsDrafts[repsBarSetId] ?? repsBarSet.reps : null;
+
+  useEffect(() => {
+    if (repsBarSetId === null) {
+      return;
+    }
+
+    if (!repsBarSteppable) {
+      setEditorBar.close(barOwnerId, repsBarSetId);
+      setRepsBarSetId(null);
+      return;
+    }
+
+    setEditorBar.update(barOwnerId, repsBarSetId, { reps: repsBarShown });
+  }, [repsBarSetId, repsBarSteppable, repsBarShown]);
+
   const weightStepLabel = formatNumber(weightStep, { maximumFractionDigits: 2 });
 
   // A press on the bar: what is typed in the field is saved first, so the step
@@ -1303,6 +1322,7 @@ const SetList = ({
     repeat: (setId, direction) => startWeightRepeat(() => stepFromBar(setId, direction)),
     stop: stopWeightRepeat,
     saveStep: saveWeightStepFromBar,
+    swipe: (setId, next) => swipeReps(setId, next),
   };
 
   const barLabelFor = (set) =>
@@ -1313,7 +1333,9 @@ const SetList = ({
     const setId = set.sets_id;
 
     setWeightBarSetId(setId);
+    setRepsBarSetId(null);
     setEditorBar.open({
+      kind: "weight",
       ownerId: barOwnerId,
       setId,
       label: barLabelFor(set),
@@ -1324,6 +1346,25 @@ const SetList = ({
       onRepeatStart: (direction) => barApiRef.current.repeat(setId, direction),
       onRepeatStop: () => barApiRef.current.stop(),
       onStepSubmit: (text) => barApiRef.current.saveStep(text),
+    });
+  };
+
+  // The reps of this set got focus: the carousel - the count before, now and
+  // after, to swipe - replaces any other bar.
+  const openRepsBar = (set, suffix = "") => {
+    const setId = set.sets_id;
+
+    setRepsBarSetId(setId);
+    setWeightBarSetId(null);
+    setEditorBar.open({
+      kind: "reps",
+      ownerId: barOwnerId,
+      setId,
+      label: barLabelFor(set),
+      reps: repsDrafts[setId] ?? set.reps,
+      suffix,
+      onChangeReps: (next) => barApiRef.current.swipe(setId, next),
+      onActivate: () => cellControlsRef.current.get(`${setId}:reps`)?.focus?.(),
     });
   };
 
@@ -1496,12 +1537,18 @@ const SetList = ({
         const isAmrap = setType === "amrap";
         const target =
           Number(set.amrap_target) > 0 ? Number(set.amrap_target) : null;
-        const repsKey = `${set.sets_id}:reps`;
         // "9/6+": nine done against a target of six or more.
         const repsSuffix = isAmrap ? (target ? `/${target}+` : "AMRAP") : "";
         const draft = repsDrafts[set.sets_id];
-        const cell = renderEditableValue({
-          cellKey: repsKey,
+        // The carousel in the bar over the keyboard belongs to a set that can
+        // still be changed, in a table that leaves room for it.
+        const hasRepsBar =
+          showsSetEditors(resolvedVisibleColumns) &&
+          isSteppableSet(set) &&
+          isPersistedSet(set.sets_id);
+
+        return renderEditableValue({
+          cellKey: `${set.sets_id}:reps`,
           value: (draft ?? set.reps)?.toString() ?? "",
           suffix: repsSuffix,
           suffixStyle: isAmrap
@@ -1509,54 +1556,21 @@ const SetList = ({
             : undefined,
           showSuffixWhenEmpty: isAmrap,
           onFocus: () => {
-            setEditorBar.close();
-            setTypedReps(null);
+            if (hasRepsBar) {
+              openRepsBar(set, repsSuffix);
+            } else {
+              setEditorBar.close();
+            }
           },
-          onBlur: () => setTypedReps(null),
-          onLiveChange: (text) => setTypedReps({ key: repsKey, text }),
+          // What is typed shows in the bar's carousel before it is committed.
+          onLiveChange: (text) =>
+            setEditorBar.update(barOwnerId, set.sets_id, { reps: text }),
           onCommit: (value) => {
             // What is typed wins over a swipe still waiting to be saved.
             discardRepsDraft(set.sets_id);
             return updateField("reps", value, set.sets_id);
           },
         });
-        const showCarousel =
-          activeEditableCell === repsKey &&
-          showsSetEditors(resolvedVisibleColumns) &&
-          isSteppableSet(set) &&
-          isPersistedSet(set.sets_id);
-
-        const shownReps =
-          typedReps?.key === repsKey ? typedReps.text : draft ?? set.reps;
-
-        // The cell always sits in the same holder, carousel or not: moving it
-        // under a new parent when the carousel appears would remount the field
-        // and take the focus - and the keyboard - away.
-        return (
-          <View
-            style={styles.repsCarouselHost}
-            onLayout={(event) => setRepsCellWidth(Math.round(event.nativeEvent.layout.width))}
-          >
-            {cell}
-            {showCarousel ? (
-            <RepsCarousel
-              value={shownReps}
-              width={repsCellWidth}
-              onChange={(next) => swipeReps(set.sets_id, next)}
-              suffix={repsSuffix}
-              suffixColor={isAmrap ? theme.amrap : undefined}
-              surface={cellSurface}
-              borderColor={primaryColor}
-              textColor={theme.title ?? theme.text}
-              quietColor={theme.text}
-              accessibilityLabel={t("workout.setList.repsCarouselLabel", {
-                label: labelBySetId.get(set.sets_id)?.label ?? String(set.set_number ?? ""),
-              })}
-              onActivate={() => cellControlsRef.current.get(repsKey)?.focus?.()}
-            />
-            ) : null}
-          </View>
-        );
       }
 
       case "rpe":
@@ -1904,11 +1918,6 @@ const SetList = ({
                   borderColor: tableBorder,
                 },
                 isLast && { borderRightWidth: 0 },
-                // The carousel is wider than the reps column: this cell is
-                // drawn over the columns after it, not under them.
-                col.key === "reps" &&
-                  activeEditableCell === `${set.sets_id}:reps` &&
-                  styles.raisedCell,
               ]}
             >
               {renderCellContent(col.key, set, rowIndex)}

@@ -1,31 +1,28 @@
 import { useMemo, useRef } from "react";
 import { Animated, PanResponder, StyleSheet, View } from "react-native";
 
-import ThemedText from "@resources/ThemedComponents/ThemedText";
+import ThemedText from "../../ThemedComponents/ThemedText";
 import { repsCarouselNumbers, repsFromSwipe } from "@utils/repsCarousel";
 
-// The small carousel over the reps of the set being edited: the number before,
-// the number now and the number after - 7 · 8 · 9 - which can be swiped. Each
-// number passed is one rep, and onChange is called with the new count; the
-// set list shows it at once and saves it once the swiping has stopped.
+// The carousel in the bar over the keyboard while the reps of a set are
+// edited: the number before, the number now and the number after - 7 · 8 · 9 -
+// which can be swiped. Each number passed is one rep, and onChange is called
+// with the new count; the set list shows it at once and saves it once the
+// swiping has stopped. Typing in the field above still works, and the carousel
+// shows what is typed.
 //
-// The real field - the cell under this - is what is typed in; this shows what
-// it holds. It claims a gesture only when it is more sideways than up and
-// down, so the table still scrolls under a finger that starts on it.
+// It claims a gesture only when it is more sideways than up and down.
 
 // How far a finger moves for one rep.
 export const REPS_SWIPE_STEP_PX = 28;
-const BOX_WIDTH = 94;
-const MIN_BOX_WIDTH = 66;
+const BOX_WIDTH = 176;
 const BOX_HEIGHT = 32;
 
 export default function RepsCarousel({
   value,
-  width = 0,
   onChange,
   suffix = "",
   suffixColor,
-  surface,
   borderColor,
   textColor,
   quietColor,
@@ -96,14 +93,7 @@ export default function RepsCarousel({
           onActivate?.();
         }
       }}
-      style={[
-        styles.box,
-        {
-          width: Math.min(BOX_WIDTH, Math.max(width, MIN_BOX_WIDTH)),
-          backgroundColor: surface,
-          borderColor,
-        },
-      ]}
+      style={[styles.box, { borderColor }]}
     >
       <Animated.View style={[styles.row, { transform: [{ translateX: slide }] }]}>
         <ThemedText style={[styles.neighbour, styles.before]} setColor={quietColor}>
@@ -129,26 +119,18 @@ export default function RepsCarousel({
 
 const styles = StyleSheet.create({
   box: {
-    position: "absolute",
-    alignSelf: "center",
     width: BOX_WIDTH,
     height: BOX_HEIGHT,
     borderRadius: 12,
     borderWidth: 1.5,
     overflow: "hidden",
     justifyContent: "center",
-    zIndex: 20,
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOpacity: 0.28,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 9,
+    paddingHorizontal: 16,
   },
   centre: {
     flexDirection: "row",
@@ -170,7 +152,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     // No blur on text in React Native: smaller and fainter stands in for it.
     transform: [{ scale: 0.85 }],
-    minWidth: 14,
+    minWidth: 18,
   },
   before: {
     textAlign: "left",
