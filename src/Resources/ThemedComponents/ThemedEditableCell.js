@@ -84,8 +84,10 @@ const ThemedEditableCell = ({
       commit: () => commitRef.current?.(),
       focus: () => inputRef.current?.focus(),
       // Shows a value in the field without committing it: the reps carousel
-      // shows the number it is passing while a finger is on it.
-      preview: (text) => setLocalValue(text),
+      // shows the number it is passing while a finger is on it. Straight on the
+      // native input - a render per number made the scroll laggy - and the
+      // field's own state is brought into line when the count is saved.
+      preview: (text) => inputRef.current?.setNativeProps?.({ text }),
     });
 
     return () => registerControl(null);

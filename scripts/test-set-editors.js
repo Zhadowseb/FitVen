@@ -551,7 +551,7 @@ function createCloud() {
     "the carousel shows what is being typed"
   );
   assert.ok(/setEditorBar\.close\(barOwnerId, repsBarSetId\)/.test(setList), "ticking the set off closes the carousel");
-  assert.ok(/onPreviewReps: \(next\) =>\s*cellControlsRef\.current\.get\(`\$\{setId\}:reps`\)\?\.preview\?\.\(String\(next\)\)/.test(setList) && /preview: \(text\) => setLocalValue\(text\)/.test(read("src/Resources/ThemedComponents/ThemedEditableCell.js")), "the number the carousel is passing shows in the cell without a render of the set list");
+  assert.ok(/onPreviewReps: \(next\) =>\s*cellControlsRef\.current\.get\(`\$\{setId\}:reps`\)\?\.preview\?\.\(String\(next\)\)/.test(setList) && /preview: \(text\) => inputRef\.current\?\.setNativeProps\?\.\(\{ text \}\)/.test(read("src/Resources/ThemedComponents/ThemedEditableCell.js")), "the number the carousel is passing shows in the cell without a render of the set list");
 
   const carouselSource = read("src/Resources/Components/SetEditorBar/RepsCarousel.js");
 
@@ -569,11 +569,11 @@ function createCloud() {
 
   assert.ok(!/onChangeRef|Vibration|onPreview|setMiddle/.test(moveHandler), "while the finger is down the move handler only moves the strip: ticks, the cell and the window follow it from a listener, and nothing is saved");
   assert.ok(/scroll\.setValue\(\s*scrollPositionFor\(/.test(moveHandler), "the strip is its own value, set straight from the finger, and cannot be dragged past 0");
-  assert.ok(/scroll\.addListener\(/.test(carouselSource) && /Vibration\.vibrate\(TICK_MS\)/.test(carouselSource) && /onPreviewRef\.current\?\.\(reps\)/.test(carouselSource), "every number that passes the middle ticks and shows in the cell");
-  assert.ok(/activeRef\.current\)\s*\{\s*Vibration/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
+  assert.ok(/scroll\.addListener\(/.test(carouselSource) && /Vibration\.vibrate\(TICK_MS\)/.test(carouselSource) && /MIN_TICK_GAP_MS/.test(carouselSource) && /onPreviewRef\.current\?\.\(reps\)/.test(carouselSource), "every number that passes the middle ticks and shows in the cell");
+  assert.ok(/if \(activeRef\.current\) \{[\s\S]*Vibration\.vibrate/.test(carouselSource), "but only while a finger or the settling is on the strip, not when the count is changed from outside");
   assert.ok(/onPanResponderRelease[\s\S]*settledReps\(/.test(carouselSource) && /onChangeRef\.current\?\.\(reps\)/.test(carouselSource), "the count is handed over when the strip has settled");
   assert.ok(/onPanResponderTerminate[\s\S]*onPreviewRef\.current\?\.\(dragRef\.current\.startReps\)/.test(carouselSource), "a drag that is taken away puts the cell back");
-  assert.ok(/const SPREAD = 6;/.test(carouselSource) && /visibleRepsWindow\(middle, SPREAD\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to");
+  assert.ok(/const SPREAD = 9;/.test(carouselSource) && /const RECENTRE = 4;/.test(carouselSource) && /visibleRepsWindow\(windowCentre, SPREAD\)/.test(carouselSource), "the numbers around the middle are drawn from where the strip is, so there is always more to scroll to - and drawn again only every few numbers, not on every one");
   assert.ok(/dragRef\.current\.startScroll = positionRef\.current/.test(carouselSource), "a finger that lands on a gliding strip takes it from where it is");
   assert.ok(
     /onPanResponderGrant[\s\S]*setEditorBar\.setDragging\(true\)/.test(carouselSource) &&

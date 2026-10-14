@@ -31,13 +31,19 @@ import { setEditorBar } from "@utils/setEditorBar";
 
 // How far apart the numbers are, and so how far a finger goes for one rep.
 export const REPS_ITEM_SPACING_PX = 44;
-// Numbers drawn on each side of the middle. Two show; the others are the buffer.
-const SPREAD = 6;
+// Numbers drawn on each side of the middle. Two show; the others are the
+// buffer. The window is only drawn again when the middle has moved RECENTRE
+// numbers from its centre, not on every number: a render per number made the
+// scroll laggy.
+const SPREAD = 9;
+const RECENTRE = 4;
 const BOX_WIDTH = 232;
 const BOX_HEIGHT = 34;
 const ITEM_WIDTH = 40;
-// One short tick for every number that becomes the count.
+// One short tick for every number that becomes the count - and not more often
+// than this, or a fast flick buzzes instead of ticking.
 const TICK_MS = 8;
+const MIN_TICK_GAP_MS = 35;
 
 export default function RepsCarousel({
   value,
@@ -53,10 +59,14 @@ export default function RepsCarousel({
   const current = repsAsNumber(value);
   // The strip's position, in pixels: the reps n are in the middle at n * step.
   const scroll = useRef(new Animated.Value(current * REPS_ITEM_SPACING_PX)).current;
-  // The number in the middle now, which is also where the drawn window is
-  // centred. Changes while a finger drags; the strip itself does not wait for it.
-  const [middle, setMiddle] = useState(current);
+  // Where the drawn window is centred. It follows the strip in jumps, not number
+  // by number; the strip itself, the emphasis and the ticks never wait for it.
+  const [windowCentre, setWindowCentre] = useState(current);
+  const windowCentreRef = useRef(current);
+  // The number in the middle now.
   const middleRef = useRef(current);
+  // The count the suffix (an AMRAP target) belongs to: the saved one.
+  const lastTickRef = useRef(0);
   const valueRef = useRef(current);
   const onChangeRef = useRef(onChange);
   const onPreviewRef = useRef(onPreview);
@@ -111,10 +121,21 @@ export default function RepsCarousel({
       }
 
       middleRef.current = reps;
-      setMiddle(reps);
+
+      // Only a render when the middle has come near the edge of what is drawn.
+      if (Math.abs(reps - windowCentreRef.current) >= RECENTRE) {
+        windowCentreRef.current = reps;
+        setWindowCentre(reps);
+      }
 
       if (activeRef.current) {
-        Vibration.vibrate(TICK_MS);
+        const now = Date.now();
+
+        if (now - lastTickRef.current >= MIN_TICK_GAP_MS) {
+          lastTickRef.current = now;
+          Vibration.vibrate(TICK_MS);
+        }
+
         onPreviewRef.current?.(reps);
       }
     });
@@ -241,12 +262,12 @@ export default function RepsCarousel({
       }}
     >
       <View style={[styles.box, { borderColor }]} pointerEvents="none">
-        {visibleRepsWindow(middle, SPREAD).map((reps) => (
+        {visibleRepsWindow(windowCentre, SPREAD).map((reps) => (
           <Animated.View key={reps} style={[styles.item, styleFor(reps)]}>
             <ThemedText style={styles.number} setColor={textColor}>
               {reps}
             </ThemedText>
-            {reps === middle && suffix ? (
+            {reps === current && suffix ? (
               <ThemedText style={styles.suffix} setColor={suffixColor ?? textColor}>
                 {suffix}
               </ThemedText>
