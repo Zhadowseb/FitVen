@@ -122,6 +122,19 @@ export default function RepsCarousel({
     return () => scroll.removeListener(id);
   }, []);
 
+  // Put the strip on the phone's UI thread from the start: the numbers then
+  // move there, with the finger, and a busy JS thread - a render of the cell, a
+  // tick - cannot hold the scroll up. (A value only moves to the UI thread once
+  // an animation with the native driver has run on it; this is a first, empty
+  // one.)
+  useEffect(() => {
+    Animated.timing(scroll, {
+      toValue: valueRef.current * REPS_ITEM_SPACING_PX,
+      duration: 1,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   // The count changed from outside - typed, saved - while no finger is on the
   // strip: it goes there.
   useEffect(() => {
@@ -148,7 +161,7 @@ export default function RepsCarousel({
         toValue: target,
         duration: 140 + Math.min(distance, 12) * 28,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }).start(({ finished }) => {
         if (!finished) {
           return;
