@@ -16,16 +16,6 @@
     },
     "production": {
       "autoIncrement": true
-    },
-    "internal-test": {
-      "distribution": "store",
-      "autoIncrement": true,
-      "android": {
-        "buildType": "app-bundle"
-      },
-      "env": {
-        "EXPO_PUBLIC_TEST_BUILD": "1"
-      }
     }
   },
   "submit": {
