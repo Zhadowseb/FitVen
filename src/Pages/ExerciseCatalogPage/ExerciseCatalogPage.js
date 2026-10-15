@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import {
   Alert,
-  ScrollView,
   TouchableOpacity,
   View,
   useColorScheme,
@@ -392,36 +391,9 @@ const ExerciseCatalogPage = ({ route }) => {
         ) : null}
       </ThemedHeader>
 
-      {/*
-        The picker scrolls its own list. A list inside a ScrollView is handed
-        unlimited height and so renders every row, which is the whole reason
-        the picker was slow. The catalog keeps the page scroll - its list is a
-        fixed-height window with the rest of the card above it, so it cannot
-        own the scrolling without moving the card around it.
-
-        This stays a ScrollView. Making it a FlatList carrying the page in its
-        header silences React Native's "VirtualizedLists should never be nested
-        inside plain ScrollViews" warning, but it also stops the catalog's own
-        list from scrolling: nested inside another VirtualizedList, the inner
-        list hands its scrolling to the parent and then sits frozen on its
-        first ten rows. Verified on a device. The warning is dev-only
-        (`VirtualizedList.js`, inside `if (__DEV__)`) and is a false alarm
-        here, because `styles.listScroll` gives the inner list a fixed height
-        and therefore a real viewport to virtualize against.
-      */}
-      {isWorkoutPicker ? (
-        <View style={[styles.content, styles.scrollContent]}>{exerciseList}</View>
-      ) : (
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          style={styles.content}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {exerciseList}
-        </ScrollView>
-      )}
+      {/* The list is the page, in both: it scrolls itself, with its search and
+          filters as its header, so there is no scroll view round it. */}
+      <View style={[styles.content, styles.scrollContent]}>{exerciseList}</View>
 
       <CustomExerciseModal
         visible={isCustomExerciseModalVisible}

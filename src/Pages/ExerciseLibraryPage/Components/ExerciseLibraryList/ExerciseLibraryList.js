@@ -9,9 +9,6 @@ import {
   useColorScheme,
   useWindowDimensions,
 } from "react-native";
-// A deep import, because React Native does not re-export this from its root.
-// It is the same module Modal pulls it from; see the list below for why.
-import { VirtualizedListContextResetter } from "react-native/Libraries/Lists/VirtualizedListContext";
 import { useSQLiteContext } from "expo-sqlite";
 import { useNavigation } from "@react-navigation/native";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -22,13 +19,12 @@ import styles, {
   VISIBLE_EXERCISE_COUNT,
 } from "./ExerciseLibraryListStyle";
 import ExerciseFilterSheet from "../ExerciseFilterSheet/ExerciseFilterSheet";
-import { weightliftingService } from "../../../../Services";
+import { exercisePopularityService, weightliftingService } from "../../../../Services";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 import Cross from "../../../../Resources/Icons/UI-icons/Cross";
 import BodyMapPreview from "../../../../Resources/Components/BodyMapPreview/BodyMapPreview";
 import Checkmark from "../../../../Resources/Icons/UI-icons/Checkmark";
 import Filter from "../../../../Resources/Icons/UI-icons/Filter";
-import Library from "../../../../Resources/Icons/UI-icons/Library";
 import Plus from "../../../../Resources/Icons/UI-icons/Plus";
 import Search from "../../../../Resources/Icons/UI-icons/Search";
 import Star from "../../../../Resources/Icons/UI-icons/Star";
@@ -42,8 +38,8 @@ import {
   toggleExerciseMuscleFilterKey,
 } from "../../../../Utils/exerciseMuscleGroups";
 import { pickerNameKey } from "../../../../Utils/exercisePickerSession";
+import { popularLibraryEntries } from "../../../../Utils/exercisePopularity";
 import {
-  ThemedCard,
   ThemedModal,
   ThemedText,
   ThemedTitle,
@@ -84,6 +80,7 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
   isSelectionBusy,
   isWorkoutPicker,
   colors,
+  subtitle = null,
   onPress,
   onToggleFavourite,
 }) {
@@ -178,6 +175,16 @@ const CatalogExerciseRow = memo(function CatalogExerciseRow({
             </View>
           ) : null}
         </View>
+
+        {subtitle ? (
+          <ThemedText
+            style={styles.exerciseSubtitle}
+            setColor={colors.quietText}
+            numberOfLines={1}
+          >
+            {subtitle}
+          </ThemedText>
+        ) : null}
       </View>
 
       <TouchableOpacity
@@ -425,6 +432,10 @@ const ExerciseLibraryList = ({
     initialFilter === "recent"
   );
   const [recentNames, setRecentNames] = useState(() => new Set());
+  // What the server says the most people train regularly (see
+  // Utils/exercisePopularity.js); nothing until it has answered, and nothing
+  // for good when it cannot.
+  const [popularRows, setPopularRows] = useState([]);
 
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   // The body map is 503x1294, so width-driven sizing makes it far too tall for
@@ -795,9 +806,10 @@ const ExerciseLibraryList = ({
 
   const lastCatalogIndex = filteredExercises.length - 1;
   const renderCatalogRow = useCallback(
-    ({ item, index }) => (
+    ({ item, index, subtitle = null }) => (
       <CatalogExerciseRow
         exercise={item}
+        subtitle={subtitle}
         isLast={index === lastCatalogIndex}
         isSelecting={selectingExerciseName === item.exercise_name}
         isAdded={addedNameSet.has(pickerNameKey(item.exercise_name))}
@@ -828,6 +840,42 @@ const ExerciseLibraryList = ({
     loadExerciseStorage();
   }, [refreshKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    exercisePopularityService.getPopularExercises().then((rows) => {
+      if (!cancelled) {
+        setPopularRows(rows);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  // At the top of the list, until the person searches or filters: then they
+  // are looking for something, and a section above it is in the way.
+  const popularEntries = useMemo(
+    () => popularLibraryEntries(popularRows, exercises),
+    [popularRows, exercises]
+  );
+  const showPopular =
+    popularEntries.length > 0 && normalizedSearchQuery === "" && activeFilterCount === 0;
+
+  const renderPopularSection = (renderRow) =>
+    showPopular ? (
+      <View style={styles.popularSection}>
+        <ThemedText style={styles.popularEyebrow} setColor={quietText}>
+          {t("exercises.library.popular")}
+        </ThemedText>
+        {popularEntries.map((entry, index) => renderRow(entry, index))}
+      </View>
+    ) : null;
+
+  const popularLine = (entry) =>
+    t("exercises.library.popularUsers", { count: entry.regularUsers });
+
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedGroupKey("all");
@@ -852,6 +900,211 @@ const ExerciseLibraryList = ({
     const selectedSecondaryMuscleLabels = selectedExercise
       ? getExerciseMuscleLabels(selectedExercise, "secondary")
       : [];
+
+    const renderPickerRow = ({ item: exercise, index, subtitle = null }) => {
+              const isCurrentSelection =
+                selectingExerciseName === exercise.exercise_name;
+              const isLast = index === filteredExercises.length - 1;
+              const addedHere = wasAddedHere(exercise);
+              const thereBefore = wasThereBefore(exercise);
+              const isIn = addedHere || thereBefore;
+
+              // Only the + adds. A tap anywhere else on the row used to add
+              // as well, so scrolling past with a thumb put exercises in the
+              // workout; now it shows the muscles, as the figure always did.
+              return (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={t("exercises.library.showMusclesA11y", {
+                    name: exercise.exercise_name,
+                  })}
+                  onPress={() => setSelectedExercise(exercise)}
+                  style={[
+                    styles.pickerExerciseRow,
+                    isCurrentSelection && {
+                      backgroundColor: withAlpha(theme.secondary, 0.07),
+                    },
+                  ]}
+                >
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t("exercises.library.showMusclesA11y", {
+                      name: exercise.exercise_name,
+                    })}
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      setSelectedExercise(exercise);
+                    }}
+                    style={[
+                      styles.pickerPreviewTile,
+                      {
+                        backgroundColor: inputSurface,
+                        borderColor: isCurrentSelection
+                          ? withAlpha(theme.secondary, 0.35)
+                          : cardBorder,
+                      },
+                    ]}
+                  >
+                    <BodyMapPreview
+                      bodyView={exercise.body_map_view}
+                      crop={exercise.body_map_section}
+                      primaryRegionKeys={exercise.primary_body_map_region_keys}
+                      secondaryRegionKeys={
+                        exercise.secondary_body_map_region_keys
+                      }
+                      style={styles.pickerPreviewBodyMap}
+                    />
+                  </Pressable>
+
+                  <View style={styles.pickerExerciseBody}>
+                    <View style={styles.pickerExerciseTitleRow}>
+                      <ThemedText
+                        style={styles.pickerExerciseName}
+                        setColor={titleColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {exercise.exercise_name}
+                      </ThemedText>
+
+                      {exercise.is_custom ? (
+                        <View
+                          style={[
+                            styles.pickerCustomBadge,
+                            { backgroundColor: withAlpha(theme.primary, 0.14) },
+                          ]}
+                        >
+                          <ThemedText
+                            style={styles.pickerCustomBadgeText}
+                            setColor={primaryTextColor}
+                          >
+                            {t("exercises.library.customBadge")}
+                          </ThemedText>
+                        </View>
+                      ) : null}
+                    </View>
+
+                    {/* The sheet stays open now, so this has to survive the
+                        moment the add finishes - otherwise a row that has
+                        already gone in looks the same as one that has not. */}
+                    {isIn ? (
+                      <ThemedText
+                        style={styles.pickerAddedText}
+                        setColor={addedHere ? secondaryColor : quietText}
+                        numberOfLines={1}
+                      >
+                        {addedHere
+                          ? t("exercises.library.addedTo", {
+                              name: workoutTargetLabel,
+                            })
+                          : t("exercises.library.alreadyIn", {
+                              name: workoutTargetLabel,
+                            })}
+                      </ThemedText>
+                    ) : subtitle ? (
+                      <ThemedText
+                        style={styles.pickerAddedText}
+                        setColor={quietText}
+                        numberOfLines={1}
+                      >
+                        {subtitle}
+                      </ThemedText>
+                    ) : null}
+                  </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isFavouriteExercise(exercise) }}
+                    accessibilityLabel={
+                      isFavouriteExercise(exercise)
+                        ? t("exercises.library.removeFavouriteA11y", {
+                            name: exercise.exercise_name,
+                          })
+                        : t("exercises.library.addFavouriteA11y", {
+                            name: exercise.exercise_name,
+                          })
+                    }
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      toggleFavourite(exercise);
+                    }}
+                    style={styles.favouriteToggle}
+                  >
+                    <Star
+                      width={19}
+                      height={19}
+                      color={
+                        isFavouriteExercise(exercise) ? theme.planned : quietText
+                      }
+                      filled={isFavouriteExercise(exercise)}
+                      roundness={1.6}
+                    />
+                  </TouchableOpacity>
+
+                  {/* In the workout it is ticked, and pressed takes it back
+                      out: at once if it went in on this visit, after a
+                      question if it was there before. */}
+                  <TouchableOpacity
+                    activeOpacity={0.86}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isIn, busy: isCurrentSelection }}
+                    accessibilityLabel={t(
+                      isIn
+                        ? "exercises.library.removeFromWorkoutA11y"
+                        : "exercises.library.addToWorkoutA11y",
+                      { name: exercise.exercise_name }
+                    )}
+                    disabled={isSelectionBusy || !isPickerReady}
+                    hitSlop={6}
+                    onPress={(event) => {
+                      event.stopPropagation?.();
+                      onToggleExercise?.(exercise);
+                    }}
+                    style={[
+                      styles.pickerAddButton,
+                      {
+                        backgroundColor: isIn
+                          ? secondaryColor
+                          : withAlpha(theme.primary, 0.14),
+                        opacity: isPickerReady ? 1 : 0.5,
+                      },
+                    ]}
+                  >
+                    {isCurrentSelection ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={isIn ? theme.inkOnSecondary ?? theme.textInverted : primaryTextColor}
+                      />
+                    ) : isIn ? (
+                      <Checkmark
+                        width={17}
+                        height={17}
+                        color={theme.inkOnSecondary ?? theme.textInverted}
+                        thickness={2.1}
+                      />
+                    ) : (
+                      <Plus
+                        width={17}
+                        height={17}
+                        color={primaryTextColor}
+                        thickness={2.1}
+                      />
+                    )}
+                  </TouchableOpacity>
+
+                  {!isLast ? (
+                    <View
+                      style={[
+                        styles.pickerExerciseDivider,
+                        { backgroundColor: cardBorder },
+                      ]}
+                    />
+                  ) : null}
+                </Pressable>
+              );
+    };
 
     return (
       <>
@@ -1068,13 +1321,7 @@ const ExerciseLibraryList = ({
           showsVerticalScrollIndicator={false}
           initialNumToRender={VISIBLE_EXERCISE_COUNT}
           windowSize={5}
-          style={[
-            styles.pickerExerciseList,
-            {
-              backgroundColor: cardSurface,
-              borderColor: cardBorder,
-            },
-          ]}
+          style={styles.pickerExerciseList}
           ListEmptyComponent={
             isLoadingExercises && exercises.length === 0 ? (
               <View style={styles.pickerEmptyState}>
@@ -1103,207 +1350,12 @@ const ExerciseLibraryList = ({
               </View>
             )
           }
-          renderItem={({ item: exercise, index }) => {
-              const isCurrentSelection =
-                selectingExerciseName === exercise.exercise_name;
-              const isLast = index === filteredExercises.length - 1;
-              const addedHere = wasAddedHere(exercise);
-              const thereBefore = wasThereBefore(exercise);
-              const isIn = addedHere || thereBefore;
-
-              // Only the + adds. A tap anywhere else on the row used to add
-              // as well, so scrolling past with a thumb put exercises in the
-              // workout; now it shows the muscles, as the figure always did.
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={t("exercises.library.showMusclesA11y", {
-                    name: exercise.exercise_name,
-                  })}
-                  onPress={() => setSelectedExercise(exercise)}
-                  style={[
-                    styles.pickerExerciseRow,
-                    isCurrentSelection && {
-                      backgroundColor: withAlpha(theme.secondary, 0.07),
-                    },
-                  ]}
-                >
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={t("exercises.library.showMusclesA11y", {
-                      name: exercise.exercise_name,
-                    })}
-                    onPress={(event) => {
-                      event.stopPropagation?.();
-                      setSelectedExercise(exercise);
-                    }}
-                    style={[
-                      styles.pickerPreviewTile,
-                      {
-                        backgroundColor: inputSurface,
-                        borderColor: isCurrentSelection
-                          ? withAlpha(theme.secondary, 0.35)
-                          : cardBorder,
-                      },
-                    ]}
-                  >
-                    <BodyMapPreview
-                      bodyView={exercise.body_map_view}
-                      crop={exercise.body_map_section}
-                      primaryRegionKeys={exercise.primary_body_map_region_keys}
-                      secondaryRegionKeys={
-                        exercise.secondary_body_map_region_keys
-                      }
-                      style={styles.pickerPreviewBodyMap}
-                    />
-                  </Pressable>
-
-                  <View style={styles.pickerExerciseBody}>
-                    <View style={styles.pickerExerciseTitleRow}>
-                      <ThemedText
-                        style={styles.pickerExerciseName}
-                        setColor={titleColor}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        {exercise.exercise_name}
-                      </ThemedText>
-
-                      {exercise.is_custom ? (
-                        <View
-                          style={[
-                            styles.pickerCustomBadge,
-                            { backgroundColor: withAlpha(theme.primary, 0.14) },
-                          ]}
-                        >
-                          <ThemedText
-                            style={styles.pickerCustomBadgeText}
-                            setColor={primaryTextColor}
-                          >
-                            {t("exercises.library.customBadge")}
-                          </ThemedText>
-                        </View>
-                      ) : null}
-                    </View>
-
-                    {/* The sheet stays open now, so this has to survive the
-                        moment the add finishes - otherwise a row that has
-                        already gone in looks the same as one that has not. */}
-                    {isIn ? (
-                      <ThemedText
-                        style={styles.pickerAddedText}
-                        setColor={addedHere ? secondaryColor : quietText}
-                        numberOfLines={1}
-                      >
-                        {addedHere
-                          ? t("exercises.library.addedTo", {
-                              name: workoutTargetLabel,
-                            })
-                          : t("exercises.library.alreadyIn", {
-                              name: workoutTargetLabel,
-                            })}
-                      </ThemedText>
-                    ) : (
-                      // The muscles are on the row's own figure. Naming them
-                      // beside it said the same thing twice, in the space the
-                      // exercise name needed.
-                      null
-                    )}
-                  </View>
-
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isFavouriteExercise(exercise) }}
-                    accessibilityLabel={
-                      isFavouriteExercise(exercise)
-                        ? t("exercises.library.removeFavouriteA11y", {
-                            name: exercise.exercise_name,
-                          })
-                        : t("exercises.library.addFavouriteA11y", {
-                            name: exercise.exercise_name,
-                          })
-                    }
-                    onPress={(event) => {
-                      event.stopPropagation?.();
-                      toggleFavourite(exercise);
-                    }}
-                    style={styles.favouriteToggle}
-                  >
-                    <Star
-                      width={19}
-                      height={19}
-                      color={
-                        isFavouriteExercise(exercise) ? theme.planned : quietText
-                      }
-                      filled={isFavouriteExercise(exercise)}
-                      roundness={1.6}
-                    />
-                  </TouchableOpacity>
-
-                  {/* In the workout it is ticked, and pressed takes it back
-                      out: at once if it went in on this visit, after a
-                      question if it was there before. */}
-                  <TouchableOpacity
-                    activeOpacity={0.86}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: isIn, busy: isCurrentSelection }}
-                    accessibilityLabel={t(
-                      isIn
-                        ? "exercises.library.removeFromWorkoutA11y"
-                        : "exercises.library.addToWorkoutA11y",
-                      { name: exercise.exercise_name }
-                    )}
-                    disabled={isSelectionBusy || !isPickerReady}
-                    hitSlop={6}
-                    onPress={(event) => {
-                      event.stopPropagation?.();
-                      onToggleExercise?.(exercise);
-                    }}
-                    style={[
-                      styles.pickerAddButton,
-                      {
-                        backgroundColor: isIn
-                          ? secondaryColor
-                          : withAlpha(theme.primary, 0.14),
-                        opacity: isPickerReady ? 1 : 0.5,
-                      },
-                    ]}
-                  >
-                    {isCurrentSelection ? (
-                      <ActivityIndicator
-                        size="small"
-                        color={isIn ? theme.inkOnSecondary ?? theme.textInverted : primaryTextColor}
-                      />
-                    ) : isIn ? (
-                      <Checkmark
-                        width={17}
-                        height={17}
-                        color={theme.inkOnSecondary ?? theme.textInverted}
-                        thickness={2.1}
-                      />
-                    ) : (
-                      <Plus
-                        width={17}
-                        height={17}
-                        color={primaryTextColor}
-                        thickness={2.1}
-                      />
-                    )}
-                  </TouchableOpacity>
-
-                  {!isLast ? (
-                    <View
-                      style={[
-                        styles.pickerExerciseDivider,
-                        { backgroundColor: cardBorder },
-                      ]}
-                    />
-                  ) : null}
-                </Pressable>
-              );
-          }}
+          renderItem={renderPickerRow}
+          ListHeaderComponent={renderPopularSection((entry, index) => (
+            <View key={`popular-${entry.exercise.exercise_name}`}>
+              {renderPickerRow({ item: entry.exercise, index: -1, subtitle: popularLine(entry) })}
+            </View>
+          ))}
         />
 
         {onAddCustomExercise ? (
@@ -1604,50 +1656,20 @@ const ExerciseLibraryList = ({
 
   return (
     <>
-      <ThemedCard
-        style={[
-          styles.card,
-          {
-            backgroundColor: cardSurface,
-            borderColor: cardBorder,
-          },
-        ]}
-      >
-      <View style={styles.header}>
-        <View style={[styles.headerIcon, { backgroundColor: secondaryBadgeSurface }]}>
-          <Library width={22} height={22} color={primaryTextColor} />
-        </View>
-
-        <View style={styles.headerCopy}>
-          <ThemedText size={11} style={styles.eyebrow} setColor={primaryTextColor}>
-            {isWorkoutPicker
-              ? t("exercises.library.eyebrowWorkout")
-              : t("exercises.library.eyebrowTrain")}
-          </ThemedText>
-          <ThemedTitle
-            type="h3"
-            style={[styles.title, { color: titleColor }]}
-          >
-            {isWorkoutPicker
-              ? t("exercises.addExercise")
-              : t("exercises.library.title")}
-          </ThemedTitle>
-          {isWorkoutPicker ? (
-            <ThemedText style={styles.description} setColor={quietText}>
-              {t("exercises.library.workoutExercise")}
-            </ThemedText>
-          ) : null}
-        </View>
-
-      </View>
-
-      <View
-        style={[
-          styles.divider,
-          { backgroundColor: theme.border ?? cardBorder },
-        ]}
-      />
-
+      <FlatList
+        data={filteredExercises}
+        keyExtractor={catalogKeyExtractor}
+        renderItem={renderCatalogRow}
+        initialNumToRender={VISIBLE_EXERCISE_COUNT}
+        maxToRenderPerBatch={VISIBLE_EXERCISE_COUNT}
+        windowSize={5}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        style={styles.catalogList}
+        contentContainerStyle={styles.catalogListContent}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
       <View style={styles.searchRow}>
         <View
           style={[
@@ -1779,6 +1801,16 @@ const ExerciseLibraryList = ({
         </View>
       ) : null}
 
+
+            {renderPopularSection((entry) => (
+              <View key={`popular-${entry.exercise.exercise_name}`}>
+                {renderCatalogRow({
+                  item: entry.exercise,
+                  index: -1,
+                  subtitle: popularLine(entry),
+                })}
+              </View>
+            ))}
       {/* The map replaces the two paragraphs that used to explain primary and
           secondary here. It says the same thing by colouring the muscles, and
           it does something as well: tapping one filters the list below. */}
@@ -1828,101 +1860,59 @@ const ExerciseLibraryList = ({
         </ThemedText>
       </View>
 
-      {isLoadingExercises && exercises.length === 0 ? (
-        <View style={styles.emptyState}>
-          <ActivityIndicator color={primaryTextColor} />
-          <ThemedText style={styles.emptyBody} setColor={quietText}>
-            {t("exercises.loading")}
-          </ThemedText>
-        </View>
-      ) : exercises.length === 0 ? (
-        <View style={styles.emptyState}>
-          <ThemedTitle type="h3" style={styles.emptyTitle}>
-            {t("exercises.library.emptyTitle")}
-          </ThemedTitle>
-          <ThemedText style={styles.emptyBody} setColor={quietText}>
-            {t("exercises.library.emptyBody")}
-          </ThemedText>
-        </View>
-      ) : filteredExercises.length === 0 ? (
-        // BUG-16: this used to be a viewport-height box with its text centred
-        // in it, so a filter that matched nothing looked like a blank screen -
-        // the message sat below the fold. The way out was a Reset button
-        // inside the filter sheet, which is not visible from the list.
-        <View style={styles.emptyState}>
-          <ThemedTitle type="h3" style={styles.emptyTitle}>
-            {t("exercises.library.noMatchesTitle")}
-          </ThemedTitle>
-          <ThemedText style={styles.emptyBody} setColor={quietText}>
-            {activeFilterCount > 0
-              ? t("exercises.library.noMatchEveryFilter")
-              : t("exercises.library.tryAnotherSearch")}
-          </ThemedText>
 
-          {activeFilterCount > 0 ? (
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel={t("exercises.library.clearAllFiltersA11y")}
-              activeOpacity={0.85}
-              onPress={resetFilters}
-              style={[styles.emptyResetButton, { borderColor: cardBorder }]}
-            >
-              <ThemedText
-                style={styles.emptyResetText}
-                setColor={primaryTextColor}
-              >
-                {t("exercises.library.clearFilters", { count: activeFilterCount })}
+          </View>
+        }
+        ListEmptyComponent={
+          isLoadingExercises && exercises.length === 0 ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator color={primaryTextColor} />
+              <ThemedText style={styles.emptyBody} setColor={quietText}>
+                {t("exercises.loading")}
               </ThemedText>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      ) : (
-        // BUG-14: the warning "VirtualizedLists should never be nested inside
-        // plain ScrollViews" is about a list that was handed unlimited height
-        // and so cannot virtualize. That is not this list - `styles.listScroll`
-        // fixes its height, so it has a real viewport and owns its scrolling.
-        // The parent ScrollView has to stay: making it a list froze this one on
-        // its first ten rows, verified on a device.
-        //
-        // These two are React Native's own escape hatch for exactly that case,
-        // and `Modal` pairs them the same way. The warning fires when an
-        // enclosing ScrollView's context is present and the list's own context
-        // is null, so the ScrollView provider is the half that silences it -
-        // the resetter alone makes it more likely, not less.
-        <VirtualizedListContextResetter>
-        <ScrollView.Context.Provider value={null}>
-        <FlatList
-          // Was a ScrollView with a plain `.map()`, on the reasoning that a
-          // fixed-height window inside a scrolling page could not own its own
-          // scrolling. It can: `styles.listScroll` already fixes the height,
-          // so a FlatList sits in the same card and needs no layout change.
-          //
-          // The reason it matters: every row mounts a body figure - an image
-          // plus an SVG overlay - and `.map()` built all 89 of them in one
-          // commit. Measured on a Galaxy A34 (dev build), removing a selected
-          // muscle took 521 ms, against 77 ms for selecting one. Both redraw
-          // the same two large figures; the difference was the list growing
-          // from 16 rows back to 89.
-          //
-          // No `getItemLayout`: the rows measured 174-177 px at density 450,
-          // so the height is not the clean constant `EXERCISE_ROW_HEIGHT`
-          // suggests, and a wrong value there drifts the scroll position.
-          data={filteredExercises}
-          keyExtractor={catalogKeyExtractor}
-          renderItem={renderCatalogRow}
-          initialNumToRender={VISIBLE_EXERCISE_COUNT}
-          maxToRenderPerBatch={VISIBLE_EXERCISE_COUNT}
-          windowSize={5}
-          keyboardShouldPersistTaps="handled"
-          style={styles.listScroll}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled
-        />
-        </ScrollView.Context.Provider>
-        </VirtualizedListContextResetter>
-      )}
-      </ThemedCard>
+            </View>
+          ) : exercises.length === 0 ? (
+            <View style={styles.emptyState}>
+              <ThemedTitle type="h3" style={styles.emptyTitle}>
+                {t("exercises.library.emptyTitle")}
+              </ThemedTitle>
+              <ThemedText style={styles.emptyBody} setColor={quietText}>
+                {t("exercises.library.emptyBody")}
+              </ThemedText>
+            </View>
+          ) : (
+            // BUG-16: a viewport-height box with its text centred in it made a
+            // filter that matched nothing look like a blank screen.
+            <View style={styles.emptyState}>
+              <ThemedTitle type="h3" style={styles.emptyTitle}>
+                {t("exercises.library.noMatchesTitle")}
+              </ThemedTitle>
+              <ThemedText style={styles.emptyBody} setColor={quietText}>
+                {activeFilterCount > 0
+                  ? t("exercises.library.noMatchEveryFilter")
+                  : t("exercises.library.tryAnotherSearch")}
+              </ThemedText>
+
+              {activeFilterCount > 0 ? (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={t("exercises.library.clearAllFiltersA11y")}
+                  activeOpacity={0.85}
+                  onPress={resetFilters}
+                  style={[styles.emptyResetButton, { borderColor: cardBorder }]}
+                >
+                  <ThemedText
+                    style={styles.emptyResetText}
+                    setColor={primaryTextColor}
+                  >
+                    {t("exercises.library.clearFilters", { count: activeFilterCount })}
+                  </ThemedText>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          )
+        }
+      />
 
       <ThemedModal
         visible={Boolean(selectedExercise)}
