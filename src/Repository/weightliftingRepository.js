@@ -2676,6 +2676,29 @@ export async function updateCountedRest(db, { setId, pause }) {
 }
 
 /**
+ * A set unticked loses the rest the app counted for it: the number was the
+ * time after a tick that is gone. A planned rest is never touched. True when
+ * there was one.
+ */
+export async function clearCountedRest(db, { setId }) {
+  const syncVersion = createNextSyncVersion();
+  const result = await db.runAsync(
+    `UPDATE "Set"
+     SET pause = NULL,
+         rest_counted = 0,
+         sync_id = COALESCE(sync_id, ${SQLITE_UUID_SQL}),
+         sync_version = ?,
+         needs_sync = 1
+     WHERE sets_id = ?
+       AND COALESCE(rest_counted, 0) = 1
+       AND COALESCE(deleted_at, '') = '';`,
+    [syncVersion, setId]
+  );
+
+  return Number(result?.changes ?? 0) > 0;
+}
+
+/**
  * What decides whether a set just ticked off gets a count-up: its rest, and
  * its workout's clock.
  */

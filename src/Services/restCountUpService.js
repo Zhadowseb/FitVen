@@ -14,7 +14,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { weightliftingRepository } from "@repository";
 import {
   countedRestSeconds,
+  isSameBurst,
   plannedRestSeconds,
+  shareRest,
 } from "@utils/restCountUp";
 import { getCurrentStoredTimestampSeconds, normalizeStoredTimestampSeconds } from "@utils/timeUtils";
 import { notifyLockScreenEdit } from "@utils/workoutDataEvents";
@@ -28,6 +30,12 @@ const MAX_AGE_SECONDS = 8 * 60 * 60;
 const listeners = new Set();
 let active = null;
 let restored = false;
+// The last set ticked off, whether or not it counts up: ticks within 15 s of
+// each other are one burst.
+let lastTick = null;
+// The rest written for the set before a burst, and the sets of the burst so
+// far, so the rest can be shared among them (Utils/restCountUp.js).
+let burst = null;
 
 function emit() {
   listeners.forEach((listener) => {
@@ -150,6 +158,11 @@ export function startRestCountUp({ db = null, workoutId, setId, startedAt }) {
  * or `setId` only one that belongs to them.
  */
 export function cancelRestCountUp({ workoutId = null, setId = null } = {}) {
+  if (workoutId !== null && lastTick && sameId(lastTick.workoutId, workoutId)) {
+    lastTick = null;
+    burst = null;
+  }
+
   if (!active) {
     return;
   }
@@ -217,11 +230,89 @@ export async function finishRestCountUp(
     return null;
   }
 
+  // A burst may follow: this is the rest it will share.
+  burst = {
+    workoutId: countUp.workoutId,
+    database,
+    total: seconds,
+    // The set before the burst, then the burst's sets but the newest.
+    setIds: [countUp.setId],
+    tailSetId: null,
+  };
+
   syncSetsInBackground(db);
   // The workout screen reads its sets again, so the rest is in the field.
   notifyLockScreenEdit({ workoutId: countUp.workoutId });
 
   return seconds;
+}
+
+// A set ticked off within 15 s of the one before it is in the same burst: the
+// rest written for the set before the burst is shared among that set and every
+// set of the burst but the newest. Only sets that count - a planned rest
+// stays as it was.
+async function shareRestInBurst(db, { workoutId, setId, at }) {
+  const previous = lastTick;
+
+  if (
+    !burst ||
+    !previous ||
+    !sameId(previous.workoutId, workoutId) ||
+    !sameId(burst.workoutId, workoutId) ||
+    (burst.database && databaseKeyOf(db) && burst.database !== databaseKeyOf(db)) ||
+    !isSameBurst(previous.at, at)
+  ) {
+    return;
+  }
+
+  // The first set of the burst is the one the rest was written after; each
+  // tick that follows within 15 s adds the one before it.
+  if (burst.tailSetId === null) {
+    if (!sameId(previous.setId, burst.firstSetId)) {
+      return;
+    }
+  } else if (!sameId(previous.setId, burst.tailSetId)) {
+    return;
+  }
+
+  if (!burst.setIds.some((id) => sameId(id, previous.setId))) {
+    burst.setIds = [...burst.setIds, previous.setId];
+  }
+
+  burst.tailSetId = setId;
+
+  const recipients = [];
+
+  for (const id of burst.setIds) {
+    const context = await weightliftingRepository.getSetRestContext(db, id);
+
+    if (context && Number(context.workout_done) !== 1 && plannedRestSeconds(context) <= 0) {
+      recipients.push(id);
+    }
+  }
+
+  if (recipients.length < 2) {
+    return;
+  }
+
+  const shares = shareRest(burst.total, recipients.length);
+
+  try {
+    await withTransaction(db, async () => {
+      for (let index = 0; index < recipients.length; index += 1) {
+        await weightliftingRepository.updateCountedRest(db, {
+          setId: recipients[index],
+          pause: shares[index],
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Could not share the counted rest:", error);
+    return;
+  }
+
+  syncSetsInBackground(db);
+  notifyLockScreenEdit({ workoutId });
 }
 
 /**
@@ -237,11 +328,39 @@ export async function handleSetCompletion(
 ) {
   if (!done) {
     cancelRestCountUp({ setId });
+
+    if (lastTick && sameId(lastTick.setId, setId)) {
+      lastTick = null;
+    }
+
+    if (burst && burst.setIds.some((id) => sameId(id, setId))) {
+      burst = null;
+    }
+
+    // The rest counted after this set was the time after a tick that is gone.
+    try {
+      if (await weightliftingRepository.clearCountedRest(db, { setId })) {
+        syncSetsInBackground(db);
+        notifyLockScreenEdit({ workoutId });
+      }
+    } catch (error) {
+      console.error("Could not take the counted rest away:", error);
+    }
+
     return;
   }
 
   // The rest after the set before ends here, in whatever exercise it was.
-  await finishRestCountUp(db, { at, workoutId });
+  const endedSetId = active?.setId ?? null;
+  const endedSeconds = await finishRestCountUp(db, { at, workoutId });
+
+  if (endedSeconds !== null && burst) {
+    burst.firstSetId = setId;
+    burst.endedSetId = endedSetId;
+  }
+
+  await shareRestInBurst(db, { workoutId, setId, at });
+  lastTick = { workoutId, setId, at };
 
   if (failed) {
     return;
