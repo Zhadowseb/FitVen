@@ -107,6 +107,18 @@ export async function processQueuedExerciseInstanceDeletes(db, userId) {
   return deletedCount;
 }
 
+// The cloud's exercise_instance.exercise_name is a foreign key to the
+// catalogue, and answers 23503 for a name that is not in it - a custom
+// exercise, or one this phone has and the catalogue has not yet.
+export function isUnknownExerciseNameError(error) {
+  const text = `${error?.message ?? ""} ${error?.details ?? ""}`;
+
+  return (
+    String(error?.code ?? "") === "23503" &&
+    /exercise_name_fkey|table "Exercise"/i.test(text)
+  );
+}
+
 export async function uploadDirtyExerciseInstances(
   db,
   userId,
@@ -124,6 +136,12 @@ export async function uploadDirtyExerciseInstances(
   );
   let uploadedCount = 0;
   let requiresWorkoutRepair = false;
+  // Names the catalogue refused in this pass. One such row used to throw out
+  // of this loop, so nothing after it - the rest of the exercises, and every
+  // set, of this workout and every later one - was uploaded, and the cloud
+  // went on holding workouts with nothing in them. Now the exercise stays on
+  // the phone, marked for the next pass, and the others go up.
+  const refusedExerciseNames = new Set();
 
   for (const localExercise of localExercises) {
     if (Number(localExercise.needs_sync) !== 1) {
@@ -158,24 +176,44 @@ export async function uploadDirtyExerciseInstances(
       continue;
     }
 
+    const nameKey = String(payload.exercise_name).trim().toLowerCase();
+
+    if (refusedExerciseNames.has(nameKey)) {
+      continue;
+    }
+
     // Built inside the request so a retry without weight_mode rebuilds both.
-    const syncResult = await weightModeColumn.withFallback(() =>
-      syncDirtyLocalRowToCloud({
-        tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
-        selectColumns: weightModeColumn.selectColumns(
-          EXERCISE_INSTANCE_CLOUD_SYNC_SELECT
-        ),
-        userId,
-        localEntity: localExercise,
-        payload: weightModeColumn.sendablePayload(payload),
-        cloudId: parseCloudExerciseInstanceId(
-          resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
-        ),
-        syncId: normalizeSyncId(localExercise.sync_id),
-        legacyLocalId: payload.local_exercise_instance_id,
-        legacyLocalIdColumn: "local_exercise_instance_id",
-      })
-    );
+    let syncResult;
+
+    try {
+      syncResult = await weightModeColumn.withFallback(() =>
+        syncDirtyLocalRowToCloud({
+          tableName: EXERCISE_INSTANCE_CLOUD_TABLE,
+          selectColumns: weightModeColumn.selectColumns(
+            EXERCISE_INSTANCE_CLOUD_SYNC_SELECT
+          ),
+          userId,
+          localEntity: localExercise,
+          payload: weightModeColumn.sendablePayload(payload),
+          cloudId: parseCloudExerciseInstanceId(
+            resolveSideBySideCloudId(localExercise, "cloud_exercise_instance_id")
+          ),
+          syncId: normalizeSyncId(localExercise.sync_id),
+          legacyLocalId: payload.local_exercise_instance_id,
+          legacyLocalIdColumn: "local_exercise_instance_id",
+        })
+      );
+    } catch (error) {
+      if (!isUnknownExerciseNameError(error)) {
+        throw error;
+      }
+
+      refusedExerciseNames.add(nameKey);
+      console.warn(
+        `"${payload.exercise_name}" is not in the cloud's exercise catalogue, so it and its sets stay on this phone for now.`
+      );
+      continue;
+    }
 
     if (!syncResult.uploaded) {
       continue;
