@@ -62,6 +62,8 @@ export default {
     favouritesOnlyA11y: "Vis kun favoritøvelser",
     recentOnlyA11y: "Vis kun øvelser fra de seneste fire træninger",
     recent: "Seneste",
+    popular: "Populære",
+    popularUsers: { one: "{count} løfter træner den fast", other: "{count} løftere træner den fast" },
     countSuffix: { one: "øvelse", other: "øvelser" },
     emptyTitle: "Ingen øvelser endnu",
     emptyBody: "Der er endnu ikke fundet nogen øvelser i det delte bibliotek.",

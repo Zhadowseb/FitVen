@@ -62,6 +62,8 @@ export default {
     favouritesOnlyA11y: "Show only favourite exercises",
     recentOnlyA11y: "Show only exercises from the last four workouts",
     recent: "Recent",
+    popular: "Popular",
+    popularUsers: { one: "{count} lifter trains it regularly", other: "{count} lifters train it regularly" },
     countSuffix: { one: "exercise", other: "exercises" },
     emptyTitle: "No exercises yet",
     emptyBody: "No exercise names were found in the shared cloud library yet.",
