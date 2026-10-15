@@ -6,6 +6,7 @@
 // the server wrote them. Pure, with `t` passed in, so
 // scripts/test-post-like-notification.js runs it in Node.
 
+import { describeCheer } from "./cheers";
 import { workoutDisplayName } from "./workoutTypeLabel";
 
 // Written by the server when three people have reported one of your shared
@@ -75,6 +76,14 @@ export function describeNotification(item, t) {
         ? workoutDisplayName(postTitle, t, textOf(data.workout_type)) ?? postTitle
         : t("notifications.postLiked.bodyFallback"),
     };
+  }
+
+  // Somebody cheered you on (supabase/migrations/20261012090000_cheers-from-a-notification.sql).
+  // The preset is stored as an id, so the words are the reader's own.
+  const cheer = describeCheer(item, t);
+
+  if (cheer) {
+    return cheer;
   }
 
   return { title: item?.title ?? "", body: item?.body ?? "" };
