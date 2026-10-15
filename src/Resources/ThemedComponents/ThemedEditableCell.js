@@ -24,6 +24,13 @@ const ThemedEditableCell = ({
   placeholderTextColor,
   onFocus,
   onBlur,
+  // Called with { commit } while the cell is mounted, and with null when it is
+  // not: the bar over the keyboard saves what is typed here before a press of
+  // plus or minus steps from it.
+  registerControl = null,
+  // Called with the text as it is typed, before it is committed: the reps
+  // carousel shows what is being typed under it.
+  onLiveChange = null,
 }) => {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme] ?? Colors.light;
@@ -67,6 +74,24 @@ const ThemedEditableCell = ({
   // removed - still saves what was typed in it. commit is a no-op when
   // nothing changed.
   useEffect(() => () => commitRef.current?.(), []);
+
+  useEffect(() => {
+    if (!registerControl) {
+      return undefined;
+    }
+
+    registerControl({
+      commit: () => commitRef.current?.(),
+      focus: () => inputRef.current?.focus(),
+      // Shows a value in the field without committing it: the reps carousel
+      // shows the number it is passing while a finger is on it. Straight on the
+      // native input - a render per number made the scroll laggy - and the
+      // field's own state is brought into line when the count is saved.
+      preview: (text) => inputRef.current?.setNativeProps?.({ text }),
+    });
+
+    return () => registerControl(null);
+  }, []);
 
   // Android's hide-keyboard button puts the keyboard away without moving
   // focus, so onBlur never fired and what had just been typed was dropped.
@@ -123,7 +148,10 @@ const ThemedEditableCell = ({
         // well, and the commit above is then a no-op, but on a numeric keypad
         // it does not always.
         onSubmitEditing={() => commitRef.current?.()}
-        onChangeText={setLocalValue}
+        onChangeText={(text) => {
+          setLocalValue(text);
+          onLiveChange?.(text);
+        }}
         keyboardType={keyboardType}
         style={[
           styles.input,

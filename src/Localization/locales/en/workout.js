@@ -193,8 +193,12 @@ export default {
     // + and − on the weight (1e). {step} is the step in kg.
     weightMinus: "Take {step} kg off set {label}",
     weightPlus: "Add {step} kg to set {label}",
-    weightMinusAll: "Take {step} kg off every unfinished set",
-    weightPlusAll: "Add {step} kg to every unfinished set",
+    // The bar over the keyboard while a weight is edited. {label} is the set.
+    weightBarLabel: "Edit weight for set {label}",
+    weightStepField: "Step for this exercise in kg. Remembered for next time",
+    weightStepSuggested: "Use {step} kg as the step, as you have been lifting",
+    // The reps carousel over the set being edited. {label} is the set.
+    repsCarouselLabel: "Reps for set {label}",
     // When a weight could not be saved.
     weightSaveFailedTitle: "The weight was not saved",
     weightStepsKept:

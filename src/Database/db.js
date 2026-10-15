@@ -456,6 +456,8 @@ async function ensureExerciseColumnPreferenceSchema(db) {
     ["visible_columns", "TEXT NOT NULL DEFAULT '{}'"],
     // 'total' | 'per_side' for a catalog exercise (4d); NULL when never chosen.
     ["weight_mode", "TEXT"],
+    // The step of the weight bar, kg; NULL never chosen, 0 automatic again.
+    ["weight_step", "REAL"],
     ["needs_sync", "INTEGER NOT NULL DEFAULT 1"],
     ["updated_at", "TEXT NOT NULL DEFAULT (datetime('now'))"],
   ]);
