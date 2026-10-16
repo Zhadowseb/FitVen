@@ -112,6 +112,16 @@ export default StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
   },
+  // A finished walk's map is one to look around in: taller.
+  mapCardFinished: {
+    height: 340,
+  },
+  endDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 3,
+  },
   mapFill: {
     ...StyleSheet.absoluteFillObject,
   },
