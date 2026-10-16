@@ -13,6 +13,10 @@ import styles from "./WalkStyle";
 // you are with a ring that pulses. The camera follows you, so the dot stays in
 // the middle of the card and the map cannot be dragged away from it.
 //
+// A finished walk is a map to look at, not a camera that follows: it shows the
+// whole route, can be dragged and zoomed, and has no "you are here" dot - the
+// route ends at a ring instead.
+//
 // With nothing to draw (the walk has not started, the position is still being
 // found, or location is not allowed) the card says so in one line, and offers
 // the one button that fixes it.
@@ -101,6 +105,7 @@ function WalkMap({
   onLoadWatchRoute,
   watchRouteTried,
   reduceMotion,
+  finished = false,
 }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
@@ -108,6 +113,7 @@ function WalkMap({
   const mapRef = useRef(null);
   const lastFollowRef = useRef(0);
   const [tracksMarker, setTracksMarker] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
 
   const mapStyle = useMemo(() => buildMapStyle(theme), [theme]);
   const green = theme.secondary ?? theme.primary;
@@ -131,6 +137,52 @@ function WalkMap({
     [mode === "map"]
   );
 
+  // The corners of everything the walk drew, to fit the camera to. Two
+  // coordinates are enough, however many points the route has.
+  const routeBounds = useMemo(() => {
+    let south = Infinity;
+    let north = -Infinity;
+    let west = Infinity;
+    let east = -Infinity;
+
+    for (const segment of route) {
+      for (const point of segment) {
+        south = Math.min(south, point.latitude);
+        north = Math.max(north, point.latitude);
+        west = Math.min(west, point.longitude);
+        east = Math.max(east, point.longitude);
+      }
+    }
+
+    return Number.isFinite(south)
+      ? [
+          { latitude: south, longitude: west },
+          { latitude: north, longitude: east },
+        ]
+      : null;
+  }, [route]);
+  const endPoint = useMemo(() => {
+    for (let index = route.length - 1; index >= 0; index -= 1) {
+      if (route[index].length > 0) {
+        return route[index][route[index].length - 1];
+      }
+    }
+
+    return null;
+  }, [route]);
+
+  // Once the map is there, a finished walk is shown whole.
+  useEffect(() => {
+    if (!finished || mode !== "map" || !mapReady || !routeBounds) {
+      return;
+    }
+
+    mapRef.current?.fitToCoordinates(routeBounds, {
+      edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
+      animated: false,
+    });
+  }, [finished, mode, mapReady, routeBounds]);
+
   // A marker is drawn from a view, and is only taken as a picture once; leaving
   // it to track changes forever costs a frame a second.
   useEffect(() => {
@@ -140,7 +192,7 @@ function WalkMap({
   }, [Boolean(startPoint)]);
 
   useEffect(() => {
-    if (!fix || mode !== "map") {
+    if (!fix || mode !== "map" || finished) {
       return;
     }
 
@@ -152,10 +204,11 @@ function WalkMap({
 
     lastFollowRef.current = now;
     mapRef.current?.animateCamera({ center: fix }, { duration: 400 });
-  }, [fix, mode]);
+  }, [fix, mode, finished]);
 
   const cardStyle = [
     styles.mapCard,
+    finished && styles.mapCardFinished,
     { backgroundColor: theme.uiBackground, borderColor: theme.cardBorder },
   ];
 
@@ -210,9 +263,13 @@ function WalkMap({
         initialRegion={initialRegion}
         customMapStyle={mapStyle}
         userInterfaceStyle={colorScheme === "dark" ? "dark" : "light"}
+        onMapReady={() => setMapReady(true)}
         pitchEnabled={false}
         rotateEnabled={false}
-        scrollEnabled={false}
+        scrollEnabled={finished}
+        zoomEnabled={finished}
+        zoomControlEnabled={finished}
+        zoomTapEnabled={finished}
         showsCompass={false}
         showsMyLocationButton={false}
         toolbarEnabled={false}
@@ -255,9 +312,20 @@ function WalkMap({
             />
           </Marker>
         ) : null}
+        {finished && endPoint ? (
+          <Marker
+            coordinate={endPoint}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={tracksMarker}
+          >
+            <View style={[styles.endDot, { backgroundColor: orange, borderColor: theme.title }]} />
+          </Marker>
+        ) : null}
       </MapView>
 
-      <PulsingDot color={orange} ringColor={theme.title} animate={!reduceMotion} />
+      {finished ? null : (
+        <PulsingDot color={orange} ringColor={theme.title} animate={!reduceMotion} />
+      )}
 
       {startLabel ? (
         <View

@@ -83,6 +83,74 @@ assert.strictEqual(walk.isUsableWalkFix({ latitude: 95, longitude: 12, accuracy:
   assert.strictEqual(before.anchor, null, "the old state is not changed");
 }
 
+/* ---------------------------------------------------------- a run, fast -- */
+
+// A 40 minute run counted 1.7 km: the jump rule measured every fix against
+// the anchor, which is many seconds old, and a runner faster than the limit
+// was "jumping" for the rest of the run. A runner going straight at a steady
+// speed, a fix a second, with a few metres of GPS wobble.
+function seeded(seed) {
+  let value = seed;
+
+  return () => (value = (value * 1664525 + 1013904223) % 4294967296) / 4294967296;
+}
+function runner(speed, { seconds = 2400, wobble = 2, seed = 11, accuracy = 8 } = {}) {
+  const random = seeded(seed);
+  const noise = () => (random() + random() + random() + random() - 2) * 1.7 * wobble;
+
+  return Array.from({ length: seconds }, (_, index) => ({
+    latitude: 55 + (speed * index + noise()) / METERS_PER_DEGREE,
+    longitude: 12 + noise() / (METERS_PER_DEGREE * Math.cos((55 * Math.PI) / 180)),
+    accuracy,
+    speed,
+    timestamp: T0 + index * 1000,
+  }));
+}
+
+for (const speed of [2.8, 3.4, 4.0, 4.5, 5.0]) {
+  const counted = walk.replayWalkPoints(runner(speed)).distanceMeters;
+  const truth = speed * 2400;
+
+  assert.ok(
+    counted > truth * 0.92 && counted < truth * 1.12,
+    `a run at ${speed} m/s is ${truth} m, counted ${Math.round(counted)}`
+  );
+}
+{
+  // Faster than the old 4 m/s limit from the first step, and the anchor does not get stuck.
+  const state = walk.replayWalkPoints(runner(4.8, { seconds: 600, wobble: 1 }));
+
+  assert.ok(state.distanceMeters > 4.8 * 600 * 0.92, `a quick run is counted, got ${Math.round(state.distanceMeters)}`);
+}
+{
+  // A walker is not made worse by it: 1.4 m/s with a few metres of wobble.
+  const counted = walk.replayWalkPoints(runner(1.4, { seconds: 1800 })).distanceMeters;
+
+  assert.ok(counted < 1.4 * 1800 * 1.15 && counted > 1.4 * 1800 * 0.9, `a walk stays a walk, got ${Math.round(counted)}`);
+}
+{
+  // A glitch in the middle of a run is still left out: one fix 300 m away.
+  const line = runner(3.4, { seconds: 300, wobble: 1 });
+  const clean = walk.replayWalkPoints(line).distanceMeters;
+
+  line[150] = { ...line[150], latitude: line[150].latitude + 300 / METERS_PER_DEGREE };
+
+  assert.ok(Math.abs(walk.replayWalkPoints(line).distanceMeters - clean) < 25, "one wild fix is not distance");
+}
+{
+  // The GPS moves for good (the provider changes) - three fixes in a row at the new place:
+  // the walk goes on from there and adds nothing for the move.
+  const before = runner(1.4, { seconds: 120, wobble: 0.5 });
+  const after = runner(1.4, { seconds: 120, wobble: 0.5 }).map((p, index) => ({
+    ...p,
+    latitude: p.latitude + 2000 / METERS_PER_DEGREE,
+    timestamp: T0 + (120 + index) * 1000,
+  }));
+  const counted = walk.replayWalkPoints([...before, ...after]).distanceMeters;
+
+  assert.ok(counted > 2 * 1.4 * 120 * 0.85 && counted < 2 * 1.4 * 120 * 1.2, `a move of the GPS is not distance, got ${Math.round(counted)}`);
+}
+
 /* ------------------------------------------------------------------ pace -- */
 
 assert.strictEqual(walk.averagePaceSecondsPerKm(10, 100), null, "no pace before 50 m");
