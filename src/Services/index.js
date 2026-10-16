@@ -3,6 +3,7 @@ export * as appOpenService from "./appOpenService";
 export * as authService from "./authService";
 export * as categoryLeaderboardService from "./categoryLeaderboardService";
 export * as dailyStepsService from "./dailyStepsService";
+export * as exercisePopularityService from "./exercisePopularityService";
 export * as exerciseService from "./exerciseService";
 export * as locationService from "./locationService";
 export * as feedbackService from "./feedbackService";

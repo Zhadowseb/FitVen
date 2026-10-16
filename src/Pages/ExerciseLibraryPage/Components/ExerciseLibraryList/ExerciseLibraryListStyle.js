@@ -6,7 +6,6 @@ export const EXERCISE_PREVIEW_WIDTH = Math.round(EXERCISE_ROW_HEIGHT * (503 / 64
 // How many rows the catalog window shows, and so how many are worth
 // rendering before the list is scrolled.  Exported for the list itself.
 export const VISIBLE_EXERCISE_COUNT = 10;
-const LIST_VIEWPORT_HEIGHT = EXERCISE_ROW_HEIGHT * VISIBLE_EXERCISE_COUNT;
 
 export default StyleSheet.create({
   card: {
@@ -74,8 +73,6 @@ export default StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingHorizontal: 14,
-    paddingTop: 12,
     paddingBottom: 12,
   },
   searchBox: {
@@ -108,7 +105,6 @@ export default StyleSheet.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 14,
     paddingBottom: 12,
   },
   activeFilterChip: {
@@ -135,7 +131,7 @@ export default StyleSheet.create({
     fontWeight: "800",
   },
   catalogSectionHeader: {
-    paddingHorizontal: 14,
+    paddingTop: 14,
     paddingBottom: 10,
   },
   catalogSectionLabel: {
@@ -190,20 +186,36 @@ export default StyleSheet.create({
     fontWeight: "800",
     textTransform: "uppercase",
   },
-  listScroll: {
-    height: LIST_VIEWPORT_HEIGHT,
-    flexGrow: 0,
+  // The catalogue is one list that is the page: its search, filters, popular
+  // exercises and map are its header, and its rows are drawn on the background.
+  catalogList: {
+    flex: 1,
   },
-  listContent: {
-    paddingBottom: 0,
+  catalogListContent: {
+    paddingBottom: 24,
+  },
+  popularSection: {
+    paddingBottom: 6,
+  },
+  popularEyebrow: {
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    paddingBottom: 8,
+  },
+  exerciseSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginTop: 1,
   },
   exerciseRow: {
     flexDirection: "row",
     alignItems: "center",
     minHeight: EXERCISE_ROW_HEIGHT,
-    borderTopWidth: 1,
-    paddingLeft: 18,
-    paddingRight: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingLeft: 0,
+    paddingRight: 0,
     paddingVertical: 0,
     overflow: "hidden",
   },
@@ -518,9 +530,6 @@ export default StyleSheet.create({
   // search field and chips rather than sizing to its rows.
   pickerExerciseList: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 18,
-    overflow: "hidden",
   },
   pickerExerciseRow: {
     position: "relative",
