@@ -4,6 +4,7 @@
 import auth from "./auth";
 import calendar from "./calendar";
 import category from "./category";
+import cheers from "./cheers";
 import categoryService from "./categoryService";
 import common from "./common";
 import customExerciseDetail from "./customExerciseDetail";
@@ -45,6 +46,7 @@ export default {
   auth,
   calendar,
   category,
+  cheers,
   categoryService,
   common,
   customExerciseDetail,

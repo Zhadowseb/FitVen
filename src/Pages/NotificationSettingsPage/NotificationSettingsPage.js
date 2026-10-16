@@ -111,6 +111,9 @@ export default function NotificationSettingsPage() {
   // database without the column only greys this switch out.
   const [postLikes, setPostLikes] = useState(null);
   const [savingPostLikes, setSavingPostLikes] = useState(false);
+  // The same for "When someone cheers you on".
+  const [cheers, setCheers] = useState(null);
+  const [savingCheers, setSavingCheers] = useState(false);
   const titleColor = theme.title ?? theme.text;
   const quietText = theme.iconColor ?? theme.quietText ?? theme.text;
   const cardSurface = theme.cardBackground ?? theme.background;
@@ -157,6 +160,14 @@ export default function NotificationSettingsPage() {
       .catch((error) => {
         console.warn("Could not load the setting for likes:", error);
         setPostLikes({ enabled: true, available: false });
+      });
+
+    notificationService
+      .getCheerNotificationSetting({ user })
+      .then(setCheers)
+      .catch((error) => {
+        console.warn("Could not load the setting for cheers:", error);
+        setCheers({ enabled: true, available: false });
       });
 
     try {
@@ -233,6 +244,29 @@ export default function NotificationSettingsPage() {
       showFeedback(t("notifications.settings.postLikesSaveFailed"));
     } finally {
       setSavingPostLikes(false);
+    }
+  };
+
+  const toggleCheers = async (enabled) => {
+    if (!user?.id || savingCheers || !cheers?.available) {
+      return;
+    }
+
+    const previous = cheers;
+    setCheers({ ...cheers, enabled });
+    setSavingCheers(true);
+    showFeedback("");
+
+    try {
+      setCheers(
+        await notificationService.setCheerNotificationsEnabled({ user, enabled })
+      );
+    } catch (error) {
+      console.warn("Could not save the setting for cheers:", error);
+      setCheers(previous);
+      showFeedback(t("cheers.settingSaveFailed"));
+    } finally {
+      setSavingCheers(false);
     }
   };
 
@@ -635,6 +669,41 @@ export default function NotificationSettingsPage() {
           {postLikes && !postLikes.available ? (
             <ThemedText style={styles.toggleNote} setColor={quietText}>
               {t("notifications.settings.postLikesUnavailable")}
+            </ThemedText>
+          ) : null}
+        </ThemedCard>
+
+        <ThemedCard
+          style={[
+            styles.card,
+            styles.cardSpacing,
+            {
+              backgroundColor: cardSurface,
+              borderColor: cardBorder,
+            },
+          ]}
+        >
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleCopy}>
+              <ThemedText style={styles.cardTitleText} setColor={titleColor}>
+                {t("cheers.settingTitle")}
+              </ThemedText>
+              <ThemedText style={styles.cardBodyText} setColor={quietText}>
+                {t("cheers.settingBody")}
+              </ThemedText>
+            </View>
+
+            <ThemedSwitch
+              accessibilityLabel={t("cheers.settingTitle")}
+              value={cheers?.enabled !== false}
+              disabled={!cheers?.available || savingCheers}
+              onValueChange={toggleCheers}
+            />
+          </View>
+
+          {cheers && !cheers.available ? (
+            <ThemedText style={styles.toggleNote} setColor={quietText}>
+              {t("cheers.settingUnavailable")}
             </ThemedText>
           ) : null}
         </ThemedCard>
