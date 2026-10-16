@@ -1,10 +1,10 @@
 // Run is switched off: the type must not be startable or plannable. Its screen
-// stays in place, but GPS tracking for it is gone - the app no longer declares
-// the Android foreground service it ran in, and locationService.startRunTracking
-// always fails. Shipping it again means new tracking first, then removing it
-// from this list.
+// stays in place, but GPS tracking for it is gone - locationService.startRunTracking
+// always fails, and the one location foreground service the app has is the
+// walk's. Shipping it again means new tracking first, then removing it from
+// this list.
 //
-// Walk is released: it tracks with the app open (Services/walkTrackerService.js)
+// Walk is released: it tracks, screen off too (Services/walkTrackerService.js),
 // and has a screen of its own, so it is no longer in the list.
 //
 // Run used to be shown greyed out with a COMING SOON stamp. It is now left out

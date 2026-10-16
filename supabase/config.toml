@@ -13,3 +13,7 @@ verify_jwt = false
 # send. The function checks FITVEN_NOTIFICATION_WEBHOOK_SECRET itself first.
 [functions.send-post-liked-notification]
 verify_jwt = false
+
+# Called by a Database Webhook on workout_cheer, same secret check as above.
+[functions.send-cheer-notification]
+verify_jwt = false

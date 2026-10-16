@@ -48,6 +48,11 @@ export const weightliftingSchemaSql = `
       -- weight, so the choice follows them to a new phone. NULL when never
       -- chosen. A custom exercise keeps it in Exercise.weight_mode instead.
       weight_mode TEXT,
+      -- The step + and - move this exercise's weight by, in kg, chosen in the
+      -- bar over the keyboard. NULL when never chosen, 0 for "automatic" again
+      -- (a 0 reaches the cloud; a NULL would not, and the old step would come
+      -- back from it).
+      weight_step REAL,
       needs_sync INTEGER NOT NULL DEFAULT 1,
       updated_at TEXT NOT NULL DEFAULT (datetime('now')),
       UNIQUE(user_id, exercise_name)

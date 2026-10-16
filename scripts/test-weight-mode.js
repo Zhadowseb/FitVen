@@ -215,30 +215,9 @@ assert.strictEqual(steps.stepWeight(22.6, 1, 2.5), 25, "rounded to 0.25");
 assert.strictEqual(steps.stepWeight(0.1 + 0.2, 1, 2.5), 2.75, "no float dust");
 assert.strictEqual(steps.stepWeight(6.25, 1, 2), 8.25, "a quarter kilo per side survives a step");
 
-const listed = [
-  { sets_id: 1, weight: 60, done: 1, failed: 0 },
-  { sets_id: 2, weight: 100, done: 0, failed: 0 },
-  { sets_id: 3, weight: null, done: 0, failed: 0 },
-  { sets_id: 4, weight: 1, done: 0, failed: 0 },
-  { sets_id: 5, weight: 90, done: 1, failed: 1 },
-];
-assert.deepStrictEqual(
-  steps.stepAllWeights(listed, 1, 2.5),
-  [
-    { setId: 2, weight: 102.5 },
-    { setId: 4, weight: 3.5 },
-  ],
-  "the header moves every unfinished set with a weight, and leaves the finished and the empty ones"
-);
-assert.deepStrictEqual(
-  steps.stepAllWeights(listed, -1, 2.5),
-  [
-    { setId: 2, weight: 97.5 },
-    { setId: 4, weight: 0 },
-  ],
-  "a set that would go under 0 stays at 0"
-);
-assert.deepStrictEqual(steps.stepAllWeights(listed.map((set) => ({ ...set, done: 1 })), 1, 2.5), []);
+// The header's "move every set" is gone: the steppers are in the bar over the
+// keyboard, one set at a time (scripts/test-set-editors.js).
+assert.strictEqual(steps.stepAllWeights, undefined);
 
 const columns = (keys) =>
   Object.fromEntries(
@@ -259,7 +238,7 @@ assert.ok(
 assert.strictEqual(limits.clampSetValue("weight", 6.25), 6.25);
 assert.strictEqual(limits.clampSetValue("weight", "11,25"), 11.25);
 
-for (const key of ["weightMinus", "weightPlus", "weightMinusAll", "weightPlusAll"]) {
+for (const key of ["weightMinus", "weightPlus", "weightBarLabel", "weightStepField"]) {
   assert.ok(da.setList[key] && en.setList[key], `workout.setList.${key} is not in both languages`);
 }
 assert.strictEqual(da.setList.weightPlus, "Læg {step} kg til sæt {label}");

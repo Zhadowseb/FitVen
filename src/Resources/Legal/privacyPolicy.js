@@ -19,12 +19,12 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-11.5";
+export const PRIVACY_POLICY_VERSION = "2026-10-13.2";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
 
-export const PRIVACY_POLICY_LAST_UPDATED = "11 October 2026";
+export const PRIVACY_POLICY_LAST_UPDATED = "13 October 2026";
 
 export const PRIVACY_POLICY_SECTIONS = [
   {
@@ -52,7 +52,7 @@ Centres: the centre you choose as yours, or else the one you have trained in mos
 
 Health data: sickness and injury entries you record, heart rate measured from a chest strap or watch, the route, distance and steps of the walks you track with FitVen, and the location and route of runs you tracked with an earlier version of FitVen. A walk's route, distance and steps stay on your phone; only the walk itself, with its date and time, is stored with your account like any other workout - unless you post the walk to your feed (see below).
 
-Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish and the posts you like.
+Social: who you follow, who follows you, who you have blocked, the people and posts you report, the workout posts you publish, the posts you like and the cheers you send to friends who start a workout, with the message if you write one.
 
 Music: if you connect Spotify and turn on sharing, the name of the track and the artist playing during a workout is saved with that workout.
 
@@ -74,7 +74,7 @@ You can withdraw that consent at any time by deleting your account, which remove
 
 Push notifications are delivered through Expo's notification service, which means a notification's title and text pass through Expo's servers on the way to your phone.
 
-Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance: FitVen stops reading it when you pause or finish the walk, when the app goes to the background and when you close the app, and does not follow you there. A walk's route stays on your phone and is deleted with the walk. It is only sent to FitVen's server if you post the walk and choose to share its route, and then only as a simplified copy with the first and last 200 metres left out. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
+Location is read in two cases, and only if you allow it. Once when you start a workout, to find the centre you are in. And continuously while a walk is running, to draw its route and measure its distance, also when the screen is off or you are in another app: on an Android phone FitVen then shows a notification for as long as the walk is tracked, and on an iPhone the status bar shows that FitVen is using your location. FitVen stops reading it when you pause or finish the walk and when you close the app, and does not follow you anywhere else. An automatic pause keeps reading it, to notice that you walk again; a pause you press does not. FitVen never asks for location "all the time": the permission is the one for while you use the app. A walk's route stays on your phone and is deleted with the walk. It is only sent to FitVen's server if you post the walk and choose to share its route, and then only as a simplified copy with the first and last 200 metres left out. FitVen does not track runs; the routes of runs tracked with an earlier version stay stored with those runs. For a centre, your position is sent to FitVen's server to look the centre up and is not kept there: only the centre is stored with the workout. Your phone keeps the position with the workout, so the lookup can be tried again if it failed.
 
 While a walk runs, FitVen also reads your phone's step counter (Motion & Fitness on an iPhone, Physical activity on an Android phone), only if you allow it, to count the walk's steps and your cadence. The count stays with the walk on your phone, unless you post the walk.
 
@@ -107,6 +107,8 @@ There are no database backups today, so nothing survives a deletion anywhere. If
 The workout posts you publish are shown to the audience you choose for each of them, together with the centre the workout was done in. A post of a walk contains its distance, its time and its steps and - only if you leave "Share route" on - a simplified copy of its route. FitVen leaves out the first and last 200 metres of the route, so the post does not show where the walk started or ended; the exact route and the positions it was made from never leave your phone. You choose for each post, and in the post settings what the switch starts as.
 
 When you like a post, its author is told that you liked it, with your name and photo, in their notifications, and as a push notification if they have notifications on.
+
+When a friend you follow starts a workout, you can cheer them on from the notification or from your notifications in the app, with a ready-made reply or a message of up to 140 characters. The cheer, and the message if you wrote one, is stored with your account and shown to the friend, with your name and photo, in their notifications and as a push notification if they have notifications on. You can only cheer a workout once. The cheer is removed if you delete it or delete your account, but the friend's notification about it, with your name and the message, stays in their notifications until they delete it. A friend can switch cheers off; then they are not told, and your replies are not offered on their workouts.
 
 People who follow you can also see whether you are training today, how many records you set in today's workout, and — if you share music — what you are listening to during a workout.
 

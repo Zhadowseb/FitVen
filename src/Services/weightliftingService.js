@@ -19,6 +19,11 @@ import {
   weightAtRmPercentage,
   weightModeOf,
 } from "@utils/weightMode";
+import {
+  createWeightStepCloudColumn,
+  recommendWeightStep,
+  storedWeightStep,
+} from "@utils/weightStep";
 import { notifyWorkoutDataChanged } from "@utils/workoutDataEvents";
 import {
   programRepository,
@@ -141,6 +146,16 @@ const preferenceWeightModeColumn = createWeightModeCloudColumn({
   onMissing: () =>
     console.info(
       "exercise_column_preferences.weight_mode is missing in the cloud; the choice stays on this phone until the app restarts."
+    ),
+});
+// `weight_step` (the step of the weight bar) comes with
+// 20261014090000_a-step-per-exercise.sql, and goes through its own handle for
+// the same reason, nested inside the weight mode's: each only answers to its
+// own missing column.
+const preferenceWeightStepColumn = createWeightStepCloudColumn({
+  onMissing: () =>
+    console.info(
+      "exercise_column_preferences.weight_step is missing in the cloud; the step stays on this phone until the app restarts."
     ),
 });
 const hydrateWeightModeColumn = createWeightModeCloudColumn({
@@ -2512,6 +2527,33 @@ export async function getExerciseHistoryTable(
   };
 }
 
+/**
+ * The step to suggest for an exercise from its history (see
+ * recommendWeightStep), or null when it has no habit yet. Reads the last eight
+ * sessions; never throws - no suggestion is the honest answer to a failure.
+ */
+export async function getRecommendedWeightStep(db, { exerciseId, exerciseName }) {
+  const name = typeof exerciseName === "string" ? exerciseName.trim() : "";
+  const id = normalizeOptionalInteger(exerciseId);
+
+  if (!name || id === null) {
+    return null;
+  }
+
+  try {
+    const rows = await weightliftingRepository.getCompletedExerciseHistorySets(db, {
+      exerciseId: id,
+      exerciseName: name,
+      limit: 8,
+    });
+
+    return recommendWeightStep(rows);
+  } catch (error) {
+    console.warn("Unable to read the history for a suggested step:", error);
+    return null;
+  }
+}
+
 function formatHistorySessionDate(sortDateValue) {
   const date = parsePersonalRecordSortDate(sortDateValue);
 
@@ -3197,6 +3239,53 @@ async function saveExerciseColumnPreference(
   };
 }
 
+// A step as stored or as the cloud has it: a number, 0 included, or null for
+// "not known".
+function normalizeStoredWeightStep(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const numeric = Number(value);
+
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null;
+}
+
+/**
+ * The step + and - move this exercise's weight by, from the weight bar: kept
+ * for the exercise and the user, marked for upload, and read by the lock
+ * screen too. `step` is in kg, or 0 for automatic again. A custom exercise's
+ * stays on this phone: only catalog exercises have a cloud row to sync.
+ */
+export async function setExerciseWeightStep(db, { exerciseId, step }) {
+  const resolvedExerciseId = normalizeRequiredId(exerciseId, "exerciseId");
+  const preferenceUserId = await getCurrentExerciseColumnPreferenceUserId();
+  const context = await weightliftingRepository.getExerciseWeightModeContext(db, {
+    exerciseId: resolvedExerciseId,
+    preferenceUserId,
+  });
+
+  if (!context?.exercise_name) {
+    return null;
+  }
+
+  const stored = storedWeightStep(step) ?? 0;
+
+  await weightliftingRepository.upsertExerciseWeightStepPreference(db, {
+    userId: preferenceUserId,
+    cloudExerciseId: normalizeOptionalInteger(context.cloud_exercise_id, null),
+    exerciseName: context.exercise_name,
+    weightStep: stored,
+    visibleColumns: visibleColumnsForNewPreference(context),
+  });
+
+  syncExerciseColumnPreferencesInBackground(db);
+  // The lock screen card steps by it too: it reads the sets again.
+  notifyWorkoutDataChanged("exercises");
+
+  return { step: stored > 0 ? stored : null };
+}
+
 function syncExerciseColumnPreferencesInBackground(db) {
   startBackgroundSync(
     () => syncExerciseColumnPreferencesWithCloud(db),
@@ -3255,24 +3344,30 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
       continue;
     }
 
-    await preferenceWeightModeColumn.withFallback(async () => {
-      const { error } = await supabase
-        .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
-        .upsert(
-          preferenceWeightModeColumn.sendablePayload({
-            user_id: userId,
-            exercise_id: cloudExerciseId,
-            visible_columns: visibleColumns,
-            weight_mode: normalizeInstanceWeightMode(preference.weight_mode),
-            updated_at: preference.updated_at ?? new Date().toISOString(),
-          }),
-          { onConflict: "user_id,exercise_id" }
-        );
+    await preferenceWeightModeColumn.withFallback(() =>
+      preferenceWeightStepColumn.withFallback(async () => {
+        const { error } = await supabase
+          .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
+          .upsert(
+            preferenceWeightStepColumn.sendablePayload(
+              preferenceWeightModeColumn.sendablePayload({
+                user_id: userId,
+                exercise_id: cloudExerciseId,
+                visible_columns: visibleColumns,
+                weight_mode: normalizeInstanceWeightMode(preference.weight_mode),
+                // null never chosen (left out), 0 automatic (sent).
+                weight_step: normalizeStoredWeightStep(preference.weight_step),
+                updated_at: preference.updated_at ?? new Date().toISOString(),
+              })
+            ),
+            { onConflict: "user_id,exercise_id" }
+          );
 
-      if (error) {
-        throw error;
-      }
-    });
+        if (error) {
+          throw error;
+        }
+      })
+    );
 
     await weightliftingRepository.markExerciseColumnPreferenceSynced(db, {
       userId: preferenceUserId,
@@ -3292,13 +3387,15 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
     };
   }
 
-  const cloudPreferences = await preferenceWeightModeColumn.withFallback(
-    async () => {
+  const cloudPreferences = await preferenceWeightModeColumn.withFallback(() =>
+    preferenceWeightStepColumn.withFallback(async () => {
       const { data, error } = await supabase
         .from(EXERCISE_COLUMN_PREFERENCE_CLOUD_TABLE)
         .select(
-          preferenceWeightModeColumn.selectColumns(
-            EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT
+          preferenceWeightStepColumn.selectColumns(
+            preferenceWeightModeColumn.selectColumns(
+              EXERCISE_COLUMN_PREFERENCE_CLOUD_SELECT
+            )
           )
         )
         .eq("user_id", userId)
@@ -3309,7 +3406,7 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
       }
 
       return data;
-    }
+    })
   );
 
   for (const cloudPreference of cloudPreferences ?? []) {
@@ -3328,6 +3425,8 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
 
     // Null - no column yet, or a row an older app wrote - keeps ours.
     const weightMode = normalizeInstanceWeightMode(cloudPreference?.weight_mode);
+    // The same for the step. 0 is a value - automatic - and is kept.
+    const weightStep = normalizeStoredWeightStep(cloudPreference?.weight_step);
 
     await weightliftingRepository.upsertExerciseColumnPreference(db, {
       userId: preferenceUserId,
@@ -3335,6 +3434,7 @@ export async function syncExerciseColumnPreferencesWithCloud(db) {
       exerciseName: localExercise.name,
       visibleColumns,
       weightMode,
+      weightStep,
       needsSync: 0,
       updatedAt:
         normalizeOptionalText(cloudPreference?.updated_at) ??
@@ -3419,6 +3519,8 @@ async function loadWorkoutExercisesFromLocal(db, workoutId) {
       sets: exerciseSets,
       setCount: exerciseSets.length,
       weightMode,
+      // The step the person chose in the weight bar; null for the automatic one.
+      weightStep: storedWeightStep(preference?.weight_step),
       canSwitchWeightMode: canLogWeightPerSide({
         name: exercise.exercise_name,
         equipment: exercise.exercise_equipment,

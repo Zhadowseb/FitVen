@@ -309,15 +309,98 @@ assert.strictEqual(rules.parsePauseValue("abc"), null);
   assert.strictEqual(payload.pause, 95);
   assert.strictEqual(payload.rest_counted, true);
 
-  // A counted rest is not planned: ticked off again, the set counts up again.
+  // Unticked, the set loses the rest counted after it - the tick is gone - and
+  // ticked again it counts up again, never down.
   await tick(12, T + 200, 0);
+  assert.deepStrictEqual(
+    (({ pause, rest_counted, needs_sync }) => ({ pause, rest_counted, needs_sync }))(setRow(12)),
+    { pause: null, rest_counted: 0, needs_sync: 1 },
+    "unticking a set kept the rest counted after it"
+  );
   await tick(12, T + 210);
-  assert.strictEqual(countUps.getActiveRestCountUp()?.setId, 12, "a counted rest was taken for a planned one");
+  assert.strictEqual(countUps.getActiveRestCountUp()?.setId, 12, "a set ticked again did not count up");
 
   // Unticked while it counts: dropped, nothing written.
   await tick(12, T + 260, 0);
   assert.strictEqual(countUps.getActiveRestCountUp(), null);
-  assert.strictEqual(setRow(12).pause, 95, "unticking the set wrote the count-up");
+  assert.strictEqual(setRow(12).pause, null, "unticking the set wrote the count-up");
+
+  // A planned rest is not touched by unticking.
+  run('UPDATE "Set" SET pause = 75, rest_counted = 0, done = 1 WHERE sets_id = 13');
+  await tick(13, T + 270, 0);
+  assert.strictEqual(setRow(13).pause, 75, "unticking a set took a planned rest away");
+  run('UPDATE "Set" SET pause = 90 WHERE sets_id = 13');
+
+  // Sets ticked within 15 s of each other are one burst: the rest after the set
+  // before it is shared among that set and the burst's sets but the last.
+  run(
+    `INSERT INTO Exercise_Instance (exercise_instance_id, workout_type_instance_id, exercise_name, exercise_order, sets)
+     VALUES (3, 70, 'Row', 3, 7)`
+  );
+  run(
+    `INSERT INTO "Set" (sets_id, exercise_instance_id, set_number, weight, reps, pause, done, needs_sync, sync_version)
+     VALUES (31, 3, 1, 80, 5, NULL, 0, 0, 1), (32, 3, 2, 80, 5, NULL, 0, 0, 1), (33, 3, 3, 80, 5, NULL, 0, 0, 1),
+            (34, 3, 4, 80, 5, NULL, 0, 0, 1), (35, 3, 5, 80, 5, NULL, 0, 0, 1), (36, 3, 6, 80, 5, NULL, 0, 0, 1),
+            (37, 3, 7, 80, 5, NULL, 0, 0, 1)`
+  );
+  const B = T + 1000;
+  await tick(31, B);
+  await tick(32, B + 300);
+  assert.strictEqual(setRow(31).pause, 300, "the rest after a set is its own until a burst");
+  await tick(33, B + 305);
+  assert.deepStrictEqual(
+    [setRow(31).pause, setRow(32).pause],
+    [150, 150],
+    "two sets ticked within 15 s did not share the rest"
+  );
+  assert.strictEqual(countUps.getActiveRestCountUp().setId, 33, "the last set of the burst does not count up");
+
+  // A third in the burst: three share it.
+  await tick(34, B + 310);
+  assert.deepStrictEqual([setRow(31).pause, setRow(32).pause, setRow(33).pause], [100, 100, 100]);
+  assert.strictEqual(setRow(31).rest_counted, 1);
+  assert.strictEqual(setRow(31).needs_sync, 1);
+
+  // The next tick after the 15 s is an ordinary one: the burst is over.
+  await tick(35, B + 400);
+  assert.strictEqual(setRow(34).pause, 90, "a tick after the burst did not write the rest after the last set of it");
+  assert.deepStrictEqual([setRow(31).pause, setRow(32).pause, setRow(33).pause], [100, 100, 100]);
+
+  // Shares that do not divide add up to the whole.
+  assert.deepStrictEqual(rules.shareRest(100, 3), [34, 33, 33]);
+  assert.deepStrictEqual(rules.shareRest(7, 2), [4, 3]);
+  assert.deepStrictEqual(rules.shareRest(5, 0), []);
+  assert.strictEqual(rules.isSameBurst(100, 114), true);
+  assert.strictEqual(rules.isSameBurst(100, 115), false);
+
+  // Unticking a set of the burst takes its share away and ends the sharing.
+  await tick(33, B + 420, 0);
+  assert.strictEqual(setRow(33).pause, null);
+  await tick(35, B + 421, 0);
+  await tick(36, B + 500);
+  await tick(37, B + 502);
+  assert.strictEqual(countUps.getActiveRestCountUp().setId, 37);
+  assert.strictEqual(setRow(36).pause, null, "the last set but one of a burst with nothing before it got a rest");
+  await tick(37, B + 503, 0);
+  await tick(36, B + 504, 0);
+  assert.strictEqual(countUps.getActiveRestCountUp(), null);
+
+  // Between exercises: the rest after the last set ticked off - whichever
+  // exercise it was in, and not the last one in the list - is written when the
+  // next set is ticked, in any exercise.
+  await tick(33, B + 600);
+  assert.strictEqual(countUps.getActiveRestCountUp().setId, 33, "the last set of an exercise did not count up");
+  await tick(21, B + 690);
+  assert.deepStrictEqual(
+    (({ pause, rest_counted }) => ({ pause, rest_counted }))(setRow(33)),
+    { pause: 90, rest_counted: 1 },
+    "the rest was not written into the last set ticked off, in the other exercise"
+  );
+  assert.strictEqual(countUps.getActiveRestCountUp().setId, 21);
+  await tick(21, B + 700, 0);
+  await tick(33, B + 701, 0);
+  assert.strictEqual(setRow(33).pause, null);
+  assert.strictEqual(countUps.getActiveRestCountUp(), null);
 
   // A rest typed by hand is planned again.
   await weightliftingService.updateSetField(db, { field: "pause", value: 120, setId: 12 });

@@ -19,6 +19,13 @@
 //   again rather than down, and a new set - the next one, a copied workout,
 //   the first set of the exercise next week - does not inherit it. Typing a
 //   rest by hand makes it planned again.
+// - Unticking a set takes its counted rest away: the number under it was a
+//   record of the time after that tick, and the tick is gone.
+// - Sets ticked within 15 seconds of each other are one burst - somebody who
+//   did several sets and ticked them off late. The time since the tick before
+//   the burst is not the rest after that one set but all of theirs, so it is
+//   shared equally between the set before the burst and every set of the
+//   burst but the last, which counts up from its own tick.
 //
 // Pure: no clock, no database. The service that runs it is
 // Services/restCountUpService.js.
@@ -129,6 +136,31 @@ export function countedRestSeconds(startedAt, endedAt) {
   }
 
   return Math.min(MAX_SET_PAUSE_SECONDS, seconds);
+}
+
+/**
+ * `total` whole seconds shared equally between `count` sets, the first ones
+ * taking the seconds that do not divide - so the shares add up to `total`.
+ */
+export function shareRest(total, count) {
+  const seconds = Math.floor(Number(total));
+  const parts = Math.floor(Number(count));
+
+  if (!Number.isFinite(seconds) || !Number.isFinite(parts) || parts < 1 || seconds < 0) {
+    return [];
+  }
+
+  const each = Math.floor(seconds / parts);
+  const left = seconds - each * parts;
+
+  return Array.from({ length: parts }, (_unused, index) => each + (index < left ? 1 : 0));
+}
+
+/** Whether two ticks, `earlier` and `later` in Unix seconds, are one burst. */
+export function isSameBurst(earlier, later) {
+  const gap = Number(later) - Number(earlier);
+
+  return Number.isFinite(gap) && gap >= 0 && gap < REST_COUNT_UP_GRACE_SECONDS;
 }
 
 /** Whether a count-up shows yet, at `now`: from 15 s after the tick. */

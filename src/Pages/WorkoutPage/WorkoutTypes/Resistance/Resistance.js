@@ -18,6 +18,7 @@ import { Alert, useColorScheme } from "react-native";
 import { Colors, withAlpha } from "../../../../Resources/GlobalStyling/colors";
 
 import styles from "./ResistanceStyle.js";
+import useSetEditorDragging from "@resources/Components/SetEditorBar/useSetEditorDragging";
 import {
   ThemedConfirmModal,
   ThemedKeyboardProtection,
@@ -101,6 +102,9 @@ const Resistance = ({
   const [showCompletedExercises, setShowCompletedExercises] = useState(true);
   const [expansionAction, setExpansionAction] = useState(null);
   const [isReorderingExercises, setIsReorderingExercises] = useState(false);
+  // A finger is dragging the reps carousel over the keyboard: this page does
+  // not scroll with it, however far up or down it wanders.
+  const setEditorDragging = useSetEditorDragging();
   const [exerciseCount, setExerciseCount] = useState(0);
   // BUG-13: finishing a workout changed nothing on screen except the
   // play/pause button disappearing. The most important action in the app
@@ -905,7 +909,7 @@ const Resistance = ({
       <ThemedKeyboardProtection
         scroll
         bottomOffset={96}
-        scrollViewProps={{ scrollEnabled: !isReorderingExercises }}
+        scrollViewProps={{ scrollEnabled: !isReorderingExercises && !setEditorDragging }}
       >
         <View style={styles.toolbar}>
           <View style={styles.toolbarLabel}>

@@ -87,6 +87,8 @@ behind by accident.
 | `20261009090000_a-like-notifies-the-poster.sql` | yes |
 | `20261010090000_more-catalog-exercises.sql` | yes |
 | `20261011090000_daily-steps.sql` | yes |
+| `20261012090000_cheers-from-a-notification.sql` | yes |
+| `20261014090000_a-step-per-exercise.sql` | no |
 | `20261016090000_popular-exercises.sql` | no |
 `20260917120000_gyms-and-lift-verification.sql` and
 `20260917120100_workout-music.sql` carry version 2.0: centres, the workout ->
@@ -537,3 +539,7 @@ privacy policy to have been accepted. Before it had run, a phone on the version 
 the phone and tried again at the next start - nothing broke, and nothing was lost. It is idempotent and gives up
 after five seconds if the table is busy, so run it again then. Deleting an account removes the rows
 (the delete-account function deletes every row with the user's id, and `on delete cascade` covers the rest).
+
+`20261012090000_cheers-from-a-notification.sql` was run on 2026-10-16. It creates `public.workout_cheer` and the triggers that
+prepare a cheer and notify the person it is for. The `send-cheer-notification` function, its webhook on `workout_cheer` and a new
+deploy of the workout-started function still have to be done for a cheer to reach a phone.
