@@ -614,6 +614,7 @@ export default function Walk({ workout_id, title, onOpenOptions = noop, restartR
           onLoadWatchRoute={isDone && !hasRoute && watchOrigin ? press(loadWatchRoute) : undefined}
           watchRouteTried={watchRouteTried}
           reduceMotion={reduceMotion}
+          finished={isDone}
         />
 
         {/* time */}
