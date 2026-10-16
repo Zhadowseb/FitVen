@@ -16,9 +16,24 @@ import {
 export const WALK_TRACKING = Object.freeze({
   // A point less exact than this is not kept at all.
   maxAccuracyMeters: 30,
-  // Faster than this between two points is a jump, not walking (a brisk walk
-  // is about 2 m/s; a run, 3 or more).
+  // A jump is a fix that is further from the one before it than a person can
+  // have gone in the time between them. This is the least a person is allowed
+  // to move at (a brisk walk is about 2 m/s, a run 3 to 5); the limit rises
+  // with how fast the person has been going, so a runner is not "jumping".
   maxSegmentSpeedMetersPerSecond: 4,
+  jumpSpeedFactor: 2,
+  jumpSpeedPaddingMetersPerSecond: 2,
+  // Fixes in a row that all look like jumps are not glitches: that is where the
+  // person is now (the GPS moved, or they started to run). The walk goes on
+  // from there, adding nothing for the step it took to get there.
+  maxJumpsInARow: 3,
+  // What the speed the limit follows is allowed to grow to.
+  maxTrackedSpeedMetersPerSecond: 9,
+  // The faster the person goes, the further a step has to be before it counts:
+  // this many seconds of travel (up to maxNoiseFloorMeters). A fix a second
+  // apart wobbles by a few metres whatever the speed, so at a run a step
+  // of 4 m is mostly wobble; at a walk it is mostly walking.
+  noiseFloorSecondsOfTravel: 3,
   // A step shorter than the GPS wobble is not movement. The anchor stays put,
   // so a slow walk still adds up once it has gone far enough.
   minSegmentMeters: 3,
@@ -47,6 +62,15 @@ const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(v
 export function createWalkState() {
   return {
     anchor: null,
+    // The last fix that was believable, kept even when it added no distance. A
+    // jump is judged against this one - two fixes a second apart - and not
+    // against the anchor, which can be many seconds old: measured against it, a
+    // runner going faster than the jump limit was "jumping" forever, and a
+    // 40 minute run counted 1.7 km.
+    reference: null,
+    // How fast the person has been going, smoothed (m/s).
+    speedMps: 0,
+    jumpsInARow: 0,
     distanceMeters: 0,
     // [timestampMs, cumulative meters] - only as far back as the pace window.
     samples: [],
@@ -98,6 +122,9 @@ export function foldWalkPoint(state, rawPoint, options = WALK_TRACKING) {
   if (!state.anchor) {
     return {
       anchor: point,
+      reference: point,
+      speedMps: 0,
+      jumpsInARow: 0,
       distanceMeters: state.distanceMeters,
       samples: trimSamples(
         [...state.samples, [point.timestamp, state.distanceMeters]],
@@ -109,15 +136,17 @@ export function foldWalkPoint(state, rawPoint, options = WALK_TRACKING) {
   }
 
   const seconds = (point.timestamp - state.anchor.timestamp) / 1000;
+  const reference = state.reference ?? state.anchor;
+  const sinceReference = (point.timestamp - reference.timestamp) / 1000;
 
   // Out of order, or the same moment twice.
-  if (!(seconds > 0)) {
+  if (!(seconds > 0) || !(sinceReference > 0)) {
     return state;
   }
 
   // The fix was gone for a while: start again from here, adding nothing.
   if (seconds > options.maxGapSeconds) {
-    return { ...state, anchor: point, pointCount };
+    return { ...state, anchor: point, reference: point, jumpsInARow: 0, pointCount };
   }
 
   const meters = calculateDistance(
@@ -131,28 +160,64 @@ export function foldWalkPoint(state, rawPoint, options = WALK_TRACKING) {
     return state;
   }
 
-  // A jump: leave the anchor where it was, so the next honest point is
-  // measured from somewhere that was real.
-  if (meters / seconds > options.maxSegmentSpeedMetersPerSecond) {
-    return state;
+  // A jump: leave the anchor and the reference where they were, so the next
+  // honest point is measured from somewhere that was real. It is judged between
+  // this fix and the one before it, against how fast the person has been going.
+  const metersFromReference = calculateDistance(
+    reference.latitude,
+    reference.longitude,
+    point.latitude,
+    point.longitude
+  );
+  const speedNow = Number.isFinite(metersFromReference) ? metersFromReference / sinceReference : Infinity;
+  const jumpLimit = Math.max(
+    options.maxSegmentSpeedMetersPerSecond,
+    (state.speedMps ?? 0) * options.jumpSpeedFactor + options.jumpSpeedPaddingMetersPerSecond
+  );
+
+  if (speedNow > jumpLimit) {
+    const jumpsInARow = (state.jumpsInARow ?? 0) + 1;
+
+    if (jumpsInARow < options.maxJumpsInARow) {
+      return { ...state, jumpsInARow };
+    }
+
+    // Several in a row: this is where the person is. Go on from here.
+    return {
+      ...state,
+      anchor: point,
+      reference: point,
+      speedMps: Math.min(speedNow, options.maxTrackedSpeedMetersPerSecond),
+      jumpsInARow: 0,
+      pointCount,
+    };
   }
+
+  const speedMps = Math.min(
+    options.maxTrackedSpeedMetersPerSecond,
+    state.speedMps > 0 ? state.speedMps * 0.8 + speedNow * 0.2 : speedNow
+  );
 
   const noiseFloor = Math.max(
     options.minSegmentMeters,
     Math.min(
       options.maxNoiseFloorMeters,
       Math.max(state.anchor.accuracy, point.accuracy) * options.noiseFloorAccuracyShare
-    )
+    ),
+    Math.min(options.maxNoiseFloorMeters, speedMps * options.noiseFloorSecondsOfTravel)
   );
 
   if (meters < noiseFloor) {
-    return { ...state, pointCount };
+    return { ...state, reference: point, speedMps, jumpsInARow: 0, pointCount };
   }
 
   const distanceMeters = state.distanceMeters + meters;
 
   return {
     anchor: point,
+    reference: point,
+    speedMps,
+    jumpsInARow: 0,
     distanceMeters,
     samples: trimSamples(
       [...state.samples, [point.timestamp, distanceMeters]],

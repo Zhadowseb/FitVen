@@ -1,0 +1,7 @@
+### Fixed
+- **A fast run no longer stops counting distance.** A walk tracked at a run - 4 m/s (4:10 per kilometre) or faster - counted next to nothing: a 40 minute run with a step count of 6,500 came out as 1.7 km. The jump rule (a fix that is further away than a person can have gone) was measured against the last point that *counted*, which can be many seconds old, so a runner was "jumping" for the rest of the run, and the walk only started counting again after two minutes without a position. A jump is now judged between a fix and the one just before it, and against how fast the person has been going, so a runner is not a jump but a position 300 m away still is.
+  - Several fixes in a row that look like jumps are taken as where the person is now (the GPS moved), and the walk goes on from there without adding the move.
+  - The faster you go, the further a step has to be before it counts (3 seconds of travel, up to 15 m), so a run is not inflated by GPS wobble.
+  - Walks at a walking pace come out closer to the true distance as well (tested against a simulated walker: the old rule counted 40-130 % too much on clean GPS, the new one a few per cent).
+  - **A run that is already recorded is not repaired:** the positions that were thrown away were never stored.
+- **Tests:** `test-walk-tracking.js` runs simulated runners at 2.8 to 5 m/s, a walker, a wild fix and a move of the GPS; the speed cases fail on the old rule.
