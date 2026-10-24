@@ -137,5 +137,53 @@ export default {
         },
       ],
     },
+    sv: {
+      title: "Räknas styrketräning som steg?",
+      summary: "Varför dina pass läggs till dina dagliga steg, och vad styrka ger som promenader inte gör.",
+      inShort: [
+        "Minuter av motion och dagliga steg hänger ihop med samma lägre risk för tidig död och hjärtsjukdom.",
+        "FitVen lägger till ungefär 115 steg per minut hård styrketräning på din dag.",
+        "Styrketräning ger det promenader inte kan: muskler, starka ben och bättre kontroll över blodsockret.",
+      ],
+      sections: [
+        {
+          heading: "Minuter eller steg?",
+          paragraphs: [
+            [
+              "En stor studie från Harvard och Brigham and Women's Hospital jämförde att mäta aktivitet i minuter med att mäta den i steg. Båda hängde ihop med samma minskning av risken för tidig död och hjärtsjukdom. Tid som läggs på träning är ett lika giltigt mått som ett stegantal.",
+              { ref: [2] },
+            ],
+          ],
+        },
+        {
+          heading: "Så räknar FitVen dina pass",
+          paragraphs: [
+            [
+              "Ett styrkepass påverkar inte din stegräknare särskilt mycket, så FitVen räknar om tiden till stegekvivalenter. Hård styrketräning räknas som ungefär 115 steg per minut, så 30 minuter ger ungefär 3 450 steg. Satsen kommer från Tæl Skridt-omräknaren, som räknar om aktiviteter till steg utifrån energiförbrukning.",
+              { ref: [1] },
+              " Promenader och löpning använder alltid dina verkliga steg.",
+            ],
+          ],
+        },
+        {
+          heading: "Vad styrka ger som promenader inte gör",
+          paragraphs: [
+            [
+              "Att gå är ett bra mått på vardagsrörelse, men det utmanar sällan dina muskler. Styrketräning hjälper till att bevara muskler och skelett när du blir äldre och förbättrar hur kroppen hanterar blodsocker. 30 till 60 minuter i veckan hänger ihop med ungefär 10–20 % lägre risk för tidig död.",
+              { ref: [3] },
+            ],
+          ],
+        },
+        {
+          heading: "Den bästa kombinationen",
+          paragraphs: [
+            [
+              "Den lägsta risken ses när vardagsgång kombineras med ett par styrkepass i veckan. Hälsovinsten av steg planar ut vid omkring 7 000–10 000 om dagen, så utöver det ger träning mer än extra steg.",
+              { ref: [4, 5] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };

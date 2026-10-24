@@ -1,0 +1,51 @@
+// The start-workout sheet behind the centre nav button: the fresh-start tiles,
+// the planned-today shortcut and the repeat-a-workout list.
+export default {
+  title: "STARTA NYTT PASS",
+  titleForDate: "Vad ska du göra den {date}?",
+  closeSheet: "Stäng passstartaren",
+  workoutCalendar: "Passkalender",
+  ready: "Redo",
+  recent: "Senaste",
+  suggested: "FÖRESLAGET",
+  timesCount: "{count}x",
+  types: {
+    resistance: "Styrka",
+    run: "Löpning",
+    walk: "Promenad",
+    workout: "Pass",
+  },
+  planned: {
+    promptSingleToday: "Du har ett pass planerat idag.",
+    promptSingleOnDay: "Du har ett pass planerat den här dagen.",
+    promptMultipleToday: "Du har flera pass planerade idag.",
+    promptMultipleOnDay: "Du har flera pass planerade den här dagen.",
+    eyebrowToday: "PLANERAT IDAG",
+    eyebrow: "PLANERAT",
+    workoutsPlanned: {
+      one: "{count} pass planerat",
+      other: "{count} pass planerade",
+    },
+    countReady: "{count} redo",
+    detailWithExercises: {
+      one: "{programName} - {count} övning",
+      other: "{programName} - {count} övningar",
+    },
+    detailReady: "{programName} - Redo",
+  },
+  usual: {
+    title: "DINA VANLIGA PASS",
+    manage: "Hantera",
+    loading: "Hittar vanliga pass...",
+    empty: "Upprepa ett pass två gånger så visas det här.",
+  },
+  repeat: {
+    title: "UPPREPA ETT PASS",
+    loading: "Laddar senaste passen...",
+    loadingMore: "Laddar fler pass...",
+    empty: "Upprepa ett pass två gånger så visas det här.",
+    showExercises: "Visa övningarna i {title}",
+    hideExercises: "Dölj övningarna i {title}",
+    noExercises: "Inga övningar i det här passet.",
+  },
+};

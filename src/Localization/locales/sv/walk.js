@@ -1,0 +1,106 @@
+// The walk workout: the live screen with the map, the clock, the stats and the
+// cadence.
+export default {
+  eyebrow: "Pass",
+  title: "Promenad",
+  options: "Promenadalternativ",
+  autoPause: "Autopaus",
+  autoPaused: "Autopausad",
+  time: "Tid",
+  clockLabel: "Promenadtid {time}",
+  start: "Starta",
+  pause: "Pausa",
+  resume: "Fortsätt",
+  finish: "Avsluta",
+  finishHint: "Avslutar promenaden",
+  lock: "Lås",
+  lockHint: "Låser skärmen så att den ignorerar tryck",
+  startedAt: "Start {time}",
+  stats: {
+    distance: "Distans",
+    pace: "Tempo /{unit}",
+    now: "Nu {pace}",
+    steps: "Steg",
+    stepsTotal: "totalt",
+  },
+  cadence: {
+    title: "Kadens",
+    unit: "steg/min",
+    perDistance: "Per {unit}",
+    perDistanceUnit: "steg/{unit}",
+    figureLabel: "En figur som går på stället i din kadens",
+  },
+  units: {
+    km: "km",
+  },
+  // "A walk was found on your phone. Add it to FitVen?"
+  watchPrompt: {
+    titleOne: "En promenad hittades på din telefon",
+    titleMany: "{count} promenader hittades på din telefon",
+    subtitleOne: "Den spelades in med din klocka eller en hälsoapp. Vill du lägga till den i FitVen?",
+    subtitleMany: "De spelades in med din klocka eller en hälsoapp. Vill du lägga till dem i FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} steg",
+    add: "Lägg till i FitVen",
+    skip: "Hoppa över",
+    skipHint: "FitVen frågar inte om den här promenaden igen",
+    addAll: "Lägg till alla",
+    later: "Inte nu",
+  },
+  map: {
+    label: "Ruttkarta över din promenad hittills",
+    waitingForFix: "Hittar din position…",
+    noRoute: "Ingen rutt spelades in för den här promenaden.",
+    noRouteWatch: "Den här promenaden kom från din klocka. Dess rutt finns inte på den här telefonen än.",
+    watchRouteTried: "Ingen rutt kom fram. Health Connect frågar varje gång, och klockan kanske inte spelade in någon.",
+    loadWatchRoute: "Visa rutten från din klocka",
+    notStarted: "Rutten ritas här när promenaden har startat.",
+    denied: "FitVen behöver din plats för att rita rutten och mäta distansen.",
+    blocked:
+      "Platsåtkomst är avstängd för FitVen. Slå på den i Inställningar för att rita rutten och mäta distansen.",
+    allow: "Tillåt plats",
+    openSettings: "Öppna Inställningar",
+  },
+  // The notification Android shows for as long as a walk is being tracked.
+  tracking: {
+    notificationTitle: "Promenad pågår",
+    notificationBody: "FitVen spårar din promenad, även när skärmen är avstängd.",
+  },
+  lockScreen: {
+    title: "Skärmen är låst",
+    message: "Tryck ignoreras medan du promenerar.",
+    unlock: "Håll för att låsa upp",
+    unlockHint: "Låser upp skärmen",
+    unlockAction: "Lås upp",
+  },
+  finishDialog: {
+    title: "Avsluta promenaden?",
+    message: "Promenaden markeras som genomförd.",
+    confirm: "Avsluta",
+  },
+  finished: {
+    title: "Promenaden är avslutad",
+    summary: "{duration} · {distance} · {steps}",
+    summaryNoDistance: "{duration} · {steps}",
+    summaryNoSteps: "{duration} · {distance}",
+    summaryTimeOnly: "{duration}",
+    steps: {
+      one: "{count} steg",
+      other: "{count} steg",
+    },
+  },
+  // Sharing a finished walk to the feed.
+  post: {
+    message: "{summary}. Lägga upp den i ditt flöde så att de som följer dig kan se den?",
+    confirm: "Lägg upp",
+    keepPrivate: "Behåll privat",
+    notePlaceholder: "Lägg till en anteckning (valfritt)",
+    shareRoute: "Dela rutt",
+    shareRouteHint: "Promenadens start och slut utelämnas.",
+  },
+  errors: {
+    finishFailedTitle: "Promenaden kunde inte avslutas",
+    finishFailedMessage: "Inget gick förlorat. Försök igen om en stund.",
+  },
+};
