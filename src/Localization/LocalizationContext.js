@@ -19,7 +19,7 @@ import {
 } from "./i18n";
 
 // Same shape as the theme preference in Contexts/ThemeContext.js: a mode the
-// user picked ("system", "en", "da") stored on the device, resolved to a
+// user picked ("system", "en", "da", "sv", ...) stored on the device, resolved to a
 // language at start and whenever it changes.
 const LANGUAGE_MODE_STORAGE_KEY = "fitapp.language-mode";
 

@@ -5,6 +5,11 @@ export default {
     system: "System",
     en: "English",
     da: "Dansk",
+    sv: "Svenska",
+    nb: "Norsk",
+    de: "Deutsch",
+    fr: "Français",
+    es: "Español",
   },
   sections: {
     settings: "Indstillinger",

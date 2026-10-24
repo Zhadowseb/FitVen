@@ -1,0 +1,4 @@
+### Added
+- **Five more languages: Swedish, Norwegian (Bokmål), German, French and Spanish.** Pick one under Profile → Language, or leave it on System: a phone set to any of them now opens the app in it (a phone in Norwegian - Bokmål, Nynorsk or "no" - gets Bokmål). Dates, times and numbers follow the language (`sv-SE`, `nb-NO`, `de-DE`, `fr-FR`, `es-ES`). A text that is not translated yet shows in English, one key at a time, as Danish always has.
+- **French counts 0 as singular** ("0 série", like "1 série"), the one place its plural differs from the others.
+- **The test holds every started language to English:** the same keys, the same `{placeholders}`, plural forms where English has them (`scripts/test-localization.js`). A language is either not started (an empty table, all English) or complete.
