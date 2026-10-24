@@ -1,0 +1,51 @@
+// Start-økt-arket bak midtknappen i navigasjonen: flisene for ny start,
+// snarveien for det som er planlagt i dag og listen for å gjenta en økt.
+export default {
+  title: "START NY ØKT",
+  titleForDate: "Hva skal du gjøre {date}?",
+  closeSheet: "Lukk øktstarteren",
+  workoutCalendar: "Treningskalender",
+  ready: "Klar",
+  recent: "Nylige",
+  suggested: "FORESLÅTT",
+  timesCount: "{count}x",
+  types: {
+    resistance: "Styrke",
+    run: "Løping",
+    walk: "Gåtur",
+    workout: "Økt",
+  },
+  planned: {
+    promptSingleToday: "Du har en økt planlagt i dag.",
+    promptSingleOnDay: "Du har en økt planlagt denne dagen.",
+    promptMultipleToday: "Du har flere økter planlagt i dag.",
+    promptMultipleOnDay: "Du har flere økter planlagt denne dagen.",
+    eyebrowToday: "PLANLAGT I DAG",
+    eyebrow: "PLANLAGT",
+    workoutsPlanned: {
+      one: "{count} økt planlagt",
+      other: "{count} økter planlagt",
+    },
+    countReady: "{count} klare",
+    detailWithExercises: {
+      one: "{programName} - {count} øvelse",
+      other: "{programName} - {count} øvelser",
+    },
+    detailReady: "{programName} - Klar",
+  },
+  usual: {
+    title: "DE VANLIGE ØKTENE DINE",
+    manage: "Administrer",
+    loading: "Finner de vanlige øktene...",
+    empty: "Gjenta en økt to ganger for å se den her.",
+  },
+  repeat: {
+    title: "GJENTA EN ØKT",
+    loading: "Laster nylige økter...",
+    loadingMore: "Laster flere økter...",
+    empty: "Gjenta en økt to ganger for å se den her.",
+    showExercises: "Vis øvelsene i {title}",
+    hideExercises: "Skjul øvelsene i {title}",
+    noExercises: "Ingen øvelser i denne økten.",
+  },
+};

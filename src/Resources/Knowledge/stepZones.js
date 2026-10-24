@@ -139,6 +139,29 @@ export default {
           paragraphs: [
             [
               "Hälsovinsten växer inte i en rät linje. De första stegen på dagen räknas mest, och kurvan planar ut efter omkring 7 000–10 000.",
+    nb: {
+      title: "Hvor mange skritt trenger du egentlig?",
+      // Listen viser ikke noe sammendrag for denne; første punkt står i for
+      // søket.
+      summary: "Helsegevinsten ved å gå er ikke en rett linje. De første par tusen skrittene hver dag teller mest.",
+      inShort: [
+        "Helsegevinsten ved å gå er ikke en rett linje. De første par tusen skrittene hver dag teller mest.",
+        "Mesteparten av langtidsgevinsten nås ved rundt 7 000 skritt om dagen.",
+        "Over 10 000 skritt er det liten ekstra gevinst for langtidsrisikoen, men det hjelper fortsatt på form, energi og humør.",
+      ],
+      zoneNotes: {
+        inactive: "For det meste sitting. Dette er utgangspunktet studiene sammenligner mot.",
+        moving: "Den bratteste delen av kurven. Hver ekstra tur her gjør mest for helsen din.",
+        active: "Gevinsten fortsetter å vokse i jevnt tempo.",
+        sweetSpot: "Mesteparten av langtidsgevinsten for hjertehelse, kreftrisiko og levetid nås her.",
+        bonus: "Ekstra for form, energi og humør, men svært lite ekstra for langtidsrisikoen.",
+      },
+      sections: [
+        {
+          heading: "Kurven flater ut",
+          paragraphs: [
+            [
+              "Helsegevinsten vokser ikke i en rett linje. De første skrittene hver dag teller mest, og kurven flater ut etter rundt 7 000–10 000.",
               { ref: [1, 2] },
             ],
           ],
@@ -148,6 +171,9 @@ export default {
           heading: "FitVens stegzoner",
           paragraphs: [
             ["FitVen delar in dagen i fem zoner, så att du alltid har ett nästa steg att sikta mot i stället för ett fast tal."],
+          heading: "FitVens skrittsoner",
+          paragraphs: [
+            ["FitVen deler dagen inn i fem soner, så du alltid har et neste steg å sikte mot i stedet for ett fast tall."],
           ],
           block: "zones",
         },
@@ -156,6 +182,10 @@ export default {
           paragraphs: [
             [
               "Äldre vuxna når typiskt platån lite tidigare (omkring 6 000–8 000), yngre vuxna lite senare (omkring 8 000–10 000).",
+          heading: "Alder spiller en rolle",
+          paragraphs: [
+            [
+              "Eldre voksne når platået gjerne litt tidligere (rundt 6 000–8 000), yngre voksne litt senere (rundt 8 000–10 000).",
               { ref: [2] },
             ],
           ],
