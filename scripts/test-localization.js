@@ -173,6 +173,19 @@ assert.deepStrictEqual(
   ["sv-SE", "nb-NO", "de-DE", "fr-FR", "es-ES"]
 );
 
+// French counts 0 and 1,5 as singular: the one form for anything under 2, the other from 2.
+{
+  const one = i18n.translate("common.sets", { count: 1 }, "fr");
+
+  assert.strictEqual(i18n.translate("common.sets", { count: 0 }, "fr"), one.replace("1", "0"), "0 série, not 0 séries");
+  assert.notStrictEqual(i18n.translate("common.sets", { count: 2 }, "fr"), one.replace("1", "2"), "2 is plural");
+  assert.notStrictEqual(
+    i18n.translate("common.sets", { count: 0 }, "es"),
+    i18n.translate("common.sets", { count: 1 }, "es").replace("1", "0"),
+    "in Spanish 0 is plural"
+  );
+}
+
 // An empty language table falls back to English; French counts 0 as singular.
 {
   const english = i18n.translate("common.retry", {}, "en");

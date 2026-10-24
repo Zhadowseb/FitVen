@@ -139,6 +139,29 @@ export default {
           paragraphs: [
             [
               "Hälsovinsten växer inte i en rät linje. De första stegen på dagen räknas mest, och kurvan planar ut efter omkring 7 000–10 000.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "FitVens stegzoner",
+          paragraphs: [
+            ["FitVen delar in dagen i fem zoner, så att du alltid har ett nästa steg att sikta mot i stället för ett fast tal."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "Åldern spelar roll",
+          paragraphs: [
+            [
+              "Äldre vuxna når typiskt platån lite tidigare (omkring 6 000–8 000), yngre vuxna lite senare (omkring 8 000–10 000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
     nb: {
       title: "Hvor mange skritt trenger du egentlig?",
       // Listen viser ikke noe sammendrag for denne; første punkt står i for
@@ -162,6 +185,29 @@ export default {
           paragraphs: [
             [
               "Helsegevinsten vokser ikke i en rett linje. De første skrittene hver dag teller mest, og kurven flater ut etter rundt 7 000–10 000.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "FitVens skrittsoner",
+          paragraphs: [
+            ["FitVen deler dagen inn i fem soner, så du alltid har et neste steg å sikte mot i stedet for ett fast tall."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "Alder spiller en rolle",
+          paragraphs: [
+            [
+              "Eldre voksne når platået gjerne litt tidligere (rundt 6 000–8 000), yngre voksne litt senere (rundt 8 000–10 000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
     de: {
       title: "Wie viele Schritte brauchst du wirklich?",
       summary: "Der gesundheitliche Nutzen des Gehens ist keine gerade Linie. Die ersten paar tausend Schritte des Tages zählen am meisten.",
@@ -183,6 +229,29 @@ export default {
           paragraphs: [
             [
               "Der gesundheitliche Nutzen wächst nicht in einer geraden Linie. Die ersten Schritte des Tages zählen am meisten, und die Kurve flacht nach etwa 7.000–10.000 ab.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "Die Schrittzonen von FitVen",
+          paragraphs: [
+            ["FitVen teilt den Tag in fünf Zonen ein, damit du immer einen nächsten Schritt als Ziel hast statt einer festen Zahl."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "Das Alter spielt eine Rolle",
+          paragraphs: [
+            [
+              "Ältere Erwachsene erreichen das Plateau tendenziell etwas früher (etwa 6.000–8.000), jüngere Erwachsene etwas später (etwa 8.000–10.000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
     fr: {
       title: "De combien de pas as-tu vraiment besoin\u00A0?",
       summary: "Le bénéfice santé de la marche n'est pas une ligne droite. Les premiers milliers de pas de la journée comptent le plus.",
@@ -204,6 +273,29 @@ export default {
           paragraphs: [
             [
               "Le bénéfice santé ne croît pas en ligne droite. Les premiers pas de la journée comptent le plus, et la courbe s'aplatit après environ 7 000–10 000.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "Les zones de pas de FitVen",
+          paragraphs: [
+            ["FitVen découpe la journée en cinq zones, pour que tu aies toujours un prochain palier à viser plutôt qu'un seul chiffre fixe."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "L'âge compte",
+          paragraphs: [
+            [
+              "Les adultes plus âgés atteignent généralement le plateau un peu plus tôt (autour de 6 000–8 000), les plus jeunes un peu plus tard (autour de 8 000–10 000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
     es: {
       title: "¿Cuántos pasos necesitas realmente?",
       summary: "El beneficio para la salud de caminar no es una línea recta. Los primeros miles de pasos del día son los que más cuentan.",
@@ -231,18 +323,6 @@ export default {
           block: "curve",
         },
         {
-          heading: "FitVens stegzoner",
-          paragraphs: [
-            ["FitVen delar in dagen i fem zoner, så att du alltid har ett nästa steg att sikta mot i stället för ett fast tal."],
-          heading: "FitVens skrittsoner",
-          paragraphs: [
-            ["FitVen deler dagen inn i fem soner, så du alltid har et neste steg å sikte mot i stedet for ett fast tall."],
-          heading: "Die Schrittzonen von FitVen",
-          paragraphs: [
-            ["FitVen teilt den Tag in fünf Zonen ein, damit du immer einen nächsten Schritt als Ziel hast statt einer festen Zahl."],
-          heading: "Les zones de pas de FitVen",
-          paragraphs: [
-            ["FitVen découpe la journée en cinq zones, pour que tu aies toujours un prochain palier à viser plutôt qu'un seul chiffre fixe."],
           heading: "Las zonas de pasos de FitVen",
           paragraphs: [
             ["FitVen divide el día en cinco zonas, para que siempre tengas un siguiente paso al que apuntar en lugar de una cifra fija."],
@@ -250,22 +330,6 @@ export default {
           block: "zones",
         },
         {
-          heading: "Åldern spelar roll",
-          paragraphs: [
-            [
-              "Äldre vuxna når typiskt platån lite tidigare (omkring 6 000–8 000), yngre vuxna lite senare (omkring 8 000–10 000).",
-          heading: "Alder spiller en rolle",
-          paragraphs: [
-            [
-              "Eldre voksne når platået gjerne litt tidligere (rundt 6 000–8 000), yngre voksne litt senere (rundt 8 000–10 000).",
-          heading: "Das Alter spielt eine Rolle",
-          paragraphs: [
-            [
-              "Ältere Erwachsene erreichen das Plateau tendenziell etwas früher (etwa 6.000–8.000), jüngere Erwachsene etwas später (etwa 8.000–10.000).",
-          heading: "L'âge compte",
-          paragraphs: [
-            [
-              "Les adultes plus âgés atteignent généralement le plateau un peu plus tôt (autour de 6 000–8 000), les plus jeunes un peu plus tard (autour de 8 000–10 000).",
           heading: "La edad importa",
           paragraphs: [
             [
