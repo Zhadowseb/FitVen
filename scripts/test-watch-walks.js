@@ -283,7 +283,7 @@ async function main() {
   assert.deepStrictEqual(await service.getWatchWalkState(db), { access: "denied", enabled: false });
 
   // The yes: Health Connect is asked once for the sessions, the distance and the steps.
-  const result = await service.enableWatchWalks(db);
+  const result = await service.enableWatchWalks(db, { now: NOW });
 
   assert.deepStrictEqual(result, { access: "granted", enabled: true, found: 2 });
   assert.deepStrictEqual(hc.asked, [["ExerciseSession", "Distance", "Steps"]]);
