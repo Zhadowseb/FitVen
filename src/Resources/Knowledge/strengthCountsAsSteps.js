@@ -137,5 +137,53 @@ export default {
         },
       ],
     },
+    fr: {
+      title: "La musculation compte-t-elle comme des pas\u00A0?",
+      summary: "Pourquoi tes séances sont ajoutées à tes pas quotidiens, et ce que la force apporte que la marche ne peut pas apporter.",
+      inShort: [
+        "Les minutes d'exercice et les pas quotidiens sont liés à la même baisse du risque de décès prématuré et de maladie cardiaque.",
+        "FitVen ajoute environ 115 pas par minute de musculation intense à ta journée.",
+        "La musculation apporte ce que la marche ne peut pas\u00A0: du muscle, des os plus solides et un meilleur contrôle de la glycémie.",
+      ],
+      sections: [
+        {
+          heading: "Des minutes ou des pas\u00A0?",
+          paragraphs: [
+            [
+              "Une vaste étude de Harvard et du Brigham and Women's Hospital a comparé la mesure de l'activité en minutes et en pas. Les deux étaient liées à la même baisse du risque de décès prématuré et de maladie cardiaque. Le temps passé à s'entraîner est une mesure tout aussi valable qu'un nombre de pas.",
+              { ref: [2] },
+            ],
+          ],
+        },
+        {
+          heading: "Comment FitVen compte tes séances",
+          paragraphs: [
+            [
+              "Une séance de force ne fait pas beaucoup bouger ton compteur de pas, donc FitVen convertit le temps en équivalents pas. La musculation intense compte pour environ 115 pas par minute\u00A0: 30 minutes ajoutent donc environ 3 450 pas. Ce taux vient du calculateur Tæl Skridt, qui convertit les activités en pas selon la dépense énergétique.",
+              { ref: [1] },
+              " Les marches et les courses utilisent toujours tes vrais pas.",
+            ],
+          ],
+        },
+        {
+          heading: "Ce que la force apporte que la marche ne peut pas",
+          paragraphs: [
+            [
+              "La marche est une bonne mesure du mouvement quotidien, mais elle sollicite rarement tes muscles. La musculation aide à garder muscles et os en vieillissant et améliore la façon dont ton corps gère la glycémie. De 30 à 60 minutes par semaine sont liées à un risque de décès prématuré inférieur d'environ 10–20\u00A0%.",
+              { ref: [3] },
+            ],
+          ],
+        },
+        {
+          heading: "La meilleure combinaison",
+          paragraphs: [
+            [
+              "Le risque le plus bas s'observe quand la marche au quotidien est combinée à quelques séances de force par semaine. Le bénéfice santé des pas plafonne autour de 7 000–10 000 par jour, donc au-delà, l'entraînement apporte plus que des pas en plus.",
+              { ref: [4, 5] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };

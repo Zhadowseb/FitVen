@@ -1,0 +1,106 @@
+// La séance de marche : l'écran en direct avec la carte, le chrono, les stats et la
+// cadence.
+export default {
+  eyebrow: "Séance",
+  title: "Marche",
+  options: "Options de la marche",
+  autoPause: "Pause auto",
+  autoPaused: "En pause auto",
+  time: "Temps",
+  clockLabel: "Durée de la marche {time}",
+  start: "Démarrer",
+  pause: "Pause",
+  resume: "Reprendre",
+  finish: "Terminer",
+  finishHint: "Termine la marche",
+  lock: "Verrouiller",
+  lockHint: "Verrouille l'écran pour qu'il ignore les touchers",
+  startedAt: "Départ {time}",
+  stats: {
+    distance: "Distance",
+    pace: "Allure /{unit}",
+    now: "Actuelle {pace}",
+    steps: "Pas",
+    stepsTotal: "total",
+  },
+  cadence: {
+    title: "Cadence",
+    unit: "pas/min",
+    perDistance: "Par {unit}",
+    perDistanceUnit: "pas/{unit}",
+    figureLabel: "Un personnage qui marche sur place à ta cadence",
+  },
+  units: {
+    km: "km",
+  },
+  // « Une marche a été trouvée sur ton téléphone. L'ajouter à FitVen ? »
+  watchPrompt: {
+    titleOne: "Une marche a été trouvée sur ton téléphone",
+    titleMany: "{count} marches ont été trouvées sur ton téléphone",
+    subtitleOne: "Elle a été enregistrée avec ta montre ou une app de santé. Veux-tu l'ajouter à FitVen ?",
+    subtitleMany: "Elles ont été enregistrées avec ta montre ou une app de santé. Veux-tu les ajouter à FitVen ?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} pas",
+    add: "Ajouter à FitVen",
+    skip: "Ignorer",
+    skipHint: "FitVen ne te redemandera plus pour cette marche",
+    addAll: "Tout ajouter",
+    later: "Pas maintenant",
+  },
+  map: {
+    label: "Carte de l'itinéraire de ta marche jusqu'ici",
+    waitingForFix: "Recherche de ta position…",
+    noRoute: "Aucun itinéraire n'a été enregistré pour cette marche.",
+    noRouteWatch: "Cette marche vient de ta montre. Son itinéraire n'est pas encore sur ce téléphone.",
+    watchRouteTried: "Aucun itinéraire n'est arrivé. Health Connect demande à chaque fois, et la montre n'en a peut-être pas enregistré.",
+    loadWatchRoute: "Afficher l'itinéraire de ta montre",
+    notStarted: "L'itinéraire est tracé ici dès que la marche a commencé.",
+    denied: "FitVen a besoin de ta position pour tracer l'itinéraire et mesurer la distance.",
+    blocked:
+      "La localisation est désactivée pour FitVen. Active-la dans les Réglages pour tracer l'itinéraire et mesurer la distance.",
+    allow: "Autoriser la localisation",
+    openSettings: "Ouvrir les Réglages",
+  },
+  // La notification qu'Android affiche tant qu'une marche est suivie.
+  tracking: {
+    notificationTitle: "Marche en cours",
+    notificationBody: "FitVen suit ta marche, même écran éteint.",
+  },
+  lockScreen: {
+    title: "Écran verrouillé",
+    message: "Les touchers sont ignorés pendant que tu marches.",
+    unlock: "Maintiens pour déverrouiller",
+    unlockHint: "Déverrouille l'écran",
+    unlockAction: "Déverrouiller",
+  },
+  finishDialog: {
+    title: "Terminer la marche ?",
+    message: "La marche sera marquée comme terminée.",
+    confirm: "Terminer",
+  },
+  finished: {
+    title: "Marche terminée",
+    summary: "{duration} · {distance} · {steps}",
+    summaryNoDistance: "{duration} · {steps}",
+    summaryNoSteps: "{duration} · {distance}",
+    summaryTimeOnly: "{duration}",
+    steps: {
+      one: "{count} pas",
+      other: "{count} pas",
+    },
+  },
+  // Partager une marche terminée dans le fil.
+  post: {
+    message: "{summary}. La publier dans ton fil pour que les personnes qui te suivent la voient ?",
+    confirm: "Publier",
+    keepPrivate: "Garder privée",
+    notePlaceholder: "Ajouter une note (facultatif)",
+    shareRoute: "Partager l'itinéraire",
+    shareRouteHint: "Le début et la fin de ta marche sont omis.",
+  },
+  errors: {
+    finishFailedTitle: "Impossible de terminer la marche",
+    finishFailedMessage: "Rien n'a été perdu. Réessaie dans un instant.",
+  },
+};

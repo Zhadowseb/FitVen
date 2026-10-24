@@ -118,5 +118,49 @@ export default {
         },
       ],
     },
+    fr: {
+      title: "De combien de pas as-tu vraiment besoin\u00A0?",
+      summary: "Le bénéfice santé de la marche n'est pas une ligne droite. Les premiers milliers de pas de la journée comptent le plus.",
+      inShort: [
+        "Le bénéfice santé de la marche n'est pas une ligne droite. Les premiers milliers de pas de la journée comptent le plus.",
+        "L'essentiel du bénéfice à long terme est atteint autour de 7 000 pas par jour.",
+        "Au-delà de 10 000 pas, le bénéfice supplémentaire pour le risque à long terme est faible, mais cela aide encore la forme, l'énergie et l'humeur.",
+      ],
+      zoneNotes: {
+        inactive: "Surtout assis. C'est la référence à laquelle les études comparent.",
+        moving: "La partie la plus raide de la courbe. Chaque marche supplémentaire ici fait le plus pour ta santé.",
+        active: "Le bénéfice continue de croître à un rythme régulier.",
+        sweetSpot: "L'essentiel du bénéfice à long terme pour le cœur, le risque de cancer et la durée de vie est atteint ici.",
+        bonus: "Un plus pour la forme, l'énergie et l'humeur, mais très peu de bénéfice supplémentaire pour le risque à long terme.",
+      },
+      sections: [
+        {
+          heading: "La courbe s'aplatit",
+          paragraphs: [
+            [
+              "Le bénéfice santé ne croît pas en ligne droite. Les premiers pas de la journée comptent le plus, et la courbe s'aplatit après environ 7 000–10 000.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "Les zones de pas de FitVen",
+          paragraphs: [
+            ["FitVen découpe la journée en cinq zones, pour que tu aies toujours un prochain palier à viser plutôt qu'un seul chiffre fixe."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "L'âge compte",
+          paragraphs: [
+            [
+              "Les adultes plus âgés atteignent généralement le plateau un peu plus tôt (autour de 6 000–8 000), les plus jeunes un peu plus tard (autour de 8 000–10 000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };
