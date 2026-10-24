@@ -132,7 +132,7 @@ const counts = getArticleById("strength-counts-as-steps");
 
 assert.strictEqual(en(counts).title, "Does strength training count as steps?");
 assert.strictEqual(da(counts).title, "Tæller styrketræning som skridt?");
-assert.strictEqual(rules.localizeArticle(counts, "de").title, en(counts).title, "a language with no text reads English");
+assert.strictEqual(rules.localizeArticle(counts, "xx").title, en(counts).title, "a language with no text reads English");
 assert.strictEqual(rules.localizeArticle(counts, "da").id, counts.id, "and keeps what is not text");
 assert.strictEqual(rules.localizeArticle(null, "en"), null);
 
