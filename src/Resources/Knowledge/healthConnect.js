@@ -126,5 +126,54 @@ export default {
         },
       ],
     },
+    nb: {
+      title: "Health Connect: ett sted for skrittene dine",
+      summary: "Health Connect lar helseappene på telefonen din dele skrittene dine. Hvorfor det er verdt å sette opp, og hvordan.",
+      inShort: [
+        "Health Connect er Androids felles sted for helsedata. Samsung Health, appen til klokken din og FitVen kan alle lese fra det og skrive til det.",
+        "Med det viser FitVen de samme skrittene som helseappen din, klokken inkludert. Uten det teller FitVen bare skrittene telefonen selv tar.",
+        "Det er gratis, innebygd i Android 14 og nyere, og du bestemmer hvilken app som får lese hva.",
+      ],
+      sections: [
+        {
+          heading: "Hvorfor det er verdt det - også utover FitVen",
+          paragraphs: [
+            [
+              "Når hver app teller for seg selv, er ingen to enige. Health Connect gir appene dine ett sett med tall: skrittene klokken din har talt, når frem til alle appene du gir tillatelse, og bytter du app eller klokke, blir historikken der den var.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Du bestemmer selv. Health Connect viser hvilke apper som får lese og skrive hva, og du kan når som helst fjerne en av dem eller slette dataene.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Slik setter du det opp",
+          paragraphs: [
+            [
+              "1. Hent Health Connect. På Android 14 og nyere er det allerede en del av telefonen: søk etter \"Health Connect\" i innstillingene. På Android 13 og eldre installerer du \"Health Connect by Android\" fra Google Play. Det er gratis.",
+              { ref: [1] },
+            ],
+            [
+              "2. La helseappen din dele. I Samsung Health åpner du Innstillinger → Health Connect og tillater at den skriver skritt. Andre helseapper har en lignende bryter.",
+            ],
+            ["3. Åpne skrittkortet i FitVen, trykk Tillat og tillat at skritt leses."],
+          ],
+        },
+        {
+          heading: "Dette kan du forvente",
+          paragraphs: [
+            [
+              "Health Connect har vanligvis bare skrittene helseappen din har sendt siden den ble koblet til. Tidligere dager dukker ikke opp av seg selv. Fra dagen du kobler til, viser FitVen og helseappen din samme tall.",
+            ],
+            [
+              "FitVen leser bare skrittene dine og skriver aldri noe til Health Connect. Du kan se og fjerne tilgangen i Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };

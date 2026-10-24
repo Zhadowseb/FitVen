@@ -137,5 +137,53 @@ export default {
         },
       ],
     },
+    nb: {
+      title: "Teller styrketrening som skritt?",
+      summary: "Hvorfor øktene dine legges til de daglige skrittene, og hva styrke gir som gåing ikke kan.",
+      inShort: [
+        "Minutter med trening og daglige skritt henger sammen med den samme lavere risikoen for tidlig død og hjertesykdom.",
+        "FitVen legger til omtrent 115 skritt per minutt hard styrketrening i dagen din.",
+        "Styrketrening gir det gåing ikke kan: muskler, sterkere skjelett og bedre blodsukkerkontroll.",
+      ],
+      sections: [
+        {
+          heading: "Minutter eller skritt?",
+          paragraphs: [
+            [
+              "En stor studie fra Harvard og Brigham and Women's Hospital sammenlignet det å måle aktivitet i minutter med å måle den i skritt. Begge var knyttet til den samme nedgangen i risiko for tidlig død og hjertesykdom. Tid brukt på trening er et like gyldig mål som antall skritt.",
+              { ref: [2] },
+            ],
+          ],
+        },
+        {
+          heading: "Slik teller FitVen øktene dine",
+          paragraphs: [
+            [
+              "En styrkeøkt flytter ikke skritttelleren din mye, så FitVen regner om tiden til skrittekvivalenter. Hard styrketrening teller som omtrent 115 skritt per minutt, så 30 minutter legger til omtrent 3 450 skritt. Satsen kommer fra Tæl Skridt-kalkulatoren, som regner om aktiviteter til skritt basert på energibruk.",
+              { ref: [1] },
+              " Gåturer og løpeturer bruker alltid dine faktiske skritt.",
+            ],
+          ],
+        },
+        {
+          heading: "Hva styrke gir som gåing ikke kan",
+          paragraphs: [
+            [
+              "Gåing er et godt mål på hverdagsbevegelse, men den utfordrer sjelden musklene dine. Styrketrening bidrar til å bevare muskler og skjelett med alderen og forbedrer hvordan kroppen håndterer blodsukker. 30 til 60 minutter i uken er knyttet til omtrent 10–20 % lavere risiko for tidlig død.",
+              { ref: [3] },
+            ],
+          ],
+        },
+        {
+          heading: "Den beste kombinasjonen",
+          paragraphs: [
+            [
+              "Den laveste risikoen ses når hverdagsgåing kombineres med et par styrkeøkter i uken. Helsegevinsten fra skritt flater ut ved rundt 7 000–10 000 om dagen, så utover det gir trening mer enn ekstra skritt.",
+              { ref: [4, 5] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };
