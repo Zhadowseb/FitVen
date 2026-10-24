@@ -1,0 +1,60 @@
+// Wissen: die Liste unter Entdecken, die Artikelseite, der Link „Studienlage lesen“ und die Wissen-Karte.
+export default {
+  title: "Wissen",
+  eyebrow: "Entdecken",
+  searchLabel: "Wissen durchsuchen",
+  searchPlaceholder: "Trainingsthemen suchen",
+  noResults: "Kein Artikel passt zu deiner Suche.",
+  articles: "Artikel",
+  featured: "Empfohlen · {category}",
+  new: "Neu",
+  read: "Gelesen",
+  minRead: "{minutes} Min. Lesezeit",
+  sourceCount: {
+    one: "{count} Quelle",
+    other: "{count} Quellen",
+  },
+  written: "Verfasst am {date}",
+  sourceRef: "Quelle {numbers}",
+  categories: {
+    all: "Alle",
+    steps: "Schritte",
+    strength: "Kraft",
+    cardio: "Ausdauer",
+    recovery: "Erholung",
+    stepsStrength: "Schritte & Kraft",
+  },
+  article: {
+    eyebrow: "Wissen",
+    title: "Artikel",
+    inShort: "Kurz gesagt",
+    sources: "Quellen",
+    aiTitle: "Mit KI geschrieben.",
+    aiBody: "Die Quellen wurden von einer KI gelesen und dieser Artikel wurde von ihr geschrieben. Schau in die Quellen oben, wenn du alle Details möchtest.",
+    aiFooter: "Von einer KI am {date} geschrieben. Allgemeine Hinweise, keine medizinische Beratung.",
+    missing: "Dieser Artikel ist nicht verfügbar.",
+  },
+  scienceLink: {
+    label: "Studienlage lesen · {minutes} Min.",
+    a11y: "Studienlage lesen: {title}, {minutes} Min. Lesezeit",
+  },
+  guideLink: {
+    label: "Ratgeber · {minutes} Min.",
+    a11y: "Ratgeber: {title}, {minutes} Min. Lesezeit",
+  },
+  curve: {
+    benefit: "Nutzen für die Gesundheit",
+    a11y: "Kurve des Gesundheitsnutzens nach täglichen Schritten: steil bis 4.000, flacher ab 7.000 bis 10.000",
+  },
+  zoneRange: {
+    under: "unter {max}",
+    between: "{min}–{max}",
+    from: "{min}+",
+  },
+  explore: {
+    title: "Wissen",
+    new: "Neu",
+    subtitle: "Die Wissenschaft hinter Schritten, Kraft und Erholung",
+    a11y: "Wissen: Lerne die Wissenschaft hinter Schritten, Kraft und Erholung kennen",
+  },
+};

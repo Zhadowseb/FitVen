@@ -1,0 +1,50 @@
+// Das Start-Blatt hinter dem mittleren Nav-Button: Neustart-Kacheln, Heute-geplant-Shortcut und die Liste zum Wiederholen.
+export default {
+  title: "NEUES WORKOUT STARTEN",
+  titleForDate: "Was machst du am {date}?",
+  closeSheet: "Workout-Starter schließen",
+  workoutCalendar: "Trainingskalender",
+  ready: "Bereit",
+  recent: "Zuletzt",
+  suggested: "VORGESCHLAGEN",
+  timesCount: "{count}x",
+  types: {
+    resistance: "Kraft",
+    run: "Lauf",
+    walk: "Spaziergang",
+    workout: "Workout",
+  },
+  planned: {
+    promptSingleToday: "Du hast heute ein Workout geplant.",
+    promptSingleOnDay: "Du hast an diesem Tag ein Workout geplant.",
+    promptMultipleToday: "Du hast heute mehrere Workouts geplant.",
+    promptMultipleOnDay: "Du hast an diesem Tag mehrere Workouts geplant.",
+    eyebrowToday: "HEUTE GEPLANT",
+    eyebrow: "GEPLANT",
+    workoutsPlanned: {
+      one: "{count} Workout geplant",
+      other: "{count} Workouts geplant",
+    },
+    countReady: "{count} bereit",
+    detailWithExercises: {
+      one: "{programName} - {count} Übung",
+      other: "{programName} - {count} Übungen",
+    },
+    detailReady: "{programName} - Bereit",
+  },
+  usual: {
+    title: "DEINE ÜBLICHEN WORKOUTS",
+    manage: "Verwalten",
+    loading: "Übliche Workouts werden gesucht...",
+    empty: "Wiederhole ein Workout zweimal, dann siehst du es hier.",
+  },
+  repeat: {
+    title: "WORKOUT WIEDERHOLEN",
+    loading: "Letzte Workouts werden geladen...",
+    loadingMore: "Weitere Workouts werden geladen...",
+    empty: "Wiederhole ein Workout zweimal, dann siehst du es hier.",
+    showExercises: "Übungen in {title} anzeigen",
+    hideExercises: "Übungen in {title} ausblenden",
+    noExercises: "Dieses Workout hat keine Übungen.",
+  },
+};

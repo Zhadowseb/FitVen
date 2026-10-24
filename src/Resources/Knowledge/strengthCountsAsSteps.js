@@ -165,6 +165,20 @@ export default {
           paragraphs: [
             [
               "En stor studie fra Harvard og Brigham and Women's Hospital sammenlignet det å måle aktivitet i minutter med å måle den i skritt. Begge var knyttet til den samme nedgangen i risiko for tidlig død og hjertesykdom. Tid brukt på trening er et like gyldig mål som antall skritt.",
+    de: {
+      title: "Zählt Krafttraining als Schritte?",
+      summary: "Warum deine Workouts zu deinen täglichen Schritten addiert werden und was Kraft bietet, das Gehen nicht kann.",
+      inShort: [
+        "Trainingsminuten und tägliche Schritte hängen mit demselben geringeren Risiko für frühen Tod und Herzkrankheiten zusammen.",
+        "FitVen addiert etwa 115 Schritte pro Minute hartes Krafttraining zu deinem Tag.",
+        "Krafttraining bringt, was Gehen nicht kann: Muskeln, Knochenstärke und eine bessere Blutzuckerkontrolle.",
+      ],
+      sections: [
+        {
+          heading: "Minuten oder Schritte?",
+          paragraphs: [
+            [
+              "Eine große Studie aus Harvard und dem Brigham and Women's Hospital verglich die Messung von Aktivität in Minuten mit der Messung in Schritten. Beides hing mit demselben Rückgang des Risikos für frühen Tod und Herzkrankheiten zusammen. Die Trainingszeit ist ein ebenso gültiges Maß wie die Schrittzahl.",
               { ref: [2] },
             ],
           ],
@@ -182,6 +196,12 @@ export default {
               "En styrkeøkt flytter ikke skritttelleren din mye, så FitVen regner om tiden til skrittekvivalenter. Hard styrketrening teller som omtrent 115 skritt per minutt, så 30 minutter legger til omtrent 3 450 skritt. Satsen kommer fra Tæl Skridt-kalkulatoren, som regner om aktiviteter til skritt basert på energibruk.",
               { ref: [1] },
               " Gåturer og løpeturer bruker alltid dine faktiske skritt.",
+          heading: "Wie FitVen deine Workouts zählt",
+          paragraphs: [
+            [
+              "Eine Krafteinheit bewegt deinen Schrittzähler kaum, deshalb rechnet FitVen die Zeit in Schrittäquivalente um. Hartes Krafttraining zählt als etwa 115 Schritte pro Minute, also bringen 30 Minuten etwa 3.450 Schritte. Der Wert stammt vom Rechner von Tæl Skridt, der Aktivitäten anhand des Energieverbrauchs in Schritte umrechnet.",
+              { ref: [1] },
+              " Spaziergänge und Läufe verwenden immer deine echten Schritte.",
             ],
           ],
         },
@@ -194,6 +214,10 @@ export default {
           paragraphs: [
             [
               "Gåing er et godt mål på hverdagsbevegelse, men den utfordrer sjelden musklene dine. Styrketrening bidrar til å bevare muskler og skjelett med alderen og forbedrer hvordan kroppen håndterer blodsukker. 30 til 60 minutter i uken er knyttet til omtrent 10–20 % lavere risiko for tidlig død.",
+          heading: "Was Kraft bietet, das Gehen nicht kann",
+          paragraphs: [
+            [
+              "Gehen ist ein gutes Maß für die Alltagsbewegung, fordert deine Muskeln aber selten heraus. Krafttraining hilft, Muskeln und Knochen im Alter zu erhalten, und verbessert, wie dein Körper mit Blutzucker umgeht. 30 bis 60 Minuten pro Woche hängen mit einem etwa 10–20 % geringeren Risiko für frühen Tod zusammen.",
               { ref: [3] },
             ],
           ],
@@ -207,6 +231,10 @@ export default {
           paragraphs: [
             [
               "Den laveste risikoen ses når hverdagsgåing kombineres med et par styrkeøkter i uken. Helsegevinsten fra skritt flater ut ved rundt 7 000–10 000 om dagen, så utover det gir trening mer enn ekstra skritt.",
+          heading: "Die beste Kombination",
+          paragraphs: [
+            [
+              "Das niedrigste Risiko zeigt sich, wenn Alltagsgehen mit ein paar Krafteinheiten pro Woche kombiniert wird. Der gesundheitliche Nutzen durch Schritte flacht bei etwa 7.000–10.000 am Tag ab, darüber hinaus bringt Training mehr als zusätzliche Schritte.",
               { ref: [4, 5] },
             ],
           ],
