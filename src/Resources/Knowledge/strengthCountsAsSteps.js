@@ -179,6 +179,20 @@ export default {
           paragraphs: [
             [
               "Eine große Studie aus Harvard und dem Brigham and Women's Hospital verglich die Messung von Aktivität in Minuten mit der Messung in Schritten. Beides hing mit demselben Rückgang des Risikos für frühen Tod und Herzkrankheiten zusammen. Die Trainingszeit ist ein ebenso gültiges Maß wie die Schrittzahl.",
+    fr: {
+      title: "La musculation compte-t-elle comme des pas\u00A0?",
+      summary: "Pourquoi tes séances sont ajoutées à tes pas quotidiens, et ce que la force apporte que la marche ne peut pas apporter.",
+      inShort: [
+        "Les minutes d'exercice et les pas quotidiens sont liés à la même baisse du risque de décès prématuré et de maladie cardiaque.",
+        "FitVen ajoute environ 115 pas par minute de musculation intense à ta journée.",
+        "La musculation apporte ce que la marche ne peut pas\u00A0: du muscle, des os plus solides et un meilleur contrôle de la glycémie.",
+      ],
+      sections: [
+        {
+          heading: "Des minutes ou des pas\u00A0?",
+          paragraphs: [
+            [
+              "Une vaste étude de Harvard et du Brigham and Women's Hospital a comparé la mesure de l'activité en minutes et en pas. Les deux étaient liées à la même baisse du risque de décès prématuré et de maladie cardiaque. Le temps passé à s'entraîner est une mesure tout aussi valable qu'un nombre de pas.",
               { ref: [2] },
             ],
           ],
@@ -202,6 +216,12 @@ export default {
               "Eine Krafteinheit bewegt deinen Schrittzähler kaum, deshalb rechnet FitVen die Zeit in Schrittäquivalente um. Hartes Krafttraining zählt als etwa 115 Schritte pro Minute, also bringen 30 Minuten etwa 3.450 Schritte. Der Wert stammt vom Rechner von Tæl Skridt, der Aktivitäten anhand des Energieverbrauchs in Schritte umrechnet.",
               { ref: [1] },
               " Spaziergänge und Läufe verwenden immer deine echten Schritte.",
+          heading: "Comment FitVen compte tes séances",
+          paragraphs: [
+            [
+              "Une séance de force ne fait pas beaucoup bouger ton compteur de pas, donc FitVen convertit le temps en équivalents pas. La musculation intense compte pour environ 115 pas par minute\u00A0: 30 minutes ajoutent donc environ 3 450 pas. Ce taux vient du calculateur Tæl Skridt, qui convertit les activités en pas selon la dépense énergétique.",
+              { ref: [1] },
+              " Les marches et les courses utilisent toujours tes vrais pas.",
             ],
           ],
         },
@@ -218,6 +238,10 @@ export default {
           paragraphs: [
             [
               "Gehen ist ein gutes Maß für die Alltagsbewegung, fordert deine Muskeln aber selten heraus. Krafttraining hilft, Muskeln und Knochen im Alter zu erhalten, und verbessert, wie dein Körper mit Blutzucker umgeht. 30 bis 60 Minuten pro Woche hängen mit einem etwa 10–20 % geringeren Risiko für frühen Tod zusammen.",
+          heading: "Ce que la force apporte que la marche ne peut pas",
+          paragraphs: [
+            [
+              "La marche est une bonne mesure du mouvement quotidien, mais elle sollicite rarement tes muscles. La musculation aide à garder muscles et os en vieillissant et améliore la façon dont ton corps gère la glycémie. De 30 à 60 minutes par semaine sont liées à un risque de décès prématuré inférieur d'environ 10–20\u00A0%.",
               { ref: [3] },
             ],
           ],
@@ -235,6 +259,10 @@ export default {
           paragraphs: [
             [
               "Das niedrigste Risiko zeigt sich, wenn Alltagsgehen mit ein paar Krafteinheiten pro Woche kombiniert wird. Der gesundheitliche Nutzen durch Schritte flacht bei etwa 7.000–10.000 am Tag ab, darüber hinaus bringt Training mehr als zusätzliche Schritte.",
+          heading: "La meilleure combinaison",
+          paragraphs: [
+            [
+              "Le risque le plus bas s'observe quand la marche au quotidien est combinée à quelques séances de force par semaine. Le bénéfice santé des pas plafonne autour de 7 000–10 000 par jour, donc au-delà, l'entraînement apporte plus que des pas en plus.",
               { ref: [4, 5] },
             ],
           ],
