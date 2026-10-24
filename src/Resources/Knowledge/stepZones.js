@@ -118,5 +118,49 @@ export default {
         },
       ],
     },
+    sv: {
+      title: "Hur många steg behöver du egentligen?",
+      summary: "Hälsovinsten med att gå är inte en rät linje. De första tusentals stegen på dagen räknas mest.",
+      inShort: [
+        "Hälsovinsten med att gå är inte en rät linje. De första tusentals stegen på dagen räknas mest.",
+        "Det mesta av den långsiktiga vinsten nås vid omkring 7 000 steg om dagen.",
+        "Över 10 000 steg är den extra vinsten för den långsiktiga risken liten, men det hjälper fortfarande kondition, energi och humör.",
+      ],
+      zoneNotes: {
+        inactive: "Mest stillasittande. Det är utgångsläget som studierna jämför med.",
+        moving: "Den brantaste delen av kurvan. Varje extra promenad här gör mest för din hälsa.",
+        active: "Vinsten fortsätter att växa i jämn takt.",
+        sweetSpot: "Det mesta av den långsiktiga vinsten för hjärtat, cancerrisken och livslängden nås här.",
+        bonus: "Extra för kondition, energi och humör, men mycket lite extra för den långsiktiga risken.",
+      },
+      sections: [
+        {
+          heading: "Kurvan planar ut",
+          paragraphs: [
+            [
+              "Hälsovinsten växer inte i en rät linje. De första stegen på dagen räknas mest, och kurvan planar ut efter omkring 7 000–10 000.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "FitVens stegzoner",
+          paragraphs: [
+            ["FitVen delar in dagen i fem zoner, så att du alltid har ett nästa steg att sikta mot i stället för ett fast tal."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "Åldern spelar roll",
+          paragraphs: [
+            [
+              "Äldre vuxna når typiskt platån lite tidigare (omkring 6 000–8 000), yngre vuxna lite senare (omkring 8 000–10 000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };
