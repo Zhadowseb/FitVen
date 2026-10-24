@@ -118,5 +118,49 @@ export default {
         },
       ],
     },
+    de: {
+      title: "Wie viele Schritte brauchst du wirklich?",
+      summary: "Der gesundheitliche Nutzen des Gehens ist keine gerade Linie. Die ersten paar tausend Schritte des Tages zählen am meisten.",
+      inShort: [
+        "Der gesundheitliche Nutzen des Gehens ist keine gerade Linie. Die ersten paar tausend Schritte des Tages zählen am meisten.",
+        "Der größte Teil des langfristigen Nutzens ist bei etwa 7.000 Schritten am Tag erreicht.",
+        "Über 10.000 Schritten gibt es kaum zusätzlichen Nutzen für das langfristige Risiko, aber es hilft weiterhin bei Fitness, Energie und Stimmung.",
+      ],
+      zoneNotes: {
+        inactive: "Überwiegend Sitzen. Das ist die Basis, mit der die Studien vergleichen.",
+        moving: "Der steilste Teil der Kurve. Jeder zusätzliche Spaziergang tut hier am meisten für deine Gesundheit.",
+        active: "Der Nutzen wächst weiter in gleichmäßigem Tempo.",
+        sweetSpot: "Hier wird der größte Teil des langfristigen Nutzens für Herzgesundheit, Krebsrisiko und Lebensdauer erreicht.",
+        bonus: "Zusätzlich für Fitness, Energie und Stimmung, aber sehr wenig zusätzlich für das langfristige Risiko.",
+      },
+      sections: [
+        {
+          heading: "Die Kurve flacht ab",
+          paragraphs: [
+            [
+              "Der gesundheitliche Nutzen wächst nicht in einer geraden Linie. Die ersten Schritte des Tages zählen am meisten, und die Kurve flacht nach etwa 7.000–10.000 ab.",
+              { ref: [1, 2] },
+            ],
+          ],
+          block: "curve",
+        },
+        {
+          heading: "Die Schrittzonen von FitVen",
+          paragraphs: [
+            ["FitVen teilt den Tag in fünf Zonen ein, damit du immer einen nächsten Schritt als Ziel hast statt einer festen Zahl."],
+          ],
+          block: "zones",
+        },
+        {
+          heading: "Das Alter spielt eine Rolle",
+          paragraphs: [
+            [
+              "Ältere Erwachsene erreichen das Plateau tendenziell etwas früher (etwa 6.000–8.000), jüngere Erwachsene etwas später (etwa 8.000–10.000).",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };
