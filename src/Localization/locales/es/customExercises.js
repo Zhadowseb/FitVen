@@ -1,0 +1,118 @@
+// Ejercicios que la gente ha creado y compartido: la biblioteca de Explorar y su fila,
+// más las palabras que usan todas las pantallas sobre un ejercicio compartido: las
+// etiquetas, los órdenes, "{n} usuarios".
+export default {
+  users: { one: "{value} usuario", other: "{value} usuarios" },
+  you: "Tú",
+  yourGym: "tu gimnasio",
+  noVideo: "Sin video",
+  equipment: {
+    barbell: "Barra",
+    dumbbell: "Mancuernas",
+    machine: "Máquina",
+    cable: "Polea",
+    kettlebell: "Pesa rusa",
+    band: "Banda",
+    none: "Sin equipamiento",
+    other: "Otro equipamiento",
+  },
+  weightMode: {
+    total: "Peso total",
+    perSide: "Por lado",
+    bodyweight: "Peso corporal",
+  },
+  sorts: {
+    popular: "Más usados",
+    newest: "Más nuevos",
+    gym: "En tu gimnasio",
+    following: "Personas que sigues",
+    video: "Con video",
+    saved: "Guardados",
+  },
+  // La línea bajo cada orden en la hoja de orden.
+  sortHints: {
+    popular: "Añadidos por más personas",
+    newest: "Los compartidos más recientemente primero",
+    gym: "Primero lo que usa la gente de tu gimnasio",
+    following: "Solo los creados por personas que sigues",
+    video: "Solo ejercicios con video",
+    saved: "Los que guardaste para más tarde",
+  },
+  someone: "Un usuario de FitVen",
+  // Se lee después del nombre, así que empieza en minúscula.
+  madeBy: "creado por {name}",
+  madeByYou: "creado por ti",
+  withVideo: "con video",
+  videoSeconds: { one: "video de {value} segundo", other: "video de {value} segundos" },
+  inYourExercises: "añadido a tus ejercicios",
+  // "Añadir" en una tarjeta: una copia en tus propios ejercicios.
+  add: "Añadir",
+  added: "Añadido",
+  addA11y: "Añadir {name} a tus ejercicios",
+  addedA11y: "{name} está en tus ejercicios",
+  addedToast: "{name} se añadió a tus ejercicios",
+  nameTaken: "Ya tienes un ejercicio llamado «{name}»",
+  addFailed: "No se pudo añadir el ejercicio. Inténtalo de nuevo.",
+  // La biblioteca de Explorar, pantalla 1a.
+  library: {
+    searchPlaceholder: { one: "Buscar {value} ejercicio", other: "Buscar {value} ejercicios" },
+    searchFallback: "Buscar ejercicios",
+    clearSearch: "Borrar la búsqueda",
+    sortEyebrow: "Ordenar",
+    sortTitle: "Mostrar ejercicios por",
+    sortA11y: "Ordenar por: {sort}",
+    filter: "Filtrar",
+    filterTitle: "Grupo muscular",
+    filterA11y: "Grupo muscular: {group}",
+    filterNoneA11y: "Filtrar por grupo muscular",
+    reset: "Restablecer",
+    resetFilter: "Restablecer filtro",
+    resultCount: { one: "{value} ejercicio", other: "{value} ejercicios" },
+    resultCountInGroup: {
+      one: "{value} ejercicio en {group}",
+      other: "{value} ejercicios en {group}",
+    },
+    rowHint: "Abre el ejercicio",
+    chooseGym: {
+      title: "Elige tu gimnasio",
+      body: "Así lo que usa la gente de tu gimnasio aparece primero.",
+    },
+    empty: {
+      title: "Sé el primero en compartir un ejercicio",
+      body: "Aquí encontrarás ejercicios que la gente ha creado, con video y pasos. Comparte uno tuyo para que otros empiecen a usarlo.",
+      cta: "Comparte uno de tus ejercicios",
+      note: "Tú eliges qué compartes. Tus series nunca se comparten.",
+    },
+    noResults: {
+      query: "Ningún ejercicio coincide con «{query}»",
+      group: "Aún no hay ejercicios de {group}",
+      queryInGroup: "Ningún ejercicio de {group} coincide con «{query}»",
+      body: "Prueba con otra palabra o grupo muscular, o restablece el filtro.",
+    },
+    saved: {
+      title: "Aún no has guardado ningún ejercicio",
+      body: "Toca Guardar en un ejercicio y te esperará aquí hasta que quieras probarlo.",
+    },
+    following: {
+      title: "Nadie a quien sigues ha compartido aún un ejercicio",
+      body: "Cuando lo hagan, los encontrarás aquí.",
+    },
+    video: {
+      title: "Aún no hay ejercicios con video",
+      body: "Aquí se reúnen los ejercicios con un clip que muestra cómo se hacen.",
+    },
+    nothing: {
+      title: "Aún no hay ejercicios aquí",
+      body: "Prueba con otro orden o vuelve a mirar en un momento.",
+    },
+    showPopular: "Ver los más usados",
+    loadFailed: "No se pudieron cargar los ejercicios",
+    loadFailedBody: "Comprueba tu conexión e inténtalo de nuevo.",
+    loadMoreFailed: "No se pudo cargar más",
+    refreshFailed: "No se pudo actualizar la lista",
+    invite: {
+      title: "¿Has creado un ejercicio tú?",
+      action: "Compártelo para que otros lo encuentren",
+    },
+  },
+};

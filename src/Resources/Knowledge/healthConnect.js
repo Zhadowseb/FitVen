@@ -126,5 +126,54 @@ export default {
         },
       ],
     },
+    es: {
+      title: "Health Connect: un solo lugar para tus pasos",
+      summary: "Health Connect permite que las apps de salud de tu teléfono compartan tus pasos. Por qué conviene configurarlo y cómo hacerlo.",
+      inShort: [
+        "Health Connect es el lugar compartido de Android para los datos de salud. Samsung Health, la app de tu reloj y FitVen pueden leer de él y escribir en él.",
+        "Con él, FitVen muestra los mismos pasos que tu app de salud, incluidos los de tu reloj. Sin él, FitVen solo cuenta los pasos que da el propio teléfono.",
+        "Es gratis, viene integrado en Android 14 y posteriores, y tú decides qué app puede leer qué.",
+      ],
+      sections: [
+        {
+          heading: "Por qué merece la pena, y no solo para FitVen",
+          paragraphs: [
+            [
+              "Cuando cada app cuenta por su cuenta, no hay dos que coincidan. Health Connect da a tus apps un único conjunto de cifras: los pasos que contó tu reloj llegan a todas las apps que permitas, y si cambias de app o de reloj, el historial se queda donde estaba.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Tú mantienes el control. Health Connect muestra qué apps pueden leer y escribir qué, y puedes quitar el permiso a cualquiera de ellas, o borrar los datos, en cualquier momento.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Cómo configurarlo",
+          paragraphs: [
+            [
+              "1. Consigue Health Connect. En Android 14 y posteriores ya forma parte del teléfono: busca \"Health Connect\" en los ajustes. En Android 13 y anteriores, instala \"Health Connect by Android\" desde Google Play. Es gratis.",
+              { ref: [1] },
+            ],
+            [
+              "2. Haz que tu app de salud comparta. En Samsung Health, abre Ajustes → Health Connect y permite que escriba pasos. Otras apps de salud tienen un interruptor parecido.",
+            ],
+            ["3. Abre la tarjeta de pasos en FitVen, toca Permitir y permite la lectura de pasos."],
+          ],
+        },
+        {
+          heading: "Qué esperar",
+          paragraphs: [
+            [
+              "Health Connect normalmente solo tiene los pasos que tu app de salud ha enviado desde que se conectó. Los días anteriores no aparecen por sí solos. Desde el día en que conectas, FitVen y tu app de salud muestran la misma cifra.",
+            ],
+            [
+              "FitVen solo lee tus pasos y nunca escribe nada en Health Connect. Puedes ver y quitar su acceso en Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };

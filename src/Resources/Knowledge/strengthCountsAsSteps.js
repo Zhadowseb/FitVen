@@ -137,5 +137,53 @@ export default {
         },
       ],
     },
+    es: {
+      title: "¿Cuenta el entrenamiento de fuerza como pasos?",
+      summary: "Por qué tus entrenamientos se suman a tus pasos diarios, y qué aporta la fuerza que caminar no aporta.",
+      inShort: [
+        "Los minutos de ejercicio y los pasos diarios se asocian con el mismo menor riesgo de muerte prematura y de enfermedad cardiaca.",
+        "FitVen suma a tu día unos 115 pasos por cada minuto de entrenamiento de fuerza intenso.",
+        "El entrenamiento de fuerza aporta lo que caminar no puede: músculo, huesos fuertes y mejor control del azúcar en sangre.",
+      ],
+      sections: [
+        {
+          heading: "¿Minutos o pasos?",
+          paragraphs: [
+            [
+              "Un gran estudio de Harvard y el Brigham and Women's Hospital comparó medir la actividad en minutos con medirla en pasos. Ambas formas se asociaron con la misma reducción del riesgo de muerte prematura y de enfermedad cardiaca. El tiempo dedicado a entrenar es una medida tan válida como el número de pasos.",
+              { ref: [2] },
+            ],
+          ],
+        },
+        {
+          heading: "Cómo cuenta FitVen tus entrenamientos",
+          paragraphs: [
+            [
+              "Una sesión de fuerza apenas mueve tu contador de pasos, así que FitVen convierte el tiempo en equivalentes de pasos. El entrenamiento de fuerza intenso cuenta como unos 115 pasos por minuto, así que 30 minutos suman unos 3.450 pasos. La tasa procede de la calculadora de Tæl Skridt, que convierte las actividades en pasos según el gasto de energía.",
+              { ref: [1] },
+              " Las caminatas y las carreras siempre usan tus pasos reales.",
+            ],
+          ],
+        },
+        {
+          heading: "Qué aporta la fuerza que caminar no aporta",
+          paragraphs: [
+            [
+              "Caminar es una buena medida del movimiento cotidiano, pero rara vez desafía tus músculos. El entrenamiento de fuerza ayuda a conservar músculo y hueso con la edad y mejora cómo maneja tu cuerpo el azúcar en sangre. De 30 a 60 minutos a la semana se asocian con un riesgo de muerte prematura entre un 10 y un 20 % menor.",
+              { ref: [3] },
+            ],
+          ],
+        },
+        {
+          heading: "La mejor combinación",
+          paragraphs: [
+            [
+              "El menor riesgo se observa cuando se combina caminar a diario con un par de sesiones de fuerza a la semana. El beneficio para la salud de los pasos se estabiliza en torno a 7.000–10.000 al día, así que, más allá de eso, entrenar aporta más que pasos extra.",
+              { ref: [4, 5] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };

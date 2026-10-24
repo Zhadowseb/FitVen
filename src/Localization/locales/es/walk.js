@@ -1,0 +1,106 @@
+// El entrenamiento de caminata: la pantalla en vivo con el mapa, el reloj, los datos y la
+// cadencia.
+export default {
+  eyebrow: "Entrenamiento",
+  title: "Caminata",
+  options: "Opciones de la caminata",
+  autoPause: "Pausa automática",
+  autoPaused: "En pausa automática",
+  time: "Tiempo",
+  clockLabel: "Tiempo de caminata {time}",
+  start: "Empezar",
+  pause: "Pausar",
+  resume: "Reanudar",
+  finish: "Terminar",
+  finishHint: "Termina la caminata",
+  lock: "Bloquear",
+  lockHint: "Bloquea la pantalla para que ignore los toques",
+  startedAt: "Inicio {time}",
+  stats: {
+    distance: "Distancia",
+    pace: "Ritmo /{unit}",
+    now: "Ahora {pace}",
+    steps: "Pasos",
+    stepsTotal: "total",
+  },
+  cadence: {
+    title: "Cadencia",
+    unit: "pasos/min",
+    perDistance: "Por {unit}",
+    perDistanceUnit: "pasos/{unit}",
+    figureLabel: "Una figura caminando en el sitio a tu cadencia",
+  },
+  units: {
+    km: "km",
+  },
+  // "Se encontró una caminata en tu teléfono. ¿Añadirla a FitVen?"
+  watchPrompt: {
+    titleOne: "Se encontró una caminata en tu teléfono",
+    titleMany: "Se encontraron {count} caminatas en tu teléfono",
+    subtitleOne: "Se registró con tu reloj o una app de salud. ¿Quieres añadirla a FitVen?",
+    subtitleMany: "Se registraron con tu reloj o una app de salud. ¿Quieres añadirlas a FitVen?",
+    minutes: "{count} min",
+    km: "{km} km",
+    steps: "{count} pasos",
+    add: "Añadir a FitVen",
+    skip: "Omitir",
+    skipHint: "FitVen no volverá a preguntar por esta caminata",
+    addAll: "Añadir todas",
+    later: "Ahora no",
+  },
+  map: {
+    label: "Mapa de la ruta de tu caminata hasta ahora",
+    waitingForFix: "Buscando tu posición…",
+    noRoute: "No se registró ninguna ruta para esta caminata.",
+    noRouteWatch: "Esta caminata viene de tu reloj. Su ruta aún no está en este teléfono.",
+    watchRouteTried: "No llegó ninguna ruta. Health Connect pregunta cada vez, y puede que el reloj no registrara una.",
+    loadWatchRoute: "Mostrar la ruta de tu reloj",
+    notStarted: "La ruta se dibuja aquí cuando empieza la caminata.",
+    denied: "FitVen necesita tu ubicación para dibujar la ruta y medir la distancia.",
+    blocked:
+      "La ubicación está desactivada para FitVen. Actívala en Ajustes para dibujar la ruta y medir la distancia.",
+    allow: "Permitir ubicación",
+    openSettings: "Abrir Ajustes",
+  },
+  // La notificación que muestra Android mientras se registra una caminata.
+  tracking: {
+    notificationTitle: "Caminata en curso",
+    notificationBody: "FitVen está registrando tu caminata, también con la pantalla apagada.",
+  },
+  lockScreen: {
+    title: "Pantalla bloqueada",
+    message: "Se ignoran los toques mientras caminas.",
+    unlock: "Mantén pulsado para desbloquear",
+    unlockHint: "Desbloquea la pantalla",
+    unlockAction: "Desbloquear",
+  },
+  finishDialog: {
+    title: "¿Terminar la caminata?",
+    message: "Esto marcará la caminata como completada.",
+    confirm: "Terminar",
+  },
+  finished: {
+    title: "Caminata terminada",
+    summary: "{duration} · {distance} · {steps}",
+    summaryNoDistance: "{duration} · {steps}",
+    summaryNoSteps: "{duration} · {distance}",
+    summaryTimeOnly: "{duration}",
+    steps: {
+      one: "{count} paso",
+      other: "{count} pasos",
+    },
+  },
+  // Compartir una caminata terminada en el feed.
+  post: {
+    message: "{summary}. ¿Publicarla en tu feed para que la vean quienes te siguen?",
+    confirm: "Publicar",
+    keepPrivate: "Mantener privada",
+    notePlaceholder: "Añade una nota (opcional)",
+    shareRoute: "Compartir ruta",
+    shareRouteHint: "El inicio y el final de tu caminata se omiten.",
+  },
+  errors: {
+    finishFailedTitle: "No se pudo terminar la caminata",
+    finishFailedMessage: "No se perdió nada. Inténtalo de nuevo en un momento.",
+  },
+};
