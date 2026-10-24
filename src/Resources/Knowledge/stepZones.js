@@ -204,6 +204,27 @@ export default {
           paragraphs: [
             [
               "Le bénéfice santé ne croît pas en ligne droite. Les premiers pas de la journée comptent le plus, et la courbe s'aplatit après environ 7 000–10 000.",
+    es: {
+      title: "¿Cuántos pasos necesitas realmente?",
+      summary: "El beneficio para la salud de caminar no es una línea recta. Los primeros miles de pasos del día son los que más cuentan.",
+      inShort: [
+        "El beneficio para la salud de caminar no es una línea recta. Los primeros miles de pasos del día son los que más cuentan.",
+        "La mayor parte del beneficio a largo plazo se alcanza en torno a los 7.000 pasos al día.",
+        "Por encima de los 10.000 pasos hay poco beneficio adicional para el riesgo a largo plazo, pero sigue ayudando a la forma física, la energía y el estado de ánimo.",
+      ],
+      zoneNotes: {
+        inactive: "Casi todo sentado. Es la referencia con la que comparan los estudios.",
+        moving: "El tramo más empinado de la curva. Cada paseo extra aquí es el que más hace por tu salud.",
+        active: "El beneficio sigue creciendo a un ritmo constante.",
+        sweetSpot: "Aquí se alcanza la mayor parte del beneficio a largo plazo para la salud del corazón, el riesgo de cáncer y la esperanza de vida.",
+        bonus: "Extra para la forma física, la energía y el estado de ánimo, pero muy poco extra para el riesgo a largo plazo.",
+      },
+      sections: [
+        {
+          heading: "La curva se aplana",
+          paragraphs: [
+            [
+              "El beneficio para la salud no crece en línea recta. Los primeros pasos del día son los que más cuentan, y la curva se aplana a partir de unos 7.000–10.000.",
               { ref: [1, 2] },
             ],
           ],
@@ -222,6 +243,9 @@ export default {
           heading: "Les zones de pas de FitVen",
           paragraphs: [
             ["FitVen découpe la journée en cinq zones, pour que tu aies toujours un prochain palier à viser plutôt qu'un seul chiffre fixe."],
+          heading: "Las zonas de pasos de FitVen",
+          paragraphs: [
+            ["FitVen divide el día en cinco zonas, para que siempre tengas un siguiente paso al que apuntar en lugar de una cifra fija."],
           ],
           block: "zones",
         },
@@ -242,6 +266,10 @@ export default {
           paragraphs: [
             [
               "Les adultes plus âgés atteignent généralement le plateau un peu plus tôt (autour de 6 000–8 000), les plus jeunes un peu plus tard (autour de 8 000–10 000).",
+          heading: "La edad importa",
+          paragraphs: [
+            [
+              "Los adultos mayores tienden a alcanzar la meseta un poco antes (en torno a 6.000–8.000), los adultos más jóvenes un poco después (en torno a 8.000–10.000).",
               { ref: [2] },
             ],
           ],
