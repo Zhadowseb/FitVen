@@ -44,12 +44,19 @@ for (const article of ARTICLES) {
     assert.notStrictEqual(related, article.id, "and not at itself");
   }
 
-  const [en, da] = [article.content.en, article.content.da];
+  const en = article.content.en;
 
-  assert.ok(en && da, `${article.id} has both languages`);
-  assert.strictEqual(da.inShort.length, en.inShort.length, `${article.id}: the same number of bullets in Danish`);
-  assert.strictEqual(da.sections.length, en.sections.length, `${article.id}: the same number of sections in Danish`);
-  assert.deepStrictEqual(Object.keys(da.zoneNotes ?? {}), Object.keys(en.zoneNotes ?? {}), `${article.id}: the same zone notes`);
+  assert.ok(en && article.content.da, `${article.id} has English and Danish`);
+
+  // Every other language has the shape English has: the same bullets, sections
+  // and zone notes. A language may have an article in English only, never half.
+  for (const [language, other] of Object.entries(article.content)) {
+    if (language === "en") continue;
+
+    assert.strictEqual(other.inShort.length, en.inShort.length, `${article.id}: the same number of bullets in ${language}`);
+    assert.strictEqual(other.sections.length, en.sections.length, `${article.id}: the same number of sections in ${language}`);
+    assert.deepStrictEqual(Object.keys(other.zoneNotes ?? {}), Object.keys(en.zoneNotes ?? {}), `${article.id}: the same zone notes in ${language}`);
+  }
 
   for (const [language, content] of Object.entries(article.content)) {
     assert.ok(content.title && content.summary, `${article.id} (${language}) has a title and a summary`);
@@ -97,7 +104,7 @@ for (const article of ARTICLES) {
   // The zone rows are drawn from stepZones.js; only the line under each is written here.
   const zones = getArticleById("step-zones");
 
-  for (const language of ["en", "da"]) {
+  for (const language of Object.keys(zones.content)) {
     assert.deepStrictEqual(
       Object.keys(zones.content[language].zoneNotes).sort(),
       STEP_ZONES.map((zone) => zone.id).sort(),
