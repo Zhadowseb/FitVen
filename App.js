@@ -46,6 +46,7 @@ import PersonalRecordsPage from "./src/Pages/PersonalRecordsPage/PersonalRecords
 import RecordsExercisePage from "./src/Pages/RecordsExercisePage/RecordsExercisePage";
 import StatisticsPage from "./src/Pages/StatisticsPage/StatisticsPage";
 import StepsPage from "./src/Pages/StepsPage/StepsPage";
+import AskPage from "./src/Pages/AskPage/AskPage";
 import KnowledgePage from "./src/Pages/KnowledgePage/KnowledgePage";
 import KnowledgeArticlePage from "./src/Pages/KnowledgeArticlePage/KnowledgeArticlePage";
 import StatisticsDetailPage from "./src/Pages/StatisticsDetailPage/StatisticsDetailPage";
@@ -429,6 +430,7 @@ function RootNavigator() {
                 <Stack.Screen name="RecordsExercisePage" component={RecordsExercisePage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsPage" component={StatisticsPage} options={{ headerShown: false }} />
                 <Stack.Screen name="StepsPage" component={StepsPage} options={{ headerShown: false }} />
+                <Stack.Screen name="AskPage" component={AskPage} options={{ headerShown: false }} />
                 <Stack.Screen name="KnowledgePage" component={KnowledgePage} options={{ headerShown: false }} />
                 <Stack.Screen name="KnowledgeArticlePage" component={KnowledgeArticlePage} options={{ headerShown: false }} />
                 <Stack.Screen name="StatisticsDetailPage" component={StatisticsDetailPage} options={{ headerShown: false }} />
@@ -479,7 +481,11 @@ function RootNavigator() {
           </NavigationContainer>
         </View>
 
-        {isAuthenticated && currentRouteName !== RUN_HEART_RATE_CHART_ROUTE ? (
+        {/* The chat has its own input bar at the bottom, as in its design, and the
+            keyboard goes over where the tabs would be. */}
+        {isAuthenticated &&
+        currentRouteName !== RUN_HEART_RATE_CHART_ROUTE &&
+        currentRouteName !== "AskPage" ? (
           <ThemedBottomNavigation
             currentRouteName={currentRouteName}
             navigationRef={navigationRef}

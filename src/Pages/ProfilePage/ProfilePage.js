@@ -42,6 +42,7 @@ import {
   ThemedView,
 } from "@resources/ThemedComponents";
 import AccentThemePicker from "./Components/AccentThemePicker";
+import AskFitvenSwitch from "./Components/AskFitvenSwitch";
 import InsetDivider from "./Components/InsetDivider";
 import ProfileAvatarButton from "./Components/ProfileAvatarButton";
 import SectionEyebrow from "./Components/SectionEyebrow";
@@ -866,6 +867,12 @@ export default function ProfilePage() {
               </ThemedText>
               <ChevronRight width={16} height={16} color={theme.chevron} />
             </TouchableOpacity>
+
+            <InsetDivider />
+
+            {/* Ask FitVen's AI reading your training data: the yes the first
+                question asks for, and where it is taken back. */}
+            <AskFitvenSwitch />
 
             <InsetDivider />
 

@@ -1,5 +1,6 @@
 export * as adminService from "./adminService";
 export * as appOpenService from "./appOpenService";
+export * as askService from "./askService";
 export * as authService from "./authService";
 export * as categoryLeaderboardService from "./categoryLeaderboardService";
 export * as dailyStepsService from "./dailyStepsService";

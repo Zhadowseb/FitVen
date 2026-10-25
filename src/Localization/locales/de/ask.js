@@ -1,0 +1,125 @@
+// Frag FitVen: der KI-Chat zu deinem eigenen Training - die Leiste auf Start,
+// der Chat, die Einwilligung beim ersten Mal und der Schalter im Profil.
+// Halte sie im Gleichschritt mit ../en/ask.js.
+export default {
+  title: "Frag FitVen",
+  placeholder: "Frag zu deinem Training…",
+  openLabel: "FitVen zu deinem Training fragen",
+  badge: "Nur deine Daten",
+  badgeHint: "Öffnet eine Erklärung, was die KI sehen kann",
+  badgeSheet: {
+    title: "Nur deine Daten",
+    body: "Die KI von FitVen kann deine eigenen Workouts, Rekorde, Programme und Schritte lesen, wenn du eine Frage stellst. Sie sieht keine Daten anderer Leute und ändert nichts ohne dich.",
+  },
+  menu: {
+    open: "Chat-Menü",
+    newChat: "Neuer Chat",
+  },
+  empty: {
+    title: "Frag alles zu deinem Training",
+    intro: "FitVen liest deine eigenen Workouts, Rekorde, Programme und Schritte, um zu antworten. Nie die von anderen.",
+  },
+  suggest: {
+    stuck: "Warum stagniert mein {exercise}?",
+    stuckAny: "Welche meiner Übungen stagniert?",
+    next: "Wie gehe ich mein nächstes {workout} an?",
+    today: "Was soll ich heute trainieren?",
+    month: "Wie lief der {month}?",
+    recent: "Wie liefen die letzten Wochen?",
+    volume: "Ist mein Wochenvolumen ausgewogen?",
+  },
+  disclaimer: "KI kann Fehler machen. Allgemeine Hinweise, keine medizinische Beratung.",
+  input: {
+    label: "Frag FitVen",
+    send: "Senden",
+    speak: "Frage einsprechen",
+  },
+  typing: "FitVen denkt nach…",
+  answered: "FitVen hat geantwortet",
+  chart: {
+    a11y: "{title}, {range}. {summary}",
+    a11yNoRange: "{title}. {summary}",
+  },
+  suggestion: {
+    eyebrow: "Vorgeschlagene Änderung · {workout}",
+    add: "Zum nächsten {workout} hinzufügen",
+    notNow: "Nicht jetzt",
+    group: "Vorgeschlagene Änderung für {workout}: {text}",
+    added: "Zu {workout} hinzugefügt",
+    undo: "Rückgängig",
+    undone: "Änderung rückgängig gemacht",
+    dismissed: "Nicht hinzugefügt",
+    line: "{exercise}: {sets}",
+    setPart: "{count} × {reps} mit {weight} kg",
+    noWorkout: "Du hast kein geplantes {workout} in Aussicht, also gibt es nichts, wozu du das hinzufügen könntest.",
+    failed: "Das konnte nicht hinzugefügt werden. Versuch es gleich noch einmal.",
+    undoFailed: "Die Änderung konnte nicht rückgängig gemacht werden.",
+  },
+  sources: {
+    line: {
+      one: "Basiert auf {count} Workout · {range}",
+      other: "Basiert auf {count} Workouts · {range}",
+    },
+    lineNoRange: {
+      one: "Basiert auf {count} Workout",
+      other: "Basiert auf {count} Workouts",
+    },
+    see: "Ansehen",
+    seeHint: "Öffnet die Workouts, auf denen die Antwort beruht",
+  },
+  tier: {
+    haiku: "Haiku",
+    sonnet: "Sonnet",
+    opus: "Opus",
+    left: {
+      one: "{count} übrig",
+      other: "{count} übrig",
+    },
+    recommended: "Empfohlen",
+    a11y: {
+      one: "{name}, {count} Frage übrig in diesem Monat",
+      other: "{name}, {count} Fragen übrig in diesem Monat",
+    },
+    a11yUnknown: "{name}",
+    pickerLabel: "Wähle das Modell, das antworten soll",
+  },
+  quota: {
+    reached: "Du hast alle deine {tier}-Fragen für diesen Monat aufgebraucht.",
+    reachedAll: "Du hast alle deine Fragen für diesen Monat aufgebraucht. Sie beginnen im nächsten Monat neu.",
+    pickAnother: "Frag stattdessen mit einem anderen Modell:",
+    use: "{tier} verwenden",
+  },
+  error: {
+    offline: "Du bist offline. Frag noch einmal, wenn du verbunden bist.",
+    generic: "Etwas ist schiefgelaufen. Versuch es noch einmal.",
+    provider: "Die KI von FitVen konnte gerade nicht antworten. Versuch es noch einmal.",
+    unavailable: "Frag FitVen ist gerade nicht verfügbar. Versuch es später noch einmal.",
+    unauthorized: "Melde dich erneut an, um eine Frage zu stellen.",
+    consent: "Stimm zu, deine Trainingsdaten zu teilen, um eine Frage zu stellen.",
+  },
+  consent: {
+    title: "Bevor du fragst",
+    intro: "Um zu antworten, muss die KI von FitVen deine eigenen Trainingsdaten lesen.",
+    what: {
+      title: "Was geteilt wird",
+      body: "Deine Frage und die FitVen-Trainingsdaten, die dafür nötig sind: Workouts, Rekorde, Programme und Schritte.",
+    },
+    who: {
+      title: "Wer es bekommt",
+      body: "Der KI-Anbieter, der die Antwort schreibt. Die Daten werden nur genutzt, um dir zu antworten.",
+    },
+    others: {
+      title: "Andere Personen",
+      body: "Mit anderen Nutzern wird nichts geteilt. Dein Chat bleibt auf diesem Telefon.",
+    },
+    change: "Du kannst das jederzeit in deinem Profil ausschalten.",
+    continue: "Weiter",
+    notNow: "Nicht jetzt",
+    failed: "Deine Auswahl konnte nicht gespeichert werden. Prüf deine Verbindung und versuch es noch einmal.",
+  },
+  settings: {
+    title: "Frag FitVen",
+    body: "Lass die KI von FitVen deine Trainingsdaten lesen, wenn du ihr eine Frage stellst. Schaltest du das aus, verschwindet Frag FitVen von Start.",
+    failed: "Das konnte nicht geändert werden. Prüf deine Verbindung und versuch es noch einmal.",
+  },
+};

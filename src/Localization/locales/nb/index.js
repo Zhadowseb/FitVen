@@ -1,4 +1,5 @@
 // Norsk (bokmål). Én fil per område av appen; en nøkkel er "<område>.<navn>".
+import ask from "./ask";
 import auth from "./auth";
 import calendar from "./calendar";
 import category from "./category";
@@ -41,6 +42,7 @@ import workoutStart from "./workoutStart";
 import workoutTypes from "./workoutTypes";
 
 export default {
+  ask,
   auth,
   calendar,
   category,

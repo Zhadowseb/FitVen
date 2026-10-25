@@ -16,6 +16,7 @@ import { useTranslation } from "@localization";
 import styles from "./HomePageStyle";
 import GreetingHeader from "./Components/GreetingHeader/GreetingHeader";
 import HomeSkeleton from "./Components/HomeSkeleton/HomeSkeleton";
+import AskBar from "./Components/AskBar/AskBar";
 import BackgroundPostBar from "./Components/BackgroundPostBar/BackgroundPostBar";
 import DaysSinceCard from "./Components/DaysSinceCard/DaysSinceCard";
 import QuickStartCard from "./Components/QuickStartCard/QuickStartCard";
@@ -26,6 +27,7 @@ import FriendsActivity from "@resources/Components/FriendsActivity/FriendsActivi
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText, ThemedView } from "@resources/ThemedComponents";
 import {
+  askService,
   gymService,
   musicService,
   notificationService,
@@ -93,6 +95,9 @@ export default function HomePage() {
   const [isStarting, setIsStarting] = useState(false);
   const [homeError, setHomeError] = useState("");
   const [openToday, setOpenToday] = useState(null);
+  // Ask FitVen's bar is there until it is turned off under Profile. Read from
+  // the phone, so it does not wait for the network.
+  const [askEnabled, setAskEnabled] = useState(true);
   // The running workout's sets, for the Quick start panel while it runs, and
   // the set the workout screen reported last - so "finished last" is the one
   // just ticked off, and a record can be celebrated for it.
@@ -309,6 +314,25 @@ export default function HomePage() {
     }, [loadCirclePreview, loadHome, refreshUnreadNotificationCount])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+
+      askService
+        .isAskEntryEnabled({ userId: user?.id ?? null })
+        .then((enabled) => {
+          if (active) {
+            setAskEnabled(enabled);
+          }
+        })
+        .catch(() => {});
+
+      return () => {
+        active = false;
+      };
+    }, [user?.id])
+  );
+
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     setExploreRefreshKey((key) => key + 1);
@@ -515,6 +539,9 @@ export default function HomePage() {
               onOpenGroup={openWorkoutFromSplit}
               onOpenAll={() => navigation.navigate("WorkoutLibraryPage")}
             />
+
+            {/* One quiet way into Ask FitVen, between the split and the friends. */}
+            {askEnabled ? <AskBar /> : null}
           </>
         ) : (
           <HomeSkeleton />
