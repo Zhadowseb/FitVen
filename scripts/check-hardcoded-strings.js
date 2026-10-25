@@ -64,6 +64,9 @@ const ALLOWED_IN_FILE = {
   "src/Pages/MusicSettingsPage/MusicSettingsPage.js": [
     "Spotify needs a client id in the app config and this redirect URI registered in the Spotify dashboard:",
   ],
+  // A code, not a sentence: the post bar on Home says it in the person's
+  // language (home.backgroundPost.tookTooLong).
+  "src/Services/syncScheduler.js": ["sync-timeout"],
 };
 
 // Files whose text is not for translation here.

@@ -20,6 +20,8 @@ export default {
     posting: "Lägger upp ditt pass i bakgrunden…",
     posted: "Ditt pass är upplagt",
     failed: "Ditt pass kunde inte läggas upp.",
+    interrupted: "Inlägget avbröts när appen stängdes.",
+    tookTooLong: "Uppladdningen tog för lång tid.",
     retry: "Försök igen",
     dismiss: "Avfärda",
   },

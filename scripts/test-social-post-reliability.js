@@ -12,7 +12,7 @@ const quietConsole = { error() {}, warn() {}, info() {} };
 function load(file, dependencies = {}, replacements = []) {
   let source = read(file).replace(/^import[\s\S]*?;\r?\n/gm, "").replace(/\bexport /g, "");
   for (const [from, to] of replacements) source = source.replaceAll(from, to);
-  const context = vm.createContext({ console: quietConsole, ...dependencies });
+  const context = vm.createContext({ console: quietConsole, setTimeout, clearTimeout, AbortController, Promise, Error, ...dependencies });
   vm.runInContext(source, context, { filename: file });
   return context;
 }
@@ -278,12 +278,89 @@ function catalogRepair() {
   db.close();
 }
 
+// A request that stalls ends, a task that stalls stops holding the queue, and a
+// post that was going out when the app closed comes back as "failed".
+async function stalledNetwork() {
+  const timeouts = load("src/Utils/fetchTimeout.js");
+
+  assert.equal(timeouts.requestTimeoutMs("https://x.supabase.co/rest/v1/set"), 30000);
+  assert.equal(timeouts.requestTimeoutMs("https://x.supabase.co/storage/v1/object/videos/a.mp4"), 300000, "a file going up gets the time a file needs");
+
+  // A fetch that never answers, and gives up when it is told to.
+  const stalled = (input, init) =>
+    new Promise((resolve, reject) => {
+      init.signal.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "AbortError" })));
+    });
+
+  await assert.rejects(
+    timeouts.fetchWithTimeout(stalled, "https://x/rest/v1/a", {}, 20),
+    (error) => error.name === "TimeoutError" && /Network request failed/.test(error.message),
+    "a stalled request must end, as a bad connection"
+  );
+  assert.equal(
+    (await timeouts.fetchWithTimeout(async () => "answer", "https://x/rest/v1/a", {}, 1000)),
+    "answer",
+    "an answer comes through"
+  );
+  await assert.rejects(
+    timeouts.fetchWithTimeout(async () => { throw new Error("Failed to fetch"); }, "https://x", {}, 1000),
+    /Failed to fetch/,
+    "another error is not made into a timeout"
+  );
+
+  // The caller's own abort still works.
+  const outer = new AbortController();
+  const aborted = timeouts.fetchWithTimeout(stalled, "https://x", { signal: outer.signal }, 5000);
+
+  outer.abort();
+  await assert.rejects(aborted, /aborted/);
+
+  // The queue: a task that never finishes lets the next one run, and tells its caller.
+  const scheduler = load("src/Services/syncScheduler.js");
+  const order = [];
+  const hung = scheduler.enqueueSync(() => new Promise(() => {}), { timeoutMs: 30 });
+  const next = scheduler.enqueueSync(async () => { order.push("next"); return "ran"; }, { timeoutMs: 1000 });
+
+  await assert.rejects(hung, (error) => error.code === "sync-timeout" && error.message === "sync-timeout", "the caller of a stalled task is told");
+  assert.equal(await next, "ran", "the task behind a stalled one did not run");
+  assert.deepEqual(order, ["next"]);
+  assert.equal(await scheduler.enqueueSync(async () => { await new Promise((r) => setTimeout(r, 15)); return "slow"; }, { timeoutMs: 1000 }), "slow", "a slow task that finishes in time is not cut off");
+  await assert.rejects(scheduler.enqueueSync(async () => { throw new Error("boom"); }), /boom/, "a failing task still rejects as before");
+  assert.match(read("src/Services/syncScheduler.js"), /SYNC_TASK_TIMEOUT_MS = 150000/);
+
+  // The post that was going out when the app closed.
+  const events = load("src/Utils/workoutPostEvents.js");
+  const record = events.pendingPostRecord({ id: 4, workoutId: 7, note: "Heavy day", shareRoute: true, state: "posting", error: null }, "db-a");
+
+  assert.equal(record.workoutId, 7);
+  assert.equal(record.note, "Heavy day");
+  assert.equal(events.pendingPostRecord({ id: 4, state: "posted" }, "db-a"), null, "a post that went out is not kept");
+  assert.equal(events.pendingPostRecord(null, "db-a"), null);
+
+  const back = events.restoredPostStatus(record, "db-a");
+
+  assert.equal(back.state, "failed", "what was posting when the app closed did not finish");
+  assert.equal(back.error, "interrupted");
+  assert.equal(back.note, "Heavy day", "the retry keeps the note");
+  assert.equal(back.shareRoute, true);
+  assert.equal(events.restoredPostStatus({ ...record, state: "failed", error: "Network request failed" }, "db-a").error, "Network request failed", "a failure keeps its reason");
+  assert.equal(events.restoredPostStatus(record, "db-b"), null, "another account's post is not shown");
+  assert.equal(events.restoredPostStatus({ workoutId: "x" }, null), null);
+
+  // Wired: the client uses the timeout, Home restores, the bar says why.
+  assert.match(read("src/Database/supaBaseClient.js"), /fetchWithTimeout\(fetch, input, init\)/, "the Supabase client does not use the timeout");
+  assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /keepWorkoutPostAcrossRestarts\(db\)/);
+  assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /home\.backgroundPost\.interrupted/);
+  assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /home\.backgroundPost\.tookTooLong/);
+}
+
 (async () => {
   await postingFlow();
   await scopedUpload();
   await statusAndErrors();
   await postDialog();
   await backgroundPost();
+  await stalledNetwork();
   catalogRepair();
   console.log("Social posting: isolated upload, shared queue, retry, post status, error messages and catalog repair passed.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });

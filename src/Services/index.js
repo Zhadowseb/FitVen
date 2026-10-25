@@ -17,6 +17,7 @@ export * as liveWorkoutService from "./liveWorkoutService";
 export * as musicService from "./musicService";
 export * as notificationService from "./notificationService";
 export * as ownWorkoutPostService from "./ownWorkoutPostService";
+export * as pendingWorkoutPostService from "./pendingWorkoutPostService";
 export * as programService from "./programService";
 export * as programTransferService from "./programTransferService";
 export * as publicProfileService from "./publicProfileService";

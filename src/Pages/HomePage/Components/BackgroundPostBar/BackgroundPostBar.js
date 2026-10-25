@@ -8,7 +8,7 @@ import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import Checkmark from "@resources/Icons/UI-icons/Checkmark";
 import Cross from "@resources/Icons/UI-icons/Cross";
 import { ThemedText } from "@resources/ThemedComponents";
-import { workoutService } from "@services";
+import { pendingWorkoutPostService, workoutService } from "@services";
 import { subscribeWorkoutPost } from "@utils/workoutPostEvents";
 
 /**
@@ -25,11 +25,24 @@ export default function BackgroundPostBar() {
 
   useEffect(() => subscribeWorkoutPost(setStatus), []);
 
+  // A post that was going out when the app was closed comes back as "failed".
+  useEffect(() => {
+    void pendingWorkoutPostService.keepWorkoutPostAcrossRestarts(db);
+  }, [db]);
+
   if (!status) {
     return null;
   }
 
   const failed = status.state === "failed";
+  const reason =
+    status.error === "interrupted"
+      ? t("home.backgroundPost.interrupted")
+      : status.error === "sync-timeout"
+        ? t("home.backgroundPost.tookTooLong")
+        : typeof status.error === "string"
+          ? status.error.slice(0, 140)
+          : null;
   const posted = status.state === "posted";
   const tone = failed ? theme.danger : posted ? theme.secondary : theme.primary;
 
@@ -51,13 +64,22 @@ export default function BackgroundPostBar() {
         )}
       </View>
 
-      <ThemedText style={styles.text} setColor={failed ? tone : theme.title} numberOfLines={2}>
-        {failed
-          ? t("home.backgroundPost.failed")
-          : posted
-            ? t("home.backgroundPost.posted")
-            : t("home.backgroundPost.posting")}
-      </ThemedText>
+      <View style={styles.message}>
+        <ThemedText style={styles.text} setColor={failed ? tone : theme.title} numberOfLines={2}>
+          {failed
+            ? t("home.backgroundPost.failed")
+            : posted
+              ? t("home.backgroundPost.posted")
+              : t("home.backgroundPost.posting")}
+        </ThemedText>
+
+        {/* Why, so "failed" is something that can be told to somebody. */}
+        {failed && reason ? (
+          <ThemedText style={styles.reason} setColor={theme.quietText} numberOfLines={2}>
+            {reason}
+          </ThemedText>
+        ) : null}
+      </View>
 
       {failed ? (
         <>

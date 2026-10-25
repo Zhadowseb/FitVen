@@ -18,10 +18,17 @@ export default StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  text: {
+  message: {
     flex: 1,
+    gap: 2,
+  },
+  text: {
     fontSize: 12.5,
     fontWeight: "700",
+  },
+  reason: {
+    fontSize: 11.5,
+    fontWeight: "600",
   },
   action: {
     fontSize: 12.5,

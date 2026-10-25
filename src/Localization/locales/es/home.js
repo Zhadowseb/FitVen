@@ -20,6 +20,8 @@ export default {
     posting: "Publicando tu entrenamiento en segundo plano…",
     posted: "Tu entrenamiento está publicado",
     failed: "No se pudo publicar tu entrenamiento.",
+    interrupted: "La publicación se interrumpió al cerrarse la app.",
+    tookTooLong: "La subida tardó demasiado.",
     retry: "Reintentar",
     dismiss: "Descartar",
   },
