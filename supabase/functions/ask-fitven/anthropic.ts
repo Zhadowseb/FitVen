@@ -232,6 +232,13 @@ export async function runToolLoop(options: ToolLoopOptions): Promise<ToolLoopRes
   }));
   const toolResults: unknown[] = [];
   let toolCalls = 0;
+  // Reads that reached the database, and how many of them it refused. When it
+  // refused every one - the `ai` schema not exposed, a function missing - the
+  // model has seen no data at all, and an answer from it would rest on nothing
+  // while looking as if it did: that is "unavailable", not an answer.
+  let dataReads = 0;
+  let dataFailures = 0;
+  const noData = () => dataReads > 0 && dataFailures === dataReads;
   let inputTokens = 0;
   let outputTokens = 0;
   // Six calls, then the forced answer, plus a little room for a response that
@@ -256,6 +263,10 @@ export async function runToolLoop(options: ToolLoopOptions): Promise<ToolLoopRes
 
     if (!uses.length) {
       // No tool call: a plain text answer.
+      if (noData()) {
+        throw new ProviderError("data_unavailable", true);
+      }
+
       return {
         answer: parseModelText(textOf(response.content)),
         toolResults,
@@ -268,6 +279,10 @@ export async function runToolLoop(options: ToolLoopOptions): Promise<ToolLoopRes
     const respondUse = uses.find((use) => use.name === RESPOND_TOOL_NAME);
 
     if (respondUse && uses.length === 1) {
+      if (noData()) {
+        throw new ProviderError("data_unavailable", true);
+      }
+
       return { answer: respondUse.input, toolResults, toolCalls, inputTokens, outputTokens };
     }
 
@@ -314,6 +329,8 @@ export async function runToolLoop(options: ToolLoopOptions): Promise<ToolLoopRes
       let data: unknown = null;
       let failed = false;
 
+      dataReads += 1;
+
       try {
         const result = await options.rpc(prepared.rpc, prepared.args);
 
@@ -327,6 +344,8 @@ export async function runToolLoop(options: ToolLoopOptions): Promise<ToolLoopRes
       }
 
       if (failed) {
+        dataFailures += 1;
+
         // No database message is passed on: the model only needs to know it
         // got nothing.
         results.push(toolResultBlock(use.id, "The data could not be read.", true));

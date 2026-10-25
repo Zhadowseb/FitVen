@@ -272,6 +272,14 @@ export function prepareToolCall(name: unknown, input: unknown, today: string): P
   }
 
   const args: Record<string, unknown> = {};
+
+  // The one tool that needs the person's own date from outside the model: the
+  // last four weeks and twelve weeks are counted back from it, not from the
+  // server's clock.
+  if (name === "profile_summary" && /^\d{4}-\d{2}-\d{2}$/.test(String(today))) {
+    args["p_today"] = today;
+  }
+
   const paramOf = (kind: ArgKind) => spec.args.find((arg) => arg.kind === kind)?.param;
 
   // Dates: from/to together, so the range cap can be applied to both.

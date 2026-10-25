@@ -254,7 +254,8 @@ async function main() {
   assert.strictEqual(tools.prepareToolCall("daily_steps", { from: "2026-02-31" }, "2026-10-26").ok, false, "not a real day");
   assert.strictEqual(tools.prepareToolCall("daily_steps", { from: "yesterday" }, "2026-10-26").ok, false);
   assert.strictEqual(tools.prepareToolCall("daily_steps", "2026-01-01", "2026-10-26").ok, false, "arguments must be an object");
-  assert.deepStrictEqual(tools.prepareToolCall("profile_summary", undefined, "2026-10-26").args, {});
+  assert.deepStrictEqual(tools.prepareToolCall("profile_summary", undefined, "2026-10-26").args, { p_today: "2026-10-26" }, "the person's own date goes with the profile");
+  assert.deepStrictEqual(tools.prepareToolCall("program_overview", undefined, "2026-10-26").args, {}, "and with nothing else");
   assert.strictEqual(tools.prepareToolCall("profile_summary", { max: 3 }, "2026-10-26").ok, false, "no arguments to take");
 
   assert.strictEqual(tools.prepareToolCall("workout_detail", {}, "2026-10-26").ok, false, "workout_id is required");
@@ -642,18 +643,71 @@ async function main() {
       ]),
       okResponse([respond("r", { text: "Final" })]),
     ]);
-    const rpc = fakeRpc({ "ai.profile_summary": { error: { message: "relation public.secret_table does not exist" } } });
-    const result = await loop(fetchFn, rpc);
-    const blocksBack = fetchFn.calls[1].body.messages[2].content;
+    // One read refused and one that works: an answer is still an answer.
+    fetchFn.calls.length = 0;
 
-    assert.deepStrictEqual(rpc.calls.map((call) => call.name), ["ai.profile_summary"], "unknown tool and user id never reach the database");
+    const rpc = fakeRpc({
+      "ai.profile_summary": { error: { message: "relation public.secret_table does not exist" } },
+      "ai.program_overview": { program: null, blocks: [] },
+    });
+    const withOneWorking = fakeFetch([
+      okResponse([
+        toolUse("u1", "sickness_history", {}),
+        toolUse("u2", "list_workouts", { user_id: "someone-else" }),
+        toolUse("u3", "profile_summary", {}),
+        respond("u4", { text: "Too early" }),
+      ]),
+      okResponse([toolUse("u5", "program_overview", {})]),
+      okResponse([respond("r", { text: "Final" })]),
+    ]);
+    const result = await loop(withOneWorking, rpc);
+    const blocksBack = withOneWorking.calls[1].body.messages[2].content;
+
+    assert.deepStrictEqual(rpc.calls.map((call) => call.name), ["ai.profile_summary", "ai.program_overview"], "unknown tool and user id never reach the database");
     assert.ok(blocksBack.every((block) => block.is_error === true));
     assert.ok(/Unknown tool/.test(blocksBack[0].content));
     assert.ok(/Unknown argument/.test(blocksBack[1].content));
     assert.strictEqual(blocksBack[2].content, "The data could not be read.", "the database's message is not passed on");
     assert.ok(!JSON.stringify(blocksBack).includes("secret_table"));
     assert.strictEqual(result.answer.text, "Final", "respond next to data tools is not taken as the answer");
-    assert.strictEqual(result.toolResults.length, 0, "a failed read is not a source of numbers");
+    assert.strictEqual(result.toolResults.length, 1, "a failed read is not a source of numbers");
+
+    // Every read refused (the schema not exposed, a function missing): the model saw
+    // no data, so an answer would rest on nothing. Unavailable, not an answer.
+    const refusedAll = fakeRpc({ "ai.profile_summary": { error: { message: "schema ai is not exposed" } } });
+
+    await assert.rejects(
+      loop(
+        fakeFetch([okResponse([toolUse("a1", "profile_summary", {})]), okResponse([respond("a2", { text: "Your bench is great." })])]),
+        refusedAll
+      ),
+      (error) => error.kind === "data_unavailable" && error.unavailable === true,
+      "an answer after only failed reads must not go out"
+    );
+
+    // ... also when it answers in plain text.
+    await assert.rejects(
+      loop(
+        fakeFetch([okResponse([toolUse("b1", "profile_summary", {})]), okResponse([{ type: "text", text: "All good." }])]),
+        refusedAll
+      ),
+      (error) => error.kind === "data_unavailable"
+    );
+
+    // No read attempted at all (a greeting): that is an answer.
+    assert.strictEqual((await loop(fakeFetch([okResponse([respond("c1", { text: "Hello" })])]), fakeRpc({}))).answer.text, "Hello");
+  }
+
+  // The same through the whole flow: 503 unavailable, and the question given back.
+  {
+    const refused = fakeDeps({
+      steps: [() => okResponse([toolUse("d1", "profile_summary", {})]), () => okResponse([respond("d2", { text: "Looks fine." })])],
+      tools: { "ai.profile_summary": { error: { message: "nope" } } },
+    });
+    const outcome = await ask.dispatch(refused.deps, askBody("sonnet"));
+
+    assert.deepStrictEqual([outcome.status, outcome.body.error], [503, "unavailable"]);
+    assert.deepStrictEqual(refused.refunds, ["sonnet"], "a question that got no data is not counted");
   }
 
   // A plain-text final answer, and one in JSON.
