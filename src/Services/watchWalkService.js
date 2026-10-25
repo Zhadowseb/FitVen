@@ -49,7 +49,7 @@ export async function getWatchWalkState(db) {
 }
 
 /** The yes: asks Health Connect, and looks for walks at once if it said yes. */
-export async function enableWatchWalks(db) {
+export async function enableWatchWalks(db, { now = Date.now() } = {}) {
   const access = await healthWorkoutsService.requestWatchWalkAccess();
 
   if (access !== "granted") {
@@ -58,7 +58,7 @@ export async function enableWatchWalks(db) {
 
   await healthWalkRepository.setWatchWalksEnabled(db, true);
 
-  const found = await refreshPendingWatchWalks(db);
+  const found = await refreshPendingWatchWalks(db, { now });
 
   return { access, enabled: true, found: found.length };
 }
