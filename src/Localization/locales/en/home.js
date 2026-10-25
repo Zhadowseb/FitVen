@@ -20,6 +20,7 @@ export default {
     posting: "Posting your workout in the background…",
     posted: "Your workout is posted",
     failed: "Your workout could not be posted.",
+    interrupted: "The post was interrupted when the app closed.",
     retry: "Try again",
     dismiss: "Dismiss",
   },

@@ -20,6 +20,7 @@ export default {
     posting: "Legger ut økten din i bakgrunnen…",
     posted: "Økten din er lagt ut",
     failed: "Økten din kunne ikke legges ut.",
+    interrupted: "Innlegget ble avbrutt da appen ble lukket.",
     retry: "Prøv igjen",
     dismiss: "Lukk",
   },

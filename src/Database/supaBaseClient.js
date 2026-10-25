@@ -8,6 +8,7 @@ import {
   secureSessionStorage,
 } from "./secureSessionStorage";
 
+import { fetchWithTimeout } from "../Utils/fetchTimeout";
 import {
   isValidUsernameBase,
   normalizeUsernameBaseInput,
@@ -44,11 +45,15 @@ async function retryingFetch(input, init) {
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      return await fetch(input, init);
+      return await fetchWithTimeout(fetch, input, init);
     } catch (error) {
       latestError = error;
 
-      if (!isRetryableNetworkError(error) || attempt === 2) {
+      // A request that timed out is tried once more, not twice: each try is
+      // thirty seconds.
+      const lastAttempt = error?.name === "TimeoutError" ? 1 : 2;
+
+      if (!isRetryableNetworkError(error) || attempt >= lastAttempt) {
         throw error;
       }
 

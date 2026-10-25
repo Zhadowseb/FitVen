@@ -50,3 +50,48 @@ export function subscribeWorkoutPost(listener) {
     listeners.delete(listener);
   };
 }
+
+/* --------------------------------------------- kept across a restart -- */
+
+/**
+ * What is kept of a post that is posting or has failed, so that a phone that
+ * was shut - or an app the system closed - mid-post can offer the retry the
+ * next time Home opens, instead of the person never knowing whether it went.
+ * Null for anything else.
+ */
+export function pendingPostRecord(status, database = null) {
+  if (!status || (status.state !== "posting" && status.state !== "failed")) {
+    return null;
+  }
+
+  return {
+    database,
+    workoutId: status.workoutId,
+    note: status.note ?? null,
+    shareRoute: status.shareRoute ?? null,
+    state: status.state,
+    error: status.error ?? null,
+  };
+}
+
+/**
+ * The status a kept record comes back as: always "failed" - what was posting
+ * when the app closed did not finish - with the reason it had, or "interrupted".
+ * Null for a record that is another account's or not a post.
+ */
+export function restoredPostStatus(record, database = null) {
+  const workoutId = Number(record?.workoutId);
+
+  if (!record || !Number.isFinite(workoutId) || (record.database ?? null) !== (database ?? null)) {
+    return null;
+  }
+
+  return {
+    id: 0,
+    workoutId,
+    note: record.note ?? null,
+    shareRoute: record.shareRoute ?? null,
+    state: "failed",
+    error: record.state === "failed" && record.error ? record.error : "interrupted",
+  };
+}
