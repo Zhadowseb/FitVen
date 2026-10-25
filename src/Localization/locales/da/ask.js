@@ -1,0 +1,125 @@
+// Spørg FitVen: AI-chatten om din egen træning - baren på Hjem, chatten,
+// samtykket første gang og kontakten i profilen. Holdes i trit med ../en/ask.js.
+// Teksterne er nye og venter på en gennemlæsning af en dansker.
+export default {
+  title: "Spørg FitVen",
+  placeholder: "Spørg om din træning…",
+  openLabel: "Spørg FitVen om din træning",
+  badge: "Kun dine data",
+  badgeHint: "Åbner en forklaring på, hvad AI'en kan se",
+  badgeSheet: {
+    title: "Kun dine data",
+    body: "FitVens AI kan læse dine egne træninger, rekorder, programmer og skridt, når du stiller et spørgsmål. Den kan ikke se andres data, og den kan ikke ændre noget uden dig.",
+  },
+  menu: {
+    open: "Chatmenu",
+    newChat: "Ny chat",
+  },
+  empty: {
+    title: "Spørg om hvad som helst i din træning",
+    intro: "FitVen læser dine egne træninger, rekorder, programmer og skridt for at svare. Aldrig andres.",
+  },
+  suggest: {
+    stuck: "Hvorfor sidder min {exercise} fast?",
+    stuckAny: "Hvilket af mine løft sidder fast?",
+    next: "Hvordan skal jeg gribe min næste {workout} an?",
+    today: "Hvad skal jeg træne i dag?",
+    month: "Hvordan gik {month}?",
+    recent: "Hvordan er de seneste uger gået?",
+    volume: "Er min ugentlige volumen i balance?",
+  },
+  disclaimer: "AI kan tage fejl. Generel vejledning, ikke lægeråd.",
+  input: {
+    label: "Spørg FitVen",
+    send: "Send",
+    speak: "Tal dit spørgsmål",
+  },
+  typing: "FitVen tænker…",
+  answered: "FitVen har svaret",
+  chart: {
+    a11y: "{title}, {range}. {summary}",
+    a11yNoRange: "{title}. {summary}",
+  },
+  suggestion: {
+    eyebrow: "Foreslået ændring · {workout}",
+    add: "Tilføj til næste {workout}",
+    notNow: "Ikke nu",
+    group: "Foreslået ændring til {workout}: {text}",
+    added: "Tilføjet til {workout}",
+    undo: "Fortryd",
+    undone: "Ændringen er fortrudt",
+    dismissed: "Ikke tilføjet",
+    line: "{exercise}: {sets}",
+    setPart: "{count} × {reps} med {weight} kg",
+    noWorkout: "Du har ingen planlagt {workout} i vente, så der er intet at tilføje det til.",
+    failed: "Kunne ikke tilføje det. Prøv igen om lidt.",
+    undoFailed: "Kunne ikke fortryde ændringen.",
+  },
+  sources: {
+    line: {
+      one: "Baseret på {count} træning · {range}",
+      other: "Baseret på {count} træninger · {range}",
+    },
+    lineNoRange: {
+      one: "Baseret på {count} træning",
+      other: "Baseret på {count} træninger",
+    },
+    see: "Se dem",
+    seeHint: "Åbner de træninger, svaret bygger på",
+  },
+  tier: {
+    haiku: "Haiku",
+    sonnet: "Sonnet",
+    opus: "Opus",
+    left: {
+      one: "{count} tilbage",
+      other: "{count} tilbage",
+    },
+    recommended: "Anbefalet",
+    a11y: {
+      one: "{name}, {count} spørgsmål tilbage denne måned",
+      other: "{name}, {count} spørgsmål tilbage denne måned",
+    },
+    a11yUnknown: "{name}",
+    pickerLabel: "Vælg, hvilken model der skal svare",
+  },
+  quota: {
+    reached: "Du har brugt alle dine {tier}-spørgsmål denne måned.",
+    reachedAll: "Du har brugt alle dine spørgsmål denne måned. De starter forfra næste måned.",
+    pickAnother: "Spørg i stedet med en anden model:",
+    use: "Brug {tier}",
+  },
+  error: {
+    offline: "Du er offline. Spørg igen, når du har forbindelse.",
+    generic: "Noget gik galt. Prøv igen.",
+    provider: "FitVens AI kunne ikke svare lige nu. Prøv igen.",
+    unavailable: "Spørg FitVen er ikke tilgængelig lige nu. Prøv igen senere.",
+    unauthorized: "Log ind igen for at stille et spørgsmål.",
+    consent: "Sig ja til at dele dine træningsdata for at stille et spørgsmål.",
+  },
+  consent: {
+    title: "Før du spørger",
+    intro: "For at svare skal FitVens AI læse dine egne træningsdata.",
+    what: {
+      title: "Hvad deles",
+      body: "Dit spørgsmål og de FitVen-træningsdata, det kræver: træninger, rekorder, programmer og skridt.",
+    },
+    who: {
+      title: "Hvem får det",
+      body: "AI-udbyderen, der skriver svaret. Det bruges til at svare dig, ikke til andet.",
+    },
+    others: {
+      title: "Andre mennesker",
+      body: "Der deles ikke noget med andre brugere. Din chat bliver på denne telefon.",
+    },
+    change: "Du kan til enhver tid slå det fra i din profil.",
+    continue: "Fortsæt",
+    notNow: "Ikke nu",
+    failed: "Kunne ikke gemme dit valg. Tjek din forbindelse og prøv igen.",
+  },
+  settings: {
+    title: "Spørg FitVen",
+    body: "Lad FitVens AI læse dine træningsdata, når du stiller den et spørgsmål. Slår du det fra, forsvinder Spørg FitVen fra Hjem.",
+    failed: "Kunne ikke ændre det. Tjek din forbindelse og prøv igen.",
+  },
+};

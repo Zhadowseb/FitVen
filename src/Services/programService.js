@@ -5,11 +5,13 @@
 // its 7,400 lines, seven near-identical entity pipelines deep. It is
 // src/Services/cloudSync/ now, and re-exported below so no caller changed.
 import {
+  dateToIsoDate,
   formatDate,
   normalizeIsoDateString,
   normalizeLocalDateString,
   parseCustomDate,
 } from "@utils/dateUtils";
+import { normalizeWorkoutLabel } from "@utils/askSuggestion";
 import { getProgramEndDate } from "@utils/programUtils";
 import { buildProgramCard, pickCardProgram } from "@utils/programCard";
 import { t } from "@localization";
@@ -1147,6 +1149,27 @@ export async function getNextUnfinishedCalendarWorkout(
     startIsoDate: normalizedStartDate,
     endIsoDate: normalizedEndDate,
   });
+}
+
+/**
+ * The next planned strength workout with this label - not done, not begun, on
+ * today or later, the nearest first. Null when there is none. Ask FitVen's
+ * "Add to next Push A" is applied to this one. The label is compared without
+ * regard to case, spacing or accents.
+ */
+export async function getNextPlannedWorkoutByLabel(db, { label, today = new Date() }) {
+  const wanted = normalizeWorkoutLabel(label);
+  const fromIsoDate = dateToIsoDate(today);
+
+  if (!wanted || !fromIsoDate) {
+    return null;
+  }
+
+  const rows = await programRepository.getPlannedStrengthWorkoutsFrom(db, {
+    fromIsoDate,
+  });
+
+  return rows.find((row) => normalizeWorkoutLabel(row.label) === wanted) ?? null;
 }
 
 export async function getWorkoutCalendarProgramDays(

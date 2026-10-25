@@ -1257,6 +1257,66 @@ export async function getNextUnfinishedWorkoutBetweenDates(
   );
 }
 
+// The types that are strength training - the set weightliftingService
+// classifies by and workoutService guesses a split from. A run or a walk has no
+// sets to replace; a workout with no type is a resistance workout.
+const STRENGTH_WORKOUT_TYPES = ["Resistance", "StrengthTraining", "Upperbody", "Legs"];
+
+/**
+ * The strength workouts still to do, from a day on, nearest first: what Ask
+ * FitVen picks the "next Push A" from. Planned means not done and not begun -
+ * a workout with a set already ticked off is being done, not planned, and its
+ * sets are not the AI's to replace.
+ *
+ * Same filters as getNextUnfinishedWorkoutBetweenDates (deleted rows, a program
+ * that has not started) and the same order. The label is the one the person
+ * sees; matching it is left to the caller, which compares names without regard
+ * to case or accents.
+ */
+export async function getPlannedStrengthWorkoutsFrom(
+  db,
+  { fromIsoDate, limit = 400 }
+) {
+  const workoutIsoDateSql = localDateToIsoSql("w.date");
+
+  return db.getAllAsync(
+    `SELECT
+        w.workout_id,
+        w.workout_type,
+        ${workoutDisplayLabelSql("w", "wt")} AS label,
+        w.date,
+        ${workoutIsoDateSql} AS date_iso,
+        w.day_id,
+        d.program_id
+     FROM Workout_Type_Instance w
+     JOIN Day d ON d.day_id = w.day_id
+     LEFT JOIN Program p ON p.program_id = d.program_id
+     LEFT JOIN Workout_Type wt ON wt.name = w.workout_type
+     WHERE w.deleted_at IS NULL
+       AND d.deleted_at IS NULL
+       AND COALESCE(w.done, 0) != 1
+       AND COALESCE(NULLIF(w.workout_type, ''), 'Resistance') IN (${STRENGTH_WORKOUT_TYPES.map(() => "?").join(", ")})
+       AND (
+         p.program_id IS NULL OR (
+           p.deleted_at IS NULL
+           AND p.status != 'NOT_STARTED'
+         )
+       )
+       AND date(${workoutIsoDateSql}) >= date(?)
+       AND NOT EXISTS (
+         SELECT 1
+         FROM Exercise_Instance ei
+         JOIN "Set" s ON s.exercise_instance_id = ei.exercise_instance_id
+         WHERE ei.workout_type_instance_id = w.workout_id
+           AND s.done = 1
+           AND COALESCE(s.deleted_at, '') = ''
+       )
+      ORDER BY date_iso ASC, COALESCE(p.program_name, '') COLLATE NOCASE ASC, w.workout_id ASC
+      LIMIT ?;`,
+    [...STRENGTH_WORKOUT_TYPES, fromIsoDate, limit]
+  );
+}
+
 /**
  * The distinct exercises used in the last few workouts.
  *

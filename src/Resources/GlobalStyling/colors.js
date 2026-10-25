@@ -132,6 +132,13 @@ export const Colors = {
             strong: "#E2DAFF",
         },
 
+        // The "Only your data" badge on Ask FitVen: green, like the design, and
+        // not an accent colour. The text is the one that reads at 11 px.
+        askBadge: {
+            surface: "rgba(78, 211, 154, 0.12)",
+            text: "#4ED39A",
+        },
+
         // The five step zones (Utils/stepZones.js). Fixed colours, not accent
         // colours: a zone is the same colour on every screen and in every theme.
         stepZones: {
@@ -244,6 +251,12 @@ export const Colors = {
             icon: "#6B4FD8",
             text: "#4B3A9E",
             strong: "#33227A",
+        },
+
+        // The same badge, its text darkened to read on a white page.
+        askBadge: {
+            surface: "rgba(30, 158, 106, 0.12)",
+            text: "#146B47",
         },
 
         // The five step zones (Utils/stepZones.js). The same hues as in dark,
