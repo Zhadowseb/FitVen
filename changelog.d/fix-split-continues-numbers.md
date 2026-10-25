@@ -1,0 +1,3 @@
+### Fixed
+- **A split session continues with the numbers from last time.** Starting a pinned session of your split (Repeat on Train, or its card on Home) copied the pinned workout itself, so it began from the weights and reps it had the day it was pinned, however much you had lifted since. It now copies the copy it was last started as - its weights, reps and sets as you left them - and the pinned workout only until there is a copy, or if the copy has been deleted. A session chosen by name (not pinned) already took the latest finished workout of that name.
+- Tests: `test-split-pins.js` repeats the heavy Push after its weights were changed and checks that it starts from them, and `test-split-card.js` that a pin without a copy is repeated exactly.

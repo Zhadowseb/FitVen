@@ -182,8 +182,9 @@ assert.deepStrictEqual(
   "without templates nothing changes"
 );
 
-// Pinned sessions: each repeats its own workout, and two of one name are
-// told apart by what each has done itself.
+// Pinned sessions: each repeats the copy it was last started as - at the
+// numbers it was left at - and the pinned workout itself until there is one.
+// Two of one name are told apart by what each has done itself.
 {
   const pinnedRow = (syncId, workoutId, date, extra = {}) => ({
     sync_id: syncId,
@@ -207,8 +208,12 @@ assert.deepStrictEqual(
   ];
   const sessions = split.resolveChosenSplit(chosen, history, { now, pinned, templates: split.splitTemplates(library) });
 
-  assert.deepStrictEqual(sessions.map((session) => session.lastWorkoutId), [101, library[1].workout_id, 102], "each Push repeats its own workout");
-  assert.deepStrictEqual(sessions.map((session) => session.setCount), [20, 0, 12]);
+  assert.deepStrictEqual(
+    sessions.map((session) => session.lastWorkoutId),
+    [103, library[1].workout_id, 104],
+    "each Push repeats the copy it was last started as, not the workout it was pinned as"
+  );
+  assert.deepStrictEqual(sessions.map((session) => session.setCount), [15, 0, 15], "the copies' sets, not the pins'");
   assert.strictEqual(sessions[0].lastTrainedAt, new Date(2026, 8, 21).getTime(), "the heavy Push was last done as its copy on Monday");
   assert.strictEqual(sessions[0].doneThisWeek, true);
   assert.strictEqual(
@@ -218,6 +223,15 @@ assert.deepStrictEqual(
   );
   assert.deepStrictEqual(sessions.map((session) => session.isUpNext), [false, false, true], "the light Push has waited longest");
   assert.strictEqual(sessions[0].pinnedAt, new Date(2026, 8, 7).getTime(), "the editor is told the pinned workout's day");
+
+  // No copy yet, or the copy deleted or not on this phone: the pinned workout, exactly.
+  const noCopy = split.resolveChosenSplit(
+    [{ name: "Push", workout: "heavy" }, { name: "Push", workout: "light", last: "light-copy-deleted" }],
+    history,
+    { now, pinned }
+  );
+
+  assert.deepStrictEqual(noCopy.map((session) => session.lastWorkoutId), [101, 102], "the pins themselves, before a copy has been made");
 
   // A pinned workout deleted, or not on this phone yet: the session falls
   // back to its name.
@@ -235,7 +249,7 @@ assert.deepStrictEqual(
   // Home's cards: the same sessions, the same next, and only what can be opened.
   const groups = split.homeGroupsFromSplit(split.resolveChosenSplit([...chosen, "Chest day"], history, { now, pinned }));
 
-  assert.deepStrictEqual(groups.map((group) => group.lastWorkoutId), [101, library[1].workout_id, 102], "a session with nothing to copy has no card");
+  assert.deepStrictEqual(groups.map((group) => group.lastWorkoutId), [103, library[1].workout_id, 104], "a session with nothing to copy has no card");
   assert.ok(groups.every((group) => group.isChosen && Number.isFinite(group.daysSince)));
   assert.deepStrictEqual(groups.map((group) => group.isUpNext), [false, false, false], "Chest day is next and has no card, so no card is next - as Train then offers no Repeat");
   assert.deepStrictEqual(groups.map((group) => group.entry?.workout ?? null), ["heavy", null, "light"]);
