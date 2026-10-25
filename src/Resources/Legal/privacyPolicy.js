@@ -19,7 +19,7 @@
 // counted by scripts/check-privacy-policy.js, which fails the build while the
 // policy claims to be published and is not finished.
 
-export const PRIVACY_POLICY_VERSION = "2026-10-13.2";
+export const PRIVACY_POLICY_VERSION = "2026-10-26.1";
 
 /** The public copy. Required by Google Play, and the address in its listing. */
 export const PRIVACY_POLICY_URL = "https://fitven.dk/privacy/";
@@ -88,7 +88,9 @@ The map that draws your route is Google Maps. Drawing a route means asking Googl
 
 If you connect Spotify, the app asks Spotify what is playing while a workout is running. Your Spotify login stays on your phone.
 
-Those four — Supabase, Expo, Google Maps and, if you connect it, Spotify — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.`,
+Ask FitVen, the part of the app where you can ask a question about your training, only works if you have said yes to it on its own screen, and you can take that back in Settings. When you ask a question, the part of your own FitVen data that is needed to answer it - for example your recent workouts, a lift's history, your records, your program and your daily steps, never your sickness entries and never anybody else's data - is sent to the AI provider, Anthropic, which writes the answer and may process it in the United States. FitVen does not use it to show anything to other people, and the conversation stays on your phone: it is not stored on FitVen's servers, and "New chat" clears it. What FitVen does keep is that you said yes and how many questions you have asked this month, so that the monthly limit can be counted; both are deleted with your account. The answers are general guidance made by an AI, can be wrong, and are not medical advice.
+
+Those five — Supabase, Expo, Google Maps, Anthropic (only when you ask Ask FitVen a question) and, if you connect it, Spotify — are the only outside services FitVen uses. There is no analytics, no advertising, no crash reporting, and no mailing list.`,
   },
   {
     title: "How long it is kept",

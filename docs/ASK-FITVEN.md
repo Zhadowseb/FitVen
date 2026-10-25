@@ -123,6 +123,11 @@ At most 6 tool calls per question, then it answers with what it has.
 
 ## The tools (Postgres functions in schema `ai`)
 
+Called on the user client as `client.schema("ai").rpc("<function>", { p_... })`
+(the schema has to be exposed in PostgREST - see the end of the migration; every
+function is executable by `authenticated` only). Parameters are named `p_<name>`
+and all but the workout id are optional.
+
 The edge function maps each tool name to one function and nothing else; an
 unknown name is rejected. Arguments are validated against the schema before the
 call, ranges are capped (2 years of history, 60 rows) and a capped result
@@ -130,7 +135,7 @@ carries `"truncated": true`.
 
 | tool (= function) | arguments | returns (jsonb) |
 |---|---|---|
-| `profile_summary` | - | `{first_workout, workouts_4w, workouts_12w, active_program, program_status, split_names[], unit:"kg", step_zone}` |
+| `profile_summary` | `p_today date` (the app's local date) | `{first_workout, workouts_4w, workouts_12w, active_program, program_status, split_names[], unit:"kg", step_zone}` |
 | `list_workouts` | `from date, to date, max int (<=60)` | `{truncated, workouts:[{id,date,label,type,minutes,sets_done,exercises[],pr_count}]}` newest first |
 | `workout_detail` | `workout_id bigint` | `{id,date,label,type,minutes,exercises:[{name,note,sets:[{n,reps,weight,type,done,failed,rpe}]}]}` or `null` |
 | `exercise_history` | `exercise_name text, from date, to date` | `{exercise,truncated,sessions:[{date,top_set:{reps,weight},est_1rm,volume,sets}]}` |
@@ -142,12 +147,23 @@ carries `"truncated": true`.
 Estimated 1RM is Brzycki, `weight × 36 / (37 − reps)`, only up to 12 reps - the
 formula the app and the centre categories already use.
 
+## Proving it
+
+`scripts/test-ask-fitven-sql.js` reads the migration and holds every function
+to the rules above, and - where PGlite can be loaded - runs the migration and the
+isolation script against copies of the synced tables with a follower whose followed
+person trained today. `scripts/ask-fitven-isolation.sql` is the same proof for the
+real project: run it in the SQL editor after the migration, with an account id,
+and it rolls back.
+
 ## Usage and consent (public functions, caller only)
 
 - `public.ai_usage_summary()` -> the `Usage` object above.
 - `public.ai_claim_question(p_tier text)` -> `{allowed, used, limit}`; counts one
   question for the caller in this month when under the limit.
 - `public.ai_refund_question(p_user uuid, p_tier text)` - service role only.
+- `public.ai_record_tokens(p_tier text, p_tokens bigint)` - optional: adds what a
+  question cost to the caller's own usage row.
 - `public.ai_get_consent()` -> timestamptz or null; `public.ai_set_consent(p_consent boolean)`.
 - Tables `public.ai_usage (user_id, month, tier, questions, tokens)` and
   `public.ai_consent (user_id, consented_at)`: owner-only select, no direct writes.
