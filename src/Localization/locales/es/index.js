@@ -1,6 +1,7 @@
 // Spanish (neutral, tú form). One file per area of the app; a key is
 // "<area>.<name>". Keep in step with ../en: scripts/test-localization.js
 // fails on a missing key or a changed placeholder.
+import ask from "./ask";
 import auth from "./auth";
 import calendar from "./calendar";
 import category from "./category";
@@ -43,6 +44,7 @@ import workoutStart from "./workoutStart";
 import workoutTypes from "./workoutTypes";
 
 export default {
+  ask,
   auth,
   calendar,
   category,

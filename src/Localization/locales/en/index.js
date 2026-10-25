@@ -1,6 +1,7 @@
 // English, the fallback language. One file per area of the app; a key is
 // "<area>.<name>". Keep the Danish files in ../da in step - the test in
 // scripts/test-localization.js fails on a key present in one and not the other.
+import ask from "./ask";
 import auth from "./auth";
 import calendar from "./calendar";
 import category from "./category";
@@ -43,6 +44,7 @@ import workoutStart from "./workoutStart";
 import workoutTypes from "./workoutTypes";
 
 export default {
+  ask,
   auth,
   calendar,
   category,

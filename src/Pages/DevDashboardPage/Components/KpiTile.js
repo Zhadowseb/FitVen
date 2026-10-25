@@ -1,7 +1,7 @@
 import { View, useColorScheme } from "react-native";
 
 import styles from "./KpiTileStyle";
-import Sparkline from "./Sparkline";
+import Sparkline from "@resources/Components/Sparkline";
 import { getStatusColor } from "../devDashboardView";
 import { Colors, withAlpha } from "@resources/GlobalStyling/colors";
 import { ThemedText } from "@resources/ThemedComponents";

@@ -187,3 +187,31 @@ and it rolls back.
   the existing workout services, shows "Added to {workout}" with Undo, and Undo
   restores the sets as they were.
 - Strings: `ask.*` in all seven languages. The privacy policy says what is sent.
+
+### How the app settled what the contract left open
+
+- **Settings → Privacy** is a switch in the account card of Profile
+  (`AskFitvenSwitch`): there is no privacy settings screen, only the policy page.
+  The cloud keeps a date or nothing, so "never asked" and "turned off" read the
+  same there; Home hides the bar only on the phone's own note of a switch turned
+  off (per person, in local storage). "Not now" on the consent screen changes
+  nothing and leaves the bar.
+- **Consent comes before anything is sent**, the recommendation included: the
+  question is added to the chat, the consent is checked (asked of the cloud if
+  the phone does not know it), and only then the recommendation and the question.
+- **The tier**: the recommendation is asked for once the typing has rested, and
+  again on send only if the text changed; a tier chosen by hand stops the asking.
+  The rule only goes down from the recommended tier; a quota state offers every
+  tier with questions left, above as well.
+- **The chart** is `Resources/Components/Sparkline.js` (the one reusable line
+  chart, moved there from the dev dashboard), drawn from `series[].y`.
+- **The chat has no tab bar** under it (as in the designs); the input bar is its
+  footer.
+- **A suggestion's weights** are written as they are, through
+  `updateSetWeights` (clamped, 1RM % worked out), because the AI reads them as
+  they are stored: in the exercise's own mode (total or per side). The app does
+  not convert. The next planned workout is the first strength workout of that
+  label that is not done, has no set ticked off, and is dated today or later.
+  The sets of the exercise are replaced as working sets (a rest is kept); an
+  exercise the workout lacks is added at the end. Undo restores every value and
+  the count, or removes the exercise it added.
