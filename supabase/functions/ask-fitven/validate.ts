@@ -342,6 +342,20 @@ export function parseModelText(raw: string): Json {
   return { text: trimmed, blocks: [], sources: null };
 }
 
+// A model sometimes sends a nested argument as a JSON string ("blocks":
+// "[{...}]"). Read it as what it says instead of losing it.
+function unstring(value: unknown): unknown {
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 // What the model handed in (the input of a respond call, or parseModelText's
 // result) as the contract's answer. null when there is no text at all, which
 // the caller treats as a failed model call (and refunds).
@@ -365,8 +379,8 @@ export function validateAnswer(
 
   return {
     text,
-    blocks: validateBlocks(raw.blocks, numbers),
-    sources: validateSources(raw.sources),
+    blocks: validateBlocks(unstring(raw.blocks), numbers),
+    sources: validateSources(unstring(raw.sources)),
     tier,
     usage,
   };

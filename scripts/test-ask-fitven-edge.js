@@ -474,6 +474,16 @@ async function main() {
   assert.strictEqual(answer.text, "Your bench is flat.");
   assert.strictEqual(answer.tier, "sonnet");
   assert.deepStrictEqual(answer.usage, USAGE);
+  const stringly = validate.validateAnswer(
+    { text: "Hi", blocks: JSON.stringify([good]), sources: JSON.stringify({ label: "L", count: 3 }) },
+    results,
+    "haiku",
+    null
+  );
+
+  assert.deepStrictEqual(stringly.blocks, [good], "blocks sent as a JSON string are read");
+  assert.strictEqual(stringly.sources.count, 3, "so are sources");
+  assert.deepStrictEqual(validate.validateAnswer({ text: "Hi", blocks: "not json", sources: "x" }, [], "haiku", null).blocks, []);
   assert.deepStrictEqual(validate.validateAnswer({ text: "ok" }, [], "haiku", null), { text: "ok", blocks: [], sources: null, tier: "haiku", usage: null });
   assert.strictEqual(validate.validateAnswer({ text: "   " }, [], "haiku", null), null, "no text is no answer");
   assert.strictEqual(validate.validateAnswer("just text", [], "haiku", null), null);
