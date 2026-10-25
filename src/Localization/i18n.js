@@ -1,11 +1,14 @@
 // The app's translations, without a native module.
 //
-// Two languages, Danish and English, in plain JS objects under ./locales. A
-// key is a dotted path ("gyms.changeCentre"); a value is a string with
-// {placeholders}, or an object with `one` / `other` (and optionally `zero`)
-// picked by `count`. A key missing in Danish falls back to English, and a key
-// missing in both comes back as the key itself with a warning in development,
-// so a typo shows on screen instead of as an empty label.
+// Seven languages - English, Danish, Swedish, Norwegian (Bokmål), German,
+// French and Spanish - in plain JS objects under ./locales. A key is a dotted
+// path ("gyms.changeCentre"); a value is a string with {placeholders}, or an
+// object with `one` / `other` (and optionally `zero`) picked by `count`. A
+// key missing in a language falls back to English, and a key missing in both
+// comes back as the key itself with a warning in development, so a typo shows
+// on screen instead of as an empty label. A language is added by a folder under
+// ./locales, its entry here, and a row in the profile page's language list;
+// scripts/test-localization.js holds every language to English's keys.
 //
 // The current language is module state, so a service can translate an error
 // message without a React tree. Components go through
@@ -19,23 +22,40 @@ import { I18nManager, NativeModules } from "react-native";
 
 import en from "./locales/en";
 import da from "./locales/da";
+import sv from "./locales/sv";
+import nb from "./locales/nb";
+import de from "./locales/de";
+import fr from "./locales/fr";
+import es from "./locales/es";
 
 export const DEFAULT_LANGUAGE = "en";
-export const SUPPORTED_LANGUAGES = ["en", "da"];
+export const SUPPORTED_LANGUAGES = ["en", "da", "sv", "nb", "de", "fr", "es"];
 export const LANGUAGE_MODES = ["system", ...SUPPORTED_LANGUAGES];
 
-const LOCALES = { en, da };
+const LOCALES = { en, da, sv, nb, de, fr, es };
 // What the Intl formatters get. British English puts the day before the month
 // like Danish does, which is what a Danish user reading English expects.
-const LOCALE_TAGS = { en: "en-GB", da: "da-DK" };
+const LOCALE_TAGS = {
+  en: "en-GB",
+  da: "da-DK",
+  sv: "sv-SE",
+  nb: "nb-NO",
+  de: "de-DE",
+  fr: "fr-FR",
+  es: "es-ES",
+};
+// Norwegian has two written forms and a phone can say any of three codes; the
+// app has Bokmål, which is what almost everybody reads.
+const LANGUAGE_ALIASES = { no: "nb", nn: "nb" };
 
 let currentLanguage = DEFAULT_LANGUAGE;
 const listeners = new Set();
 
 function normalizeLanguage(language) {
-  const code = String(language ?? "")
+  const raw = String(language ?? "")
     .toLowerCase()
     .split(/[-_]/)[0];
+  const code = LANGUAGE_ALIASES[raw] ?? raw;
 
   return SUPPORTED_LANGUAGES.includes(code) ? code : null;
 }
@@ -140,14 +160,18 @@ function interpolate(template, params) {
   );
 }
 
-function pickPluralForm(forms, count) {
+// One is 1 in every language here but French, where 0 and 1.5 are singular too
+// ("0 série", "1,5 kilo"): `one` for anything under 2.
+function pickPluralForm(forms, count, language) {
   const numeric = Number(count);
 
   if (numeric === 0 && forms.zero !== undefined) {
     return forms.zero;
   }
 
-  if (Math.abs(numeric) === 1 && forms.one !== undefined) {
+  const isOne = language === "fr" ? Math.abs(numeric) < 2 : Math.abs(numeric) === 1;
+
+  if (isOne && forms.one !== undefined) {
     return forms.one;
   }
 
@@ -167,7 +191,7 @@ export function translate(key, params = {}, language = currentLanguage) {
   }
 
   if (value !== null && typeof value === "object") {
-    value = pickPluralForm(value, params.count);
+    value = pickPluralForm(value, params.count, language);
   }
 
   if (value === undefined || value === null) {

@@ -1,0 +1,118 @@
+// Øvelser folk har laget og delt: Utforsk-biblioteket og raden i det, pluss
+// ordene alle skjermene om en delt øvelse bruker - taggene, sorteringene,
+// "{n} brukere".
+export default {
+  users: { one: "{value} bruker", other: "{value} brukere" },
+  you: "Du",
+  yourGym: "senteret ditt",
+  noVideo: "Ingen video",
+  equipment: {
+    barbell: "Stang",
+    dumbbell: "Manualer",
+    machine: "Maskin",
+    cable: "Kabel",
+    kettlebell: "Kettlebell",
+    band: "Strikk",
+    none: "Ikke noe utstyr",
+    other: "Annet utstyr",
+  },
+  weightMode: {
+    total: "Totalvekt",
+    perSide: "Per side",
+    bodyweight: "Kroppsvekt",
+  },
+  sorts: {
+    popular: "Mest brukt",
+    newest: "Nyeste",
+    gym: "På senteret ditt",
+    following: "Folk du følger",
+    video: "Har video",
+    saved: "Lagret",
+  },
+  // Linjen under hver sortering i sorteringsarket.
+  sortHints: {
+    popular: "Lagt til av flest",
+    newest: "Sist delte først",
+    gym: "Det folk på senteret ditt bruker, først",
+    following: "Bare de som er laget av folk du følger",
+    video: "Bare øvelser med video",
+    saved: "De du lagret til senere",
+  },
+  someone: "En FitVen-bruker",
+  // Leses opp etter navnet, så de starter med liten bokstav.
+  madeBy: "laget av {name}",
+  madeByYou: "laget av deg",
+  withVideo: "med video",
+  videoSeconds: { one: "video på {value} sek.", other: "video på {value} sek." },
+  inYourExercises: "lagt til i øvelsene dine",
+  // "Legg til" på et kort: en kopi i dine egne øvelser.
+  add: "Legg til",
+  added: "Lagt til",
+  addA11y: "Legg til {name} i øvelsene dine",
+  addedA11y: "{name} er i øvelsene dine",
+  addedToast: "{name} ble lagt til i øvelsene dine",
+  nameTaken: "Du har allerede en øvelse som heter «{name}»",
+  addFailed: "Øvelsen kunne ikke legges til. Prøv igjen.",
+  // Utforsk-biblioteket, skjerm 1a.
+  library: {
+    searchPlaceholder: { one: "Søk blant {value} øvelse", other: "Søk blant {value} øvelser" },
+    searchFallback: "Søk etter øvelser",
+    clearSearch: "Tøm søket",
+    sortEyebrow: "Sorter",
+    sortTitle: "Vis øvelser etter",
+    sortA11y: "Sorter etter: {sort}",
+    filter: "Filter",
+    filterTitle: "Muskelgruppe",
+    filterA11y: "Muskelgruppe: {group}",
+    filterNoneA11y: "Filtrer etter muskelgruppe",
+    reset: "Nullstill",
+    resetFilter: "Nullstill filter",
+    resultCount: { one: "{value} øvelse", other: "{value} øvelser" },
+    resultCountInGroup: {
+      one: "{value} øvelse for {group}",
+      other: "{value} øvelser for {group}",
+    },
+    rowHint: "Åpner øvelsen",
+    chooseGym: {
+      title: "Velg senteret ditt",
+      body: "Da kommer det folk på senteret ditt bruker, først.",
+    },
+    empty: {
+      title: "Bli den første til å dele en øvelse",
+      body: "Her finner du øvelser folk har laget selv, med video og steg for steg. Del en av dine, så andre kan begynne å bruke den.",
+      cta: "Del en av øvelsene dine",
+      note: "Du velger selv hva du deler. Settene dine deles aldri.",
+    },
+    noResults: {
+      query: "Ingen øvelser passer med «{query}»",
+      group: "Ingen øvelser for {group} ennå",
+      queryInGroup: "Ingen {group}-øvelser passer med «{query}»",
+      body: "Prøv et annet ord eller en annen muskelgruppe, eller nullstill filteret.",
+    },
+    saved: {
+      title: "Du har ikke lagret noen øvelser ennå",
+      body: "Trykk Lagre på en øvelse, så venter den her til du vil prøve den.",
+    },
+    following: {
+      title: "Ingen du følger har delt en øvelse ennå",
+      body: "Når de gjør det, finner du dem her.",
+    },
+    video: {
+      title: "Ingen øvelser har video ennå",
+      body: "Øvelser med et klipp som viser hvordan de utføres, samles her.",
+    },
+    nothing: {
+      title: "Ingen øvelser her ennå",
+      body: "Prøv en annen sortering, eller se igjen om litt.",
+    },
+    showPopular: "Se de mest brukte",
+    loadFailed: "Øvelsene kunne ikke lastes",
+    loadFailedBody: "Sjekk tilkoblingen din og prøv igjen.",
+    loadMoreFailed: "Kunne ikke laste mer",
+    refreshFailed: "Listen kunne ikke oppdateres",
+    invite: {
+      title: "Har du laget en øvelse selv?",
+      action: "Del den så andre kan finne den",
+    },
+  },
+};

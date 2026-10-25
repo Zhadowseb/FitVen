@@ -112,6 +112,11 @@ export default function ProfilePage() {
     { value: "system", label: t("profile.language.system") },
     { value: "da", label: t("profile.language.da") },
     { value: "en", label: t("profile.language.en") },
+    { value: "sv", label: t("profile.language.sv") },
+    { value: "nb", label: t("profile.language.nb") },
+    { value: "de", label: t("profile.language.de") },
+    { value: "fr", label: t("profile.language.fr") },
+    { value: "es", label: t("profile.language.es") },
   ];
   const appearanceOptions = [
     { value: "dark", label: t("profile.appearance.dark") },

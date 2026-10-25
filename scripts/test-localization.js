@@ -46,16 +46,23 @@ function leafKeys(table, prefix = "") {
 }
 
 const enKeys = leafKeys(en);
-const daKeys = leafKeys(da);
-const missingInDa = enKeys.filter((key) => !daKeys.includes(key));
-const missingInEn = daKeys.filter((key) => !enKeys.includes(key));
 
-assert.deepStrictEqual(missingInDa, [], `keys in en but not in da:\n  ${missingInDa.join("\n  ")}`);
-assert.deepStrictEqual(missingInEn, [], `keys in da but not in en:\n  ${missingInEn.join("\n  ")}`);
 assert.ok(enKeys.length > 0, "the English table is empty");
 
-// Every value is a non-empty string or plural forms of non-empty strings, and
-// the two languages use the same placeholders.
+// A language is either not started - an empty table, which falls back to
+// English key by key - or complete: every key English has, no key it lacks, the
+// same placeholders, and plural forms where English has them.
+const startedLanguages = i18n.SUPPORTED_LANGUAGES.filter(
+  (language) => language !== "en" && Object.keys(i18n.getLocaleTable(language) ?? {}).length > 0
+);
+
+assert.ok(startedLanguages.includes("da"), "Danish is translated");
+assert.deepStrictEqual(
+  i18n.SUPPORTED_LANGUAGES,
+  ["en", "da", "sv", "nb", "de", "fr", "es"],
+  "the languages the app offers"
+);
+
 function placeholders(text) {
   return [...String(text).matchAll(/\{(\w+)\}/g)].map((match) => match[1]).sort();
 }
@@ -64,26 +71,38 @@ function lookup(table, key) {
   return key.split(".").reduce((node, part) => node?.[part], table);
 }
 
-for (const key of enKeys) {
-  const enValue = lookup(en, key);
-  const daValue = lookup(da, key);
-  const enForms = isPluralForms(enValue) ? Object.values(enValue) : [enValue];
-  const daForms = isPluralForms(daValue) ? Object.values(daValue) : [daValue];
+for (const language of startedLanguages) {
+  const table = i18n.getLocaleTable(language);
+  const keys = leafKeys(table);
+  const missing = enKeys.filter((key) => !keys.includes(key));
+  const extra = keys.filter((key) => !enKeys.includes(key));
 
-  for (const form of [...enForms, ...daForms]) {
-    assert.ok(typeof form === "string" && form.trim().length > 0, `${key} has an empty value`);
+  assert.deepStrictEqual(missing, [], `keys in en but not in ${language}:\n  ${missing.slice(0, 40).join("\n  ")}`);
+  assert.deepStrictEqual(extra, [], `keys in ${language} but not in en:\n  ${extra.slice(0, 40).join("\n  ")}`);
+
+  // Every value is a non-empty string or plural forms of non-empty strings, and
+  // the languages use the same placeholders.
+  for (const key of enKeys) {
+    const enValue = lookup(en, key);
+    const value = lookup(table, key);
+    const enForms = isPluralForms(enValue) ? Object.values(enValue) : [enValue];
+    const forms = isPluralForms(value) ? Object.values(value) : [value];
+
+    for (const form of [...enForms, ...forms]) {
+      assert.ok(typeof form === "string" && form.trim().length > 0, `${language}: ${key} has an empty value`);
+    }
+
+    assert.deepStrictEqual(
+      isPluralForms(value),
+      isPluralForms(enValue),
+      `${language}: ${key} is plural forms in one language and a string in the other`
+    );
+    assert.deepStrictEqual(
+      placeholders(forms.join(" ")),
+      placeholders(enForms.join(" ")),
+      `${language}: ${key} uses different placeholders than en`
+    );
   }
-
-  assert.deepStrictEqual(
-    isPluralForms(daValue),
-    isPluralForms(enValue),
-    `${key} is plural forms in one language and a string in the other`
-  );
-  assert.deepStrictEqual(
-    placeholders(daForms.join(" ")),
-    placeholders(enForms.join(" ")),
-    `${key} uses different placeholders in en and da`
-  );
 }
 
 /* --------------------------------------------------- keys used in the app -- */
@@ -142,6 +161,43 @@ assert.strictEqual(i18n.resolveLanguage("en-GB"), "en");
 assert.ok(i18n.SUPPORTED_LANGUAGES.includes(i18n.resolveLanguage("system")), "system resolves to a supported language");
 assert.ok(i18n.SUPPORTED_LANGUAGES.includes(i18n.resolveLanguage("xx")), "an unknown code falls back to a supported language");
 assert.strictEqual(i18n.getLocaleTag("da"), "da-DK");
+assert.strictEqual(i18n.resolveLanguage("sv-SE"), "sv");
+assert.strictEqual(i18n.resolveLanguage("nb-NO"), "nb");
+assert.strictEqual(i18n.resolveLanguage("no"), "nb", "Norwegian is Bokmål");
+assert.strictEqual(i18n.resolveLanguage("nn-NO"), "nb", "Nynorsk reads Bokmål");
+assert.strictEqual(i18n.resolveLanguage("de_AT"), "de");
+assert.strictEqual(i18n.resolveLanguage("fr-CA"), "fr");
+assert.strictEqual(i18n.resolveLanguage("es-MX"), "es");
+assert.deepStrictEqual(
+  ["sv", "nb", "de", "fr", "es"].map((language) => i18n.getLocaleTag(language)),
+  ["sv-SE", "nb-NO", "de-DE", "fr-FR", "es-ES"]
+);
+
+// French counts 0 and 1,5 as singular: the one form for anything under 2, the other from 2.
+{
+  const one = i18n.translate("common.sets", { count: 1 }, "fr");
+
+  assert.strictEqual(i18n.translate("common.sets", { count: 0 }, "fr"), one.replace("1", "0"), "0 série, not 0 séries");
+  assert.notStrictEqual(i18n.translate("common.sets", { count: 2 }, "fr"), one.replace("1", "2"), "2 is plural");
+  assert.notStrictEqual(
+    i18n.translate("common.sets", { count: 0 }, "es"),
+    i18n.translate("common.sets", { count: 1 }, "es").replace("1", "0"),
+    "in Spanish 0 is plural"
+  );
+}
+
+// An empty language table falls back to English; French counts 0 as singular.
+{
+  const english = i18n.translate("common.retry", {}, "en");
+
+  for (const language of i18n.SUPPORTED_LANGUAGES) {
+    const table = i18n.getLocaleTable(language);
+
+    if (Object.keys(table ?? {}).length === 0) {
+      assert.strictEqual(i18n.translate("common.retry", {}, language), english, `${language} falls back to English`);
+    }
+  }
+}
 
 /* ------------------------------------------------ workout type names -- */
 
@@ -292,4 +348,4 @@ assert.strictEqual(i18n.translate("common.cancel"), "Annuller", "translate follo
 unsubscribe();
 i18n.setLanguage("en");
 
-console.log(`Localization: ${enKeys.length} keys in step across en and da, ${usedKeys.size} keys used in the app, all present.`);
+console.log(`Localization: ${enKeys.length} keys in step across en and every language that is started (${startedLanguages.join(", ")}), ${usedKeys.size} keys used in the app, all present.`);

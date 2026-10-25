@@ -126,5 +126,250 @@ export default {
         },
       ],
     },
+    sv: {
+      title: "Health Connect: ett ställe för dina steg",
+      summary: "Health Connect låter telefonens hälsoappar dela dina steg. Därför är det värt att ställa in, och så gör du.",
+      inShort: [
+        "Health Connect är Androids gemensamma plats för hälsodata. Samsung Health, klockans app och FitVen kan alla läsa från den och skriva till den.",
+        "Med den visar FitVen samma steg som din hälsoapp, klockans inräknade. Utan den räknar FitVen bara de steg som telefonen själv tar.",
+        "Den är gratis, inbyggd i Android 14 och senare, och du bestämmer vilken app som får läsa vad.",
+      ],
+      sections: [
+        {
+          heading: "Därför är det värt det – även utanför FitVen",
+          paragraphs: [
+            [
+              "När varje app räknar för sig är det inga två som stämmer överens. Health Connect ger dina appar en gemensam uppsättning siffror: stegen som din klocka räknade når alla appar du ger tillåtelse, och byter du app eller klocka ligger historiken kvar där den var.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Du bestämmer själv. Health Connect visar vilka appar som får läsa och skriva vad, och du kan när som helst ta bort en av dem eller radera datan.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Så ställer du in det",
+          paragraphs: [
+            [
+              "1. Skaffa Health Connect. På Android 14 och senare är det redan en del av telefonen: sök efter \"Health Connect\" i inställningarna. På Android 13 och äldre installerar du \"Health Connect by Android\" från Google Play. Det är gratis.",
+              { ref: [1] },
+            ],
+            [
+              "2. Låt din hälsoapp dela. I Samsung Health öppnar du Inställningar → Health Connect och tillåter att den skriver steg. Andra hälsoappar har ett liknande reglage.",
+            ],
+            ["3. Öppna stegkortet i FitVen, tryck på Tillåt och tillåt att steg läses."],
+          ],
+        },
+        {
+          heading: "Det här kan du förvänta dig",
+          paragraphs: [
+            [
+              "Health Connect har oftast bara de steg som din hälsoapp har skickat sedan den kopplades. Tidigare dagar dyker inte upp av sig själva. Från den dag du ansluter visar FitVen och din hälsoapp samma siffra.",
+            ],
+            [
+              "FitVen läser bara dina steg och skriver aldrig något till Health Connect. Du kan se och ta bort dess åtkomst i Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
+    nb: {
+      title: "Health Connect: ett sted for skrittene dine",
+      summary: "Health Connect lar helseappene på telefonen din dele skrittene dine. Hvorfor det er verdt å sette opp, og hvordan.",
+      inShort: [
+        "Health Connect er Androids felles sted for helsedata. Samsung Health, appen til klokken din og FitVen kan alle lese fra det og skrive til det.",
+        "Med det viser FitVen de samme skrittene som helseappen din, klokken inkludert. Uten det teller FitVen bare skrittene telefonen selv tar.",
+        "Det er gratis, innebygd i Android 14 og nyere, og du bestemmer hvilken app som får lese hva.",
+      ],
+      sections: [
+        {
+          heading: "Hvorfor det er verdt det - også utover FitVen",
+          paragraphs: [
+            [
+              "Når hver app teller for seg selv, er ingen to enige. Health Connect gir appene dine ett sett med tall: skrittene klokken din har talt, når frem til alle appene du gir tillatelse, og bytter du app eller klokke, blir historikken der den var.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Du bestemmer selv. Health Connect viser hvilke apper som får lese og skrive hva, og du kan når som helst fjerne en av dem eller slette dataene.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Slik setter du det opp",
+          paragraphs: [
+            [
+              "1. Hent Health Connect. På Android 14 og nyere er det allerede en del av telefonen: søk etter \"Health Connect\" i innstillingene. På Android 13 og eldre installerer du \"Health Connect by Android\" fra Google Play. Det er gratis.",
+              { ref: [1] },
+            ],
+            [
+              "2. La helseappen din dele. I Samsung Health åpner du Innstillinger → Health Connect og tillater at den skriver skritt. Andre helseapper har en lignende bryter.",
+            ],
+            ["3. Åpne skrittkortet i FitVen, trykk Tillat og tillat at skritt leses."],
+          ],
+        },
+        {
+          heading: "Dette kan du forvente",
+          paragraphs: [
+            [
+              "Health Connect har vanligvis bare skrittene helseappen din har sendt siden den ble koblet til. Tidligere dager dukker ikke opp av seg selv. Fra dagen du kobler til, viser FitVen og helseappen din samme tall.",
+            ],
+            [
+              "FitVen leser bare skrittene dine og skriver aldri noe til Health Connect. Du kan se og fjerne tilgangen i Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
+    de: {
+      title: "Health Connect: ein Ort für deine Schritte",
+      summary: "Mit Health Connect können die Gesundheits-Apps deines Handys deine Schritte teilen. Warum sich die Einrichtung lohnt und wie sie geht.",
+      inShort: [
+        "Health Connect ist der gemeinsame Ort für Gesundheitsdaten unter Android. Samsung Health, die App deiner Uhr und FitVen können alle daraus lesen und dorthin schreiben.",
+        "Damit zeigt FitVen dieselben Schritte wie deine Gesundheits-App, die deiner Uhr eingeschlossen. Ohne zählt FitVen nur die Schritte, die das Handy selbst macht.",
+        "Es ist kostenlos, ab Android 14 fest eingebaut, und du entscheidest, welche App was lesen darf.",
+      ],
+      sections: [
+        {
+          heading: "Warum es sich lohnt – nicht nur für FitVen",
+          paragraphs: [
+            [
+              "Wenn jede App für sich zählt, sind sich nie zwei einig. Health Connect gibt deinen Apps einen gemeinsamen Satz an Zahlen: Die Schritte, die deine Uhr gezählt hat, kommen in jeder App an, die du erlaubst, und wenn du App oder Uhr wechselst, bleibt der Verlauf, wo er war.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Du behältst die Kontrolle. Health Connect listet auf, welche Apps was lesen und schreiben dürfen, und du kannst jede davon jederzeit entfernen oder die Daten löschen.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "So richtest du es ein",
+          paragraphs: [
+            [
+              "1. Hole dir Health Connect. Ab Android 14 ist es schon Teil des Handys: Suche in den Einstellungen nach \"Health Connect\". Bei Android 13 und älter installierst du \"Health Connect by Android\" aus dem Google Play Store. Es ist kostenlos.",
+              { ref: [1] },
+            ],
+            [
+              "2. Lass deine Gesundheits-App teilen. Öffne in Samsung Health Einstellungen → Health Connect und erlaube, dass sie Schritte schreibt. Andere Gesundheits-Apps haben einen ähnlichen Schalter.",
+            ],
+            ["3. Öffne die Schrittekarte in FitVen, tippe auf Erlauben und erlaube das Lesen der Schritte."],
+          ],
+        },
+        {
+          heading: "Was du erwarten kannst",
+          paragraphs: [
+            [
+              "Health Connect hat meist nur die Schritte, die deine Gesundheits-App seit der Verbindung gesendet hat. Frühere Tage tauchen nicht von selbst auf. Ab dem Tag der Verbindung zeigen FitVen und deine Gesundheits-App dieselbe Zahl.",
+            ],
+            [
+              "FitVen liest nur deine Schritte und schreibt nie etwas in Health Connect. Den Zugriff kannst du in Health Connect einsehen und entfernen.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
+    fr: {
+      title: "Health Connect\u00A0: un seul endroit pour tes pas",
+      summary: "Health Connect permet aux apps de santé de ton téléphone de partager tes pas. Pourquoi il vaut la peine de le configurer, et comment.",
+      inShort: [
+        "Health Connect est l'espace commun d'Android pour les données de santé. Samsung Health, l'app de ta montre et FitVen peuvent tous y lire et y écrire.",
+        "Avec lui, FitVen affiche les mêmes pas que ton app de santé, montre comprise. Sans lui, FitVen ne compte que les pas que le téléphone enregistre lui-même.",
+        "Il est gratuit, intégré à Android 14 et aux versions plus récentes, et c'est toi qui décides quelle app peut lire quoi.",
+      ],
+      sections: [
+        {
+          heading: "Pourquoi ça vaut la peine – et pas seulement pour FitVen",
+          paragraphs: [
+            [
+              "Quand chaque app compte de son côté, il n'y en a pas deux qui sont d'accord. Health Connect donne à tes apps un seul jeu de chiffres\u00A0: les pas comptés par ta montre arrivent dans toutes les apps que tu autorises, et quand tu changes d'app ou de montre, l'historique reste où il était.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Tu gardes le contrôle. Health Connect liste quelles apps peuvent lire et écrire quoi, et tu peux en retirer n'importe laquelle, ou supprimer les données, à tout moment.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Comment le configurer",
+          paragraphs: [
+            [
+              "1. Récupère Health Connect. Sur Android 14 et les versions plus récentes, il fait déjà partie du téléphone\u00A0: cherche «\u00A0Health Connect\u00A0» dans tes paramètres. Sur Android 13 et les versions plus anciennes, installe «\u00A0Health Connect by Android\u00A0» depuis Google Play. C'est gratuit.",
+              { ref: [1] },
+            ],
+            [
+              "2. Autorise ton app de santé à partager. Dans Samsung Health, ouvre Paramètres → Health Connect et autorise-la à écrire les pas. Les autres apps de santé ont un interrupteur similaire.",
+            ],
+            ["3. Ouvre la carte des pas dans FitVen, touche Autoriser et autorise la lecture des pas."],
+          ],
+        },
+        {
+          heading: "À quoi s'attendre",
+          paragraphs: [
+            [
+              "Health Connect n'a généralement que les pas que ton app de santé lui a envoyés depuis sa connexion. Les jours précédents n'apparaissent pas d'eux-mêmes. À partir du jour où tu connectes, FitVen et ton app de santé affichent le même nombre.",
+            ],
+            [
+              "FitVen lit seulement tes pas et n'écrit jamais rien dans Health Connect. Tu peux voir et retirer son accès dans Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
+    es: {
+      title: "Health Connect: un solo lugar para tus pasos",
+      summary: "Health Connect permite que las apps de salud de tu teléfono compartan tus pasos. Por qué conviene configurarlo y cómo hacerlo.",
+      inShort: [
+        "Health Connect es el lugar compartido de Android para los datos de salud. Samsung Health, la app de tu reloj y FitVen pueden leer de él y escribir en él.",
+        "Con él, FitVen muestra los mismos pasos que tu app de salud, incluidos los de tu reloj. Sin él, FitVen solo cuenta los pasos que da el propio teléfono.",
+        "Es gratis, viene integrado en Android 14 y posteriores, y tú decides qué app puede leer qué.",
+      ],
+      sections: [
+        {
+          heading: "Por qué merece la pena, y no solo para FitVen",
+          paragraphs: [
+            [
+              "Cuando cada app cuenta por su cuenta, no hay dos que coincidan. Health Connect da a tus apps un único conjunto de cifras: los pasos que contó tu reloj llegan a todas las apps que permitas, y si cambias de app o de reloj, el historial se queda donde estaba.",
+              { ref: [1, 2] },
+            ],
+            [
+              "Tú mantienes el control. Health Connect muestra qué apps pueden leer y escribir qué, y puedes quitar el permiso a cualquiera de ellas, o borrar los datos, en cualquier momento.",
+              { ref: [1] },
+            ],
+          ],
+        },
+        {
+          heading: "Cómo configurarlo",
+          paragraphs: [
+            [
+              "1. Consigue Health Connect. En Android 14 y posteriores ya forma parte del teléfono: busca \"Health Connect\" en los ajustes. En Android 13 y anteriores, instala \"Health Connect by Android\" desde Google Play. Es gratis.",
+              { ref: [1] },
+            ],
+            [
+              "2. Haz que tu app de salud comparta. En Samsung Health, abre Ajustes → Health Connect y permite que escriba pasos. Otras apps de salud tienen un interruptor parecido.",
+            ],
+            ["3. Abre la tarjeta de pasos en FitVen, toca Permitir y permite la lectura de pasos."],
+          ],
+        },
+        {
+          heading: "Qué esperar",
+          paragraphs: [
+            [
+              "Health Connect normalmente solo tiene los pasos que tu app de salud ha enviado desde que se conectó. Los días anteriores no aparecen por sí solos. Desde el día en que conectas, FitVen y tu app de salud muestran la misma cifra.",
+            ],
+            [
+              "FitVen solo lee tus pasos y nunca escribe nada en Health Connect. Puedes ver y quitar su acceso en Health Connect.",
+              { ref: [2] },
+            ],
+          ],
+        },
+      ],
+    },
   },
 };
