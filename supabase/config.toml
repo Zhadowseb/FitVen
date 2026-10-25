@@ -17,3 +17,8 @@ verify_jwt = false
 # Called by a Database Webhook on workout_cheer, same secret check as above.
 [functions.send-cheer-notification]
 verify_jwt = false
+
+# Ask FitVen. Called by the app with the person's JWT, which the function
+# verifies again itself; it only reads that person's own data.
+[functions.ask-fitven]
+verify_jwt = true
