@@ -360,6 +360,7 @@ async function main() {
   assert.ok(system.includes("Danish"), "answers in the context's language");
   assert.ok(system.includes("2026-10-26 19:42") && system.includes("Europe/Copenhagen"));
   assert.ok(/kg/.test(system) && /never convert to pounds/i.test(system));
+  assert.ok(/weight_mode/.test(system) && /per_side/.test(system), "the model is told how weights are stored");
   assert.ok(/short/i.test(system));
   assert.ok(/only this person's own/i.test(system) && /cannot see anyone else/i.test(system));
   assert.ok(/not medical advice/i.test(system));

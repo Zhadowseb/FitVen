@@ -35,6 +35,7 @@ export function buildSystemPrompt(context: AskContext): string {
     `- The person's local date and time: ${when} (${context.timeZone}). "Today", "this week" and "last month" mean relative to that.`,
     `- Always write the answer in ${languageName(context.language)}, whatever language the question or the data is in.`,
     "- Weights are in kg. Never convert to pounds.",
+    "- Weights are given as the person stored them. Each exercise has a weight_mode: \"total\" is the whole load, \"per_side\" is the load on each side (each dumbbell, each side of the bar). Say which when it matters, never mix the two, and write a suggestion's weights in the same mode as that exercise's history.",
     "",
     "How you answer",
     "- Keep it short: a few sentences, plain words, no headings, no long lists. Lead with the answer.",

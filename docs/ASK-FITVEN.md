@@ -137,12 +137,14 @@ carries `"truncated": true`.
 |---|---|---|
 | `profile_summary` | `p_today date` (the app's local date) | `{first_workout, workouts_4w, workouts_12w, active_program, program_status, split_names[], unit:"kg", step_zone}` |
 | `list_workouts` | `from date, to date, max int (<=60)` | `{truncated, workouts:[{id,date,label,type,minutes,sets_done,exercises[],pr_count}]}` newest first |
-| `workout_detail` | `workout_id bigint` | `{id,date,label,type,minutes,exercises:[{name,note,sets:[{n,reps,weight,type,done,failed,rpe}]}]}` or `null` |
-| `exercise_history` | `exercise_name text, from date, to date` | `{exercise,truncated,sessions:[{date,top_set:{reps,weight},est_1rm,volume,sets}]}` |
+| `workout_detail` | `workout_id bigint` | `{id,date,label,type,minutes,exercises:[{name,weight_mode,note,sets:[{n,reps,weight,type,done,failed,rpe}]}]}` or `null` |
+| `exercise_history` | `exercise_name text, from date, to date` | `{exercise,truncated,sessions:[{date,weight_mode,top_set:{reps,weight},est_1rm,volume,sets}]}` |
 | `personal_records` | `exercise_name text default null` | `{records:[{exercise,reps,weight,date}]}` (the sets the app flagged as records) |
 | `weekly_volume` | `from date, to date` | `{weeks:[{week,exercise_sets}]}` sets per week per exercise name (muscle groups are mapped by the app's catalogue, so the model gets exercise names) |
 | `program_overview` | - | `{program, blocks:[{mesocycle,weeks,focus,microcycles:[{n,focus,days:[{weekday,date,workouts:[{label,exercises[]}]}]}]}]}` for the active program |
 | `daily_steps` | `from date, to date` | `{days:[{day,steps,source}]}` |
+
+`weight_mode` is `total` or `per_side` (how that workout's weights were entered; `total` when unset). Weights are returned as stored; a suggestion's weights must be written in the same mode.
 
 Estimated 1RM is Brzycki, `weight × 36 / (37 − reps)`, only up to 12 reps - the
 formula the app and the centre categories already use.

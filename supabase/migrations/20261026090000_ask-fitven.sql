@@ -492,6 +492,7 @@ begin
       instance.exercise_order,
       jsonb_build_object(
         'name', instance.exercise_name,
+        'weight_mode', coalesce(instance.weight_mode, 'total'),
         'note', instance.note,
         'sets', coalesce((
           select jsonb_agg(
@@ -557,7 +558,8 @@ begin
       workout.id as workout_id,
       workout.date::date as day,
       logged_set.reps,
-      logged_set.weight::numeric as weight
+      logged_set.weight::numeric as weight,
+      coalesce(instance.weight_mode, 'total') as weight_mode
     from public.workout_type_instance workout
     join public.exercise_instance instance
       on instance.cloud_workout_type_instance_id = workout.id
@@ -583,6 +585,7 @@ begin
       sets.workout_id,
       sets.day,
       count(*) as set_count,
+      max(sets.weight_mode) as weight_mode,
       sum(sets.reps * sets.weight) as volume,
       max(case when sets.reps <= 12 then sets.weight * 36.0 / (37 - sets.reps) end) as est_1rm,
       (array_agg(jsonb_build_object('reps', sets.reps, 'weight', sets.weight)
@@ -597,7 +600,8 @@ begin
       workout.id as workout_id,
       workout.date::date as day,
       logged_set.reps,
-      logged_set.weight::numeric as weight
+      logged_set.weight::numeric as weight,
+      coalesce(instance.weight_mode, 'total') as weight_mode
     from public.workout_type_instance workout
     join public.exercise_instance instance
       on instance.cloud_workout_type_instance_id = workout.id
@@ -623,6 +627,7 @@ begin
       sets.workout_id,
       sets.day,
       count(*) as set_count,
+      max(sets.weight_mode) as weight_mode,
       sum(sets.reps * sets.weight) as volume,
       max(case when sets.reps <= 12 then sets.weight * 36.0 / (37 - sets.reps) end) as est_1rm,
       (array_agg(jsonb_build_object('reps', sets.reps, 'weight', sets.weight)
@@ -636,6 +641,7 @@ begin
     jsonb_agg(
       jsonb_build_object(
         'date', sessions.day,
+        'weight_mode', sessions.weight_mode,
         'top_set', sessions.top_set,
         'est_1rm', round(sessions.est_1rm, 1),
         'volume', round(sessions.volume),

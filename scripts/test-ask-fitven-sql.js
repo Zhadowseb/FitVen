@@ -136,7 +136,7 @@ create table public."Mesocycle" (id bigserial primary key, user_id uuid not null
 create table public."Microcycle" (id bigserial primary key, user_id uuid not null, cloud_mesocycle_id bigint, microcycle_number int, focus text, deleted_at timestamptz, is_deleting boolean not null default false);
 create table public."Day" (id bigserial primary key, user_id uuid not null, cloud_microcycle_id bigint, weekday text, date date, deleted_at timestamptz, is_deleting boolean not null default false);
 create table public.workout_type_instance (id bigserial primary key, user_id uuid not null, cloud_day_id bigint, workout_type text, date date, label text, done boolean, elapsed_time int, deleted_at timestamptz, is_deleting boolean not null default false);
-create table public.exercise_instance (id bigserial primary key, user_id uuid not null, cloud_workout_type_instance_id bigint, exercise_name text, exercise_order int, note text, deleted_at timestamptz, is_deleting boolean not null default false);
+create table public.exercise_instance (id bigserial primary key, user_id uuid not null, cloud_workout_type_instance_id bigint, exercise_name text, exercise_order int, note text, weight_mode text, deleted_at timestamptz, is_deleting boolean not null default false);
 create table public."set" (id bigserial primary key, user_id uuid not null, cloud_exercise_instance_id bigint, set_number int, personal_record boolean, weight numeric, reps int, done boolean, failed boolean, set_type text, rpe numeric, deleted_at timestamptz, is_deleting boolean not null default false);
 create table public.daily_steps (user_id uuid not null, day date not null, steps int not null, source text not null, primary key (user_id, day));
 create table public.profile_private (user_id uuid primary key, split_names jsonb);
@@ -230,6 +230,7 @@ async function live() {
   assert.strictEqual(await one(A, `select ai.workout_detail(4) as r`), null, "B's workout id, asked for by A");
   assert.strictEqual(await one(A, `select ai.workout_detail(5) as r`), null, "C's workout id, asked for by A");
   assert.strictEqual((await one(A, `select ai.workout_detail(2) as r`)).exercises[0].sets.length, 2);
+  assert.strictEqual((await one(A, `select ai.workout_detail(2) as r`)).exercises[0].weight_mode, "total", "an exercise says how its weights are stored");
   assert.strictEqual(await one(B, `select ai.workout_detail(1) as r`), null, "and the other way round");
   assert.strictEqual((await one(B, `select ai.workout_detail(4) as r`)).exercises[0].note, "B note");
 
