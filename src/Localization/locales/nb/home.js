@@ -21,6 +21,7 @@ export default {
     posted: "Økten din er lagt ut",
     failed: "Økten din kunne ikke legges ut.",
     interrupted: "Innlegget ble avbrutt da appen ble lukket.",
+    tookTooLong: "Opplastingen tok for lang tid.",
     retry: "Prøv igjen",
     dismiss: "Lukk",
   },

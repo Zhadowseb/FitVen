@@ -21,6 +21,7 @@ export default {
     posted: "Your workout is posted",
     failed: "Your workout could not be posted.",
     interrupted: "The post was interrupted when the app closed.",
+    tookTooLong: "The upload took too long.",
     retry: "Try again",
     dismiss: "Dismiss",
   },

@@ -21,6 +21,7 @@ export default {
     posted: "Ta séance est publiée",
     failed: "Ta séance n'a pas pu être publiée.",
     interrupted: "La publication a été interrompue à la fermeture de l'appli.",
+    tookTooLong: "L'envoi a pris trop de temps.",
     retry: "Réessayer",
     dismiss: "Ignorer",
   },

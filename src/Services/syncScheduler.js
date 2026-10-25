@@ -5,7 +5,9 @@ let activeSyncQueue = Promise.resolve();
 // request that stalled, a permission dialog nobody can see - used to hold up
 // all of them for the rest of the session. Past this the queue goes on without
 // it, and whoever was waiting for the task is told it took too long. The task
-// itself cannot be cancelled and may still finish behind the scenes.
+// itself cannot be cancelled and may still finish behind the scenes. The error
+// is the code "sync-timeout", not a sentence: the screens say it in the
+// person's language (the post bar on Home does).
 export const SYNC_TASK_TIMEOUT_MS = 150000;
 
 function withDeadline(task, timeoutMs) {
@@ -15,7 +17,7 @@ function withDeadline(task, timeoutMs) {
       if (!settled) {
         settled = true;
 
-        const error = new Error("The upload took too long. Try again.");
+        const error = new Error("sync-timeout");
 
         error.code = "sync-timeout";
         reject(error);

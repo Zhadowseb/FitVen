@@ -38,9 +38,11 @@ export default function BackgroundPostBar() {
   const reason =
     status.error === "interrupted"
       ? t("home.backgroundPost.interrupted")
-      : typeof status.error === "string"
-        ? status.error.slice(0, 140)
-        : null;
+      : status.error === "sync-timeout"
+        ? t("home.backgroundPost.tookTooLong")
+        : typeof status.error === "string"
+          ? status.error.slice(0, 140)
+          : null;
   const posted = status.state === "posted";
   const tone = failed ? theme.danger : posted ? theme.secondary : theme.primary;
 

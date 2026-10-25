@@ -19,6 +19,7 @@ export default {
     posted: "Din træning er postet",
     failed: "Din træning kunne ikke postes.",
     interrupted: "Opslaget blev afbrudt, da appen blev lukket.",
+    tookTooLong: "Overførslen tog for lang tid.",
     retry: "Prøv igen",
     dismiss: "Luk",
   },

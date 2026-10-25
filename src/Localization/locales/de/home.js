@@ -19,6 +19,7 @@ export default {
     posted: "Dein Workout ist gepostet",
     failed: "Dein Workout konnte nicht gepostet werden.",
     interrupted: "Der Beitrag wurde unterbrochen, als die App geschlossen wurde.",
+    tookTooLong: "Der Upload hat zu lange gedauert.",
     retry: "Erneut versuchen",
     dismiss: "Schließen",
   },

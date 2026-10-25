@@ -321,7 +321,7 @@ async function stalledNetwork() {
   const hung = scheduler.enqueueSync(() => new Promise(() => {}), { timeoutMs: 30 });
   const next = scheduler.enqueueSync(async () => { order.push("next"); return "ran"; }, { timeoutMs: 1000 });
 
-  await assert.rejects(hung, (error) => error.code === "sync-timeout", "the caller of a stalled task is told");
+  await assert.rejects(hung, (error) => error.code === "sync-timeout" && error.message === "sync-timeout", "the caller of a stalled task is told");
   assert.equal(await next, "ran", "the task behind a stalled one did not run");
   assert.deepEqual(order, ["next"]);
   assert.equal(await scheduler.enqueueSync(async () => { await new Promise((r) => setTimeout(r, 15)); return "slow"; }, { timeoutMs: 1000 }), "slow", "a slow task that finishes in time is not cut off");
@@ -351,6 +351,7 @@ async function stalledNetwork() {
   assert.match(read("src/Database/supaBaseClient.js"), /fetchWithTimeout\(fetch, input, init\)/, "the Supabase client does not use the timeout");
   assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /keepWorkoutPostAcrossRestarts\(db\)/);
   assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /home\.backgroundPost\.interrupted/);
+  assert.match(read("src/Pages/HomePage/Components/BackgroundPostBar/BackgroundPostBar.js"), /home\.backgroundPost\.tookTooLong/);
 }
 
 (async () => {
