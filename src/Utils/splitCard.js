@@ -191,9 +191,12 @@ export function pinnedWorkouts(rows = []) {
  * The sessions of a chosen split, in the order chosen - entries
  * (Utils/splitEntries.js) or, as saved before pins, names.
  *
- * What "Repeat" copies (`lastWorkoutId`): a pinned session's own workout,
- * exactly, while it is on the phone. Otherwise - no pin, or the pinned
- * workout deleted or not downloaded yet - the latest finished strength
+ * What "Repeat" copies (`lastWorkoutId`): for a pinned session the copy made
+ * the last time it was started from the split (`entry.last`) - its weights and
+ * reps as they were left, so the session goes on from where it was - and,
+ * before there is one, or when it has been deleted, the pinned workout itself,
+ * exactly. Otherwise - no pin, or the pinned workout deleted or not downloaded
+ * yet - the latest finished strength
  * workout of its name, then `templates` (splitTemplates): the latest finished
  * workout of that name of any type, else the latest planned one, which gives
  * "Repeat" something to copy without claiming it was trained.
@@ -218,6 +221,11 @@ export function resolveChosenSplit(entries = [], history = [], { now, templates 
   const sessions = normalized.map((entry) => {
     const key = normalizeSplitName(entry.name);
     const own = entry.workout ? pinned.get(entry.workout) ?? null : null;
+    // The copy made the last time this pinned session was started: a copy of a
+    // copy of the pin, with the numbers changed along the way. Repeating the
+    // pin itself started every time from the numbers it had the day it was
+    // pinned.
+    const lastCopy = entry.workout && entry.last ? pinned.get(entry.last) ?? null : null;
     const trained = history.find((candidate) => candidate.key === key) ?? null;
     const fallback = trained
       ? null
@@ -225,7 +233,7 @@ export function resolveChosenSplit(entries = [], history = [], { now, templates 
         templates.find((candidate) => candidate.key === key) ??
         null;
     const byName = trained ?? fallback;
-    const template = own ?? byName;
+    const template = lastCopy ?? own ?? byName;
     let trainedAt;
 
     if (entry.workout && nameCounts.get(key) > 1) {

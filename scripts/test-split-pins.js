@@ -315,6 +315,26 @@ async function main() {
   const afterDone = await splitService.getSplitCard(db, { userId: USER });
 
   assert.equal(afterDone.sessions[0].daysSince, 0, "the heavy Push was done today");
+
+  // Next time the heavy Push is repeated from the copy, at the weights it was
+  // left at - not from the pin, at the weights it had the day it was pinned.
+  db.sqlite
+    .prepare(
+      `UPDATE "Set" SET weight = 105 WHERE exercise_instance_id IN
+         (SELECT exercise_instance_id FROM Exercise_Instance WHERE workout_type_instance_id = ?)`
+    )
+    .run(copied.workout_id);
+
+  const continued = await splitService.getHomeSplitGroups(db, { userId: USER });
+
+  assert.equal(continued[0].lastWorkoutId, copied.workout_id, "the heavy Push is repeated from the pin, not from last time");
+  assert.deepEqual(weightsOf(continued[0].lastWorkoutId), [105, 105], "the weights from last time are not the ones carried on");
+  assert.equal(continued[2].lastWorkoutId, 2, "the light Push keeps its own");
+  assert.deepEqual(
+    (await splitService.getSplitCard(db, { userId: USER })).sessions.map((session) => session.lastWorkoutId),
+    continued.map((group) => group.lastWorkoutId),
+    "Home and the Train tab repeat different workouts"
+  );
   assert.equal(afterDone.sessions[2].daysSince, 6, "the light Push counted the heavy Push's workout as its own");
   assert.deepEqual(afterDone.sessions.map((session) => session.isUpNext), [false, false, true], "next is the Push that has waited");
 
